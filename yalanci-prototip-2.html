@@ -1,0 +1,4408 @@
+<!DOCTYPE html><html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>YALANCI — Bilgi ve Blöf Oyunu</title><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-app-compat.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-database-compat.min.js"></script><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
+:root{
+  --bg:#171029;
+  --bg-deep:#0f0a1c;
+  --panel:#241a3a;
+  --panel-2:#2c2047;
+  --line:rgba(245,239,230,.10);
+  --coral:#ff5d73;
+  --gold:#ffc857;
+  --mint:#4ade80;
+  --ink:#f5efe6;
+  --ink-dim:#b9a9c9;
+  --radius:20px;
+}
+
+*{box-sizing:border-box}
+
+html,body{height:100%}
+
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 15% 0%,#3a2560 0%,transparent 45%),
+    radial-gradient(circle at 100% 30%,#2a1f4a 0%,transparent 50%),
+    var(--bg);
+  color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+}
+
+#app{
+  width:100%;
+  max-width:480px;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  padding-bottom:28px;
+}
+
+h1,h2,h3{
+  font-family:'Bricolage Grotesque',sans-serif;
+  margin:0;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:18px 20px 10px;
+}
+
+.brand{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:800;
+  font-size:20px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.brand .dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--coral);
+  box-shadow:0 0 12px var(--coral);
+}
+
+.round-pill{
+  font-size:13px;
+  color:var(--ink-dim);
+  background:var(--panel);
+  border:1px solid var(--line);
+  padding:5px 12px;
+  border-radius:100px;
+  white-space:nowrap;
+}
+
+.leave-link{
+  font-size:12px;
+  color:var(--ink-dim);
+  text-decoration:underline;
+  background:none;
+  border:none;
+  cursor:pointer;
+}
+
+.scorebar{
+  display:flex;
+  gap:8px;
+  padding:0 20px 14px;
+  overflow-x:auto;
+}
+
+.score-chip{
+  flex:1;
+  min-width:64px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:8px 10px;
+  text-align:center;
+}
+
+.score-chip .nm{
+  font-size:12px;
+  color:var(--ink-dim);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.score-chip .pt{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;
+  font-size:18px;
+  color:var(--gold);
+}
+
+main{
+  flex:1;
+  padding:8px 20px 20px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:24px 20px;
+}
+
+.stage-label{
+  font-size:13px;
+  color:var(--coral);
+  font-weight:600;
+  margin-bottom:8px;
+}
+
+.headline{
+  font-weight:700;
+  font-size:26px;
+  line-height:1.25;
+}
+
+.sub{
+  color:var(--ink-dim);
+  font-size:15px;
+  line-height:1.5;
+}
+
+.question-card{
+  background:linear-gradient(155deg,var(--panel-2),var(--panel));
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:28px 22px;
+  text-align:center;
+}
+
+.question-cat{
+  font-size:13px;
+  color:var(--gold);
+  font-weight:600;
+  margin-bottom:10px;
+}
+
+.question-text{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:23px;
+  font-weight:600;
+  line-height:1.35;
+}
+
+.timer-wrap{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:18px 0 4px;
+}
+
+.timer-ring{
+  width:78px;
+  height:78px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  font-weight:700;
+  background:conic-gradient(
+    var(--coral) calc(var(--pct)*1%),
+    var(--panel) 0
+  );
+}
+
+.timer-ring .inner{
+  width:62px;
+  height:62px;
+  border-radius:50%;
+  background:var(--bg-deep);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+input[type=text]{
+  width:100%;
+  background:var(--bg-deep);
+  border:1.5px solid var(--line);
+  color:var(--ink);
+  border-radius:14px;
+  padding:16px;
+  font-size:17px;
+  outline:none;
+  margin-top:16px;
+}
+
+input[type=text]:focus{
+  border-color:var(--coral);
+}
+
+.btn{
+  display:block;
+  width:100%;
+  text-align:center;
+  border:none;
+  border-radius:14px;
+  padding:16px 18px;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:12px;
+}
+
+.btn-primary{
+  background:var(--coral);
+  color:#1a0e12;
+}
+
+.btn-gold{
+  background:var(--gold);
+  color:#2a1d00;
+}
+
+.btn-ghost{
+  background:transparent;
+  border:1.5px solid var(--line);
+  color:var(--ink);
+}
+
+.btn:disabled{
+  opacity:.35;
+}
+
+.option-btn{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  text-align:left;
+  background:var(--bg-deep);
+  border:1.5px solid var(--line);
+  color:var(--ink);
+  border-radius:14px;
+  padding:15px 16px;
+  font-size:16px;
+  margin-top:10px;
+  cursor:pointer;
+}
+
+.option-letter{
+  width:28px;
+  height:28px;
+  border-radius:8px;
+  background:var(--panel-2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  flex-shrink:0;
+}
+
+.pass-screen{
+  text-align:center;
+  padding:50px 20px;
+}
+
+.avatar{
+  width:84px;
+  height:84px;
+  border-radius:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:40px;
+  margin:0 auto 18px;
+}
+
+.cat-grid{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:16px;
+}
+
+.cat-btn{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  width:100%;
+  background:var(--bg-deep);
+  border:1.5px solid var(--line);
+  border-radius:16px;
+  padding:16px;
+  color:var(--ink);
+  font-weight:700;
+  font-size:17px;
+  cursor:pointer;
+}
+
+.cat-btn:disabled{
+  opacity:.3;
+}
+
+.cat-icon{
+  font-size:26px;
+}
+
+.cat-left{
+  font-size:12px;
+  color:var(--ink-dim);
+  margin-left:auto;
+  font-weight:500;
+}
+
+.leaderboard{
+  margin-top:16px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.lb-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  background:var(--bg-deep);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px 14px;
+}
+
+.lb-rank{
+  width:26px;
+  height:26px;
+  border-radius:8px;
+  background:var(--panel-2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+}
+
+.lb-name{
+  flex:1;
+  font-weight:600;
+}
+
+.lb-delta{
+  color:var(--mint);
+  font-size:12px;
+}
+
+.lb-pts{
+  font-weight:800;
+  font-size:18px;
+  color:var(--gold);
+}
+
+.footnote{
+  font-size:12px;
+  color:var(--ink-dim);
+  text-align:center;
+  margin-top:14px;
+  line-height:1.5;
+}
+
+.player-input-row{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+
+.player-input-row input{
+  margin-top:0;
+}
+
+.remove-btn{
+  width:48px;
+  flex:none;
+  border:none;
+  border-radius:12px;
+  background:#3b233d;
+  color:#fff;
+  cursor:pointer;
+}
+
+.player-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:14px;
+}
+
+.player-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px;
+  border-radius:12px;
+  background:var(--bg-deep);
+}
+
+.qr-wrap{
+  display:flex;
+  justify-content:center;
+  margin:18px 0;
+}
+
+#qrcode{
+  background:white;
+  padding:12px;
+  border-radius:14px;
+}
+
+.code-box{
+  font-size:34px;
+  font-weight:800;
+  letter-spacing:.15em;
+  text-align:center;
+  color:var(--gold);
+  background:var(--bg-deep);
+  border:1.5px dashed var(--gold);
+  border-radius:16px;
+  padding:16px;
+}
+
+.lobby-list{
+  margin-top:14px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.lobby-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:var(--bg-deep);
+  border-radius:12px;
+  padding:12px;
+}
+
+.error-text{
+  color:var(--coral);
+  font-size:13px;
+  margin-top:8px;
+}
+
+.success-text{
+  color:var(--mint);
+  font-size:13px;
+  margin-top:8px;
+}
+
+.waiting{
+  text-align:center;
+  padding:30px 10px;
+}
+
+.reveal-row{
+  align-items:flex-start;
+}
+
+.reveal-sub{
+  font-size:12px;
+  color:var(--ink-dim);
+  margin-top:2px;
+}
+
+@media(max-width:600px){
+  .headline{font-size:23px}
+  .question-text{font-size:21px}
+}
+</style></head><body><div id="app"></div><script>
+
+/* =========================================================
+   AYARLAR
+========================================================= */
+
+const ANSWER1_TIME = 30;
+const ANSWER2_TIME = 20;
+
+const POINTS_FOR_CORRECT = 1;
+const POINTS_PER_VOTE = 1;
+
+const MIN_OPTIONS = 5;
+
+/* Oyun toplamda kaç soru sonra biter (kategorilerdeki
+   toplam soru sayısına bakılmaksızın). Değiştirmek kolay:
+   sadece bu sayıyı güncelle. */
+const TOTAL_ROUNDS = 10;
+
+
+/* =========================================================
+   SORULAR
+========================================================= */
+
+let CATEGORIES = [
+
+{
+id:"cografya",
+name:"Coğrafya",
+icon:"🗺️",
+questions:[
+{
+q:"Dünyanın en derin okyanus çukuru hangisidir?",
+correct:"Mariana Çukuru",
+extra:["Tonga Çukuru","Porto Riko Çukuru","Kermadek Çukuru","Filipin Çukuru"]
+},
+{
+q:"Baykal Gölü hangi ülkede bulunur?",
+correct:"Rusya",
+extra:["Moğolistan","Kazakistan","Çin","Ukrayna"]
+},
+{
+q:"Dünyanın en uzun nehri kabul edilen nehir hangisidir?",
+correct:"Nil Nehri",
+extra:["Amazon Nehri","Yangtze Nehri","Mississippi Nehri","Kongo Nehri"]
+},
+{
+q:"Bolivya'nın anayasal başkenti hangi şehirdir?",
+correct:"Sucre",
+extra:["La Paz","Santa Cruz","Cochabamba","Potosí"]
+},
+{
+q:"Dünyanın en yüksek şelalesi olan Angel Şelalesi hangi ülkededir?",
+correct:"Venezuela",
+extra:["Brezilya","Kolombiya","Guyana","Ekvador"]
+},
+{
+q:"Yüzölçümü bakımından dünyanın en büyük gölü (tuzlu su dahil) hangisidir?",
+correct:"Hazar Denizi",
+extra:["Aral Gölü","Ölü Deniz","Titicaca Gölü","Viktorya Gölü"]
+}
+]
+},
+
+{
+id:"genel",
+name:"Genel Kültür",
+icon:"🧠",
+questions:[
+{
+q:"Ana dil olarak en çok konuşulan dil hangisidir?",
+correct:"Mandarin Çincesi",
+extra:["İngilizce","İspanyolca","Hintçe","Arapça"]
+},
+{
+q:"Nobel Ödülü kazanan ilk kadın kimdir?",
+correct:"Marie Curie",
+extra:["Rosalind Franklin","Ada Lovelace","Florence Nightingale","Virginia Woolf"]
+},
+{
+q:"Dini kitaplar hariç, dünyanın en çok satan romanı hangisidir?",
+correct:"Don Kişot",
+extra:["Küçük Prens","İki Şehrin Hikayesi","Yüzüklerin Efendisi","Harry Potter"]
+},
+{
+q:"Standart bir satranç tahtasında toplam kaç kare vardır?",
+correct:"64",
+extra:["32","49","81","100"]
+},
+{
+q:"UNESCO tarafından dünyanın en eski üniversitesi olarak tanınan kurum hangisidir?",
+correct:"Karaviyyin Üniversitesi",
+extra:["Oxford Üniversitesi","Bologna Üniversitesi","El-Ezher Üniversitesi","Cambridge Üniversitesi"]
+},
+{
+q:"İlk modern Olimpiyat Oyunları hangi yıl düzenlenmiştir?",
+correct:"1896",
+extra:["1900","1892","1904","1912"]
+}
+]
+},
+
+{
+id:"bilim",
+name:"Bilim",
+icon:"🔬",
+questions:[
+{
+q:"İnsan vücudundaki en küçük kemik nerede bulunur?",
+correct:"Kulakta (üzengi kemiği)",
+extra:["Elde","Ayakta","Kafatasında","Omurgada"]
+},
+{
+q:"Periyodik tabloda atom numarası 1 olan element hangisidir?",
+correct:"Hidrojen",
+extra:["Helyum","Lityum","Oksijen","Karbon"]
+},
+{
+q:"Işığın boşluktaki hızı saniyede yaklaşık kaç kilometredir?",
+correct:"300.000 km",
+extra:["150.000 km","1.000.000 km","30.000 km","3.000.000 km"]
+},
+{
+q:"DNA'nın çift sarmal yapısını kim(ler) tanımlamıştır?",
+correct:"Watson ve Crick",
+extra:["Darwin ve Mendel","Curie ve Einstein","Pasteur ve Koch","Franklin ve Wilkins"]
+},
+{
+q:"Ortalama bir yetişkin insan vücudunda kaç litre kan bulunur?",
+correct:"5 litre",
+extra:["3 litre","8 litre","10 litre","2 litre"]
+},
+{
+q:"Güneş Sistemi'nde halkalara sahip olduğu bilinen kaç gezegen vardır?",
+correct:"4",
+extra:["1","2","6","8"]
+}
+]
+},
+
+{
+id:"tarih",
+name:"Tarih",
+icon:"📜",
+questions:[
+{
+q:"Berlin Duvarı hangi yıl yıkılmıştır?",
+correct:"1989",
+extra:["1985","1991","1993","1979"]
+},
+{
+q:"Osmanlı İmparatorluğu'nun kurucusu kimdir?",
+correct:"Osman Gazi",
+extra:["Orhan Gazi","Fatih Sultan Mehmet","Yavuz Sultan Selim","Kanuni Sultan Süleyman"]
+},
+{
+q:"Fransız İhtilali hangi yıl başlamıştır?",
+correct:"1789",
+extra:["1799","1776","1804","1815"]
+},
+{
+q:"İstanbul'un fethi hangi yılda gerçekleşmiştir?",
+correct:"1453",
+extra:["1071","1517","1389","1461"]
+},
+{
+q:"Amerika kıtasına ulaşan Avrupalı kaşif olarak bilinen kişi kimdir?",
+correct:"Kristof Kolomb",
+extra:["Vasco da Gama","Ferdinand Magellan","Amerigo Vespucci","Marco Polo"]
+},
+{
+q:"Sanayi Devrimi ilk olarak hangi ülkede başlamıştır?",
+correct:"İngiltere",
+extra:["Almanya","Fransa","Amerika Birleşik Devletleri","Belçika"]
+}
+]
+},
+
+{
+id:"spor",
+name:"Spor",
+icon:"⚽",
+questions:[
+{
+q:"Olimpik bir yüzme havuzunun standart uzunluğu kaç metredir?",
+correct:"50 metre",
+extra:["25 metre","100 metre","33 metre","75 metre"]
+},
+{
+q:"FIFA Dünya Kupası'nı en çok kazanan ülke hangisidir?",
+correct:"Brezilya",
+extra:["Almanya","Arjantin","İtalya","Fransa"]
+},
+{
+q:"Resmi bir maratonun mesafesi kaç kilometredir?",
+correct:"42,195 km",
+extra:["40 km","45 km","21 km","50 km"]
+},
+{
+q:"Tenisteki dört büyük Grand Slam turnuvasından İngiltere'de düzenlenen hangisidir?",
+correct:"Wimbledon",
+extra:["Roland Garros","US Open","Avustralya Açık","Miami Open"]
+},
+{
+q:"İlk FIFA Dünya Kupası hangi yıl düzenlenmiştir?",
+correct:"1930",
+extra:["1934","1926","1950","1938"]
+},
+{
+q:"NBA standartlarına göre bir basketbol çeyreği kaç dakikadır?",
+correct:"12 dakika",
+extra:["10 dakika","15 dakika","8 dakika","20 dakika"]
+}
+]
+},
+
+{
+id:"sinema",
+name:"Sinema & Dizi",
+icon:"🎬",
+questions:[
+{
+q:"Ünlü 'duş sahnesi' ile bilinen Alfred Hitchcock filmi hangisidir?",
+correct:"Psycho",
+extra:["Vertigo","Rear Window","The Birds","North by Northwest"]
+},
+{
+q:"'Yeşil Yol' (The Green Mile) filminin yönetmeni kimdir?",
+correct:"Frank Darabont",
+extra:["Steven Spielberg","Ron Howard","David Fincher","Robert Zemeckis"]
+},
+{
+q:"Emmy Ödülleri hangi alanda verilir?",
+correct:"Televizyon",
+extra:["Sinema","Müzik","Tiyatro","Edebiyat"]
+},
+{
+q:"'Game of Thrones' dizisi hangi kitap serisine dayanır?",
+correct:"A Song of Ice and Fire",
+extra:["The Wheel of Time","The Witcher","Mistborn","The Stormlight Archive"]
+},
+{
+q:"İlk Oscar töreni hangi yıl düzenlenmiştir?",
+correct:"1929",
+extra:["1935","1920","1945","1950"]
+},
+{
+q:"Quentin Tarantino'nun yönetmen olarak ilk uzun metrajlı filmi hangisidir?",
+correct:"Reservoir Dogs",
+extra:["Pulp Fiction","Kill Bill","Jackie Brown","True Romance"]
+}
+]
+},
+
+{
+id:"teknoloji",
+name:"Teknoloji",
+icon:"💻",
+questions:[
+{
+q:"HTML açılımı nedir?",
+correct:"HyperText Markup Language",
+extra:["High Tech Modern Language","Hyperlink Text Machine Language","Home Tool Markup Language","HyperTransfer Markup Logic"]
+},
+{
+q:"İlk bilgisayar virüsü olarak kabul edilen program hangisidir?",
+correct:"Creeper",
+extra:["ILOVEYOU","Melissa","Stuxnet","Morris Worm"]
+},
+{
+q:"'Bluetooth' teknolojisinin ismi nereden gelir?",
+correct:"Viking kralı Harald Bluetooth'tan",
+extra:["Mavi ışık dalgalarından","Bir diş hekimi mucitten","Bir uydu adından","Bir şirket kısaltmasından"]
+},
+{
+q:"Python programlama dilinin ismi neyden esinlenilmiştir?",
+correct:"Monty Python (komedi grubu)",
+extra:["Yılan türünden","Yaratıcısının soyadından","Bir Yunan mitolojisi karakterinden","Bir NASA projesinden"]
+},
+{
+q:"Dünyanın ilk elektronik genel amaçlı bilgisayarı kabul edilen makine hangisidir?",
+correct:"ENIAC",
+extra:["UNIVAC","Colossus","Z3","IBM 701"]
+},
+{
+q:"USB açılımı nedir?",
+correct:"Universal Serial Bus",
+extra:["United System Bus","Universal Standard Board","Unified Serial Board","Universal System Bridge"]
+}
+]
+}
+
+];
+
+
+/* =========================================================
+   YARDIMCI FONKSİYONLAR
+========================================================= */
+
+function normalize(text){
+return (text||"").trim().toLocaleLowerCase("tr-TR");
+}
+
+/* Bazı cevap metinleri kesme işareti (') içerebilir
+   (örn. "Bluetooth'tan"). Bu metinleri tek tırnakla
+   sınırlanmış bir HTML onclick niteliğinin içine güvenle
+   yerleştirmek için JSON.stringify çıktısındaki tek
+   tırnakları HTML varlığına çeviriyoruz. */
+
+function jsAttr(text){
+return JSON.stringify(text).replace(/'/g,"&#39;");
+}
+
+function shuffle(array){
+const a=[...array];
+
+for(let i=a.length-1;i>0;i--){
+const j=Math.floor(Math.random()*(i+1));
+[a[i],a[j]]=[a[j],a[i]];
+}
+
+return a;
+}
+
+function getCategory(id){
+return CATEGORIES.find(c=>c.id===id);
+}
+
+function generateRoomCode(){
+const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+let code="";
+
+for(let i=0;i<5;i++){
+code+=chars[Math.floor(Math.random()*chars.length)];
+}
+
+return code;
+}
+
+function slug(name){
+return (name||"").trim().replace(/[^a-zA-Z0-9ÇĞİÖŞÜçğıöşü]/g,"_")||"oyuncu";
+}
+
+function roomKey(code,kind,round,name){
+return "YALANCI_ROOM_"+code+"_"+kind+"_"+round+"_"+slug(name);
+}
+
+/*
+  Firebase Realtime Database boş dizi/nesneleri ([] veya {})
+  hiç saklamaz — o alanı tamamen siler. "usedQuestions" başta
+  her kategori için boş bir dizi olduğundan, kaydedilir
+  kaydedilmez Firebase tarafından silinir ve geri okuduğumuzda
+  "undefined" olarak gelir. Firebase'den her oda verisi
+  çektiğimizde bu fonksiyonla eksik alanları tamamlıyoruz ki
+  kod hiçbir yerde "undefined" ile karşılaşıp çökmesin.
+*/
+
+function normalizeRoom(room){
+
+if(!room) return room;
+
+room.usedQuestions=room.usedQuestions||{};
+
+CATEGORIES.forEach(c=>{
+
+if(!Array.isArray(room.usedQuestions[c.id])){
+
+room.usedQuestions[c.id]=[];
+
+}
+
+});
+
+room.scores=room.scores||{};
+
+room.players=room.players||[];
+
+return room;
+
+}
+
+
+/* =========================================================
+   OPTIONS OLUŞTURMA
+========================================================= */
+
+function buildOptions(question,wrongAnswers){
+
+const result=[];
+const used=new Set();
+
+for(const answer of wrongAnswers){
+
+if(!answer) continue;
+
+const normalized=normalize(answer);
+
+if(normalized===normalize(question.correct)) continue;
+
+if(used.has(normalized)) continue;
+
+used.add(normalized);
+
+result.push({
+text:answer,
+correct:false
+});
+}
+
+
+/* Oyunculardan gelen yanlış cevaplar yetmezse
+   oyunun kendi yanlış cevaplarını ekle */
+
+for(const extra of shuffle(question.extra||[])){
+
+if(result.length>=MIN_OPTIONS-1) break;
+
+const normalized=normalize(extra);
+
+if(normalized===normalize(question.correct)) continue;
+
+if(used.has(normalized)) continue;
+
+used.add(normalized);
+
+result.push({
+text:extra,
+correct:false
+});
+}
+
+
+/* DOĞRU CEVAP MUTLAKA SEÇENEKLERİN İÇİNDE */
+
+result.push({
+text:question.correct,
+correct:true
+});
+
+return shuffle(result);
+}
+
+/* Her seçeneğin kimin yazdığı yanlış cevap olduğunu etiketler.
+   Bu bilgi seçim sırasında kimseye gösterilmez — sadece tur
+   sonunda "Cevaplar Açıklandı" bölümünde kullanılır. */
+
+function attachOwners(options,wrongMap){
+
+options.forEach(opt=>{
+
+if(opt.correct){
+opt.owners=[];
+return;
+}
+
+opt.owners=Object.keys(wrongMap).filter(name=>
+wrongMap[name] &&
+normalize(wrongMap[name])===normalize(opt.text)
+);
+
+});
+
+return options;
+
+}
+
+/* Tur sonunda gösterilen "kim ne yazdı" açıklama kutusu.
+   choicesMap: {oyuncuAdı: seçtiği metin} */
+
+function revealHTML(options,choicesMap){
+
+const map=choicesMap||{};
+
+const rows=(options||[]).map(opt=>{
+
+const count=Object.values(map).filter(c=>c===opt.text).length;
+
+let sub;
+
+if(opt.correct){
+
+sub=count>0
+?
+`${count} kişi doğruyu buldu → her biri +${POINTS_FOR_CORRECT} puan`
+:
+"Kimse bulamadı";
+
+}else if(opt.owners && opt.owners.length){
+
+sub=`${opt.owners.join(", ")} yazmıştı`+
+(count>0
+?
+` · ${count} kişi seçti → +${POINTS_PER_VOTE} puan`
+:
+" · kimse seçmedi");
+
+}else{
+
+sub=count>0
+?
+`Oyunun eklediği sahte cevaptı · ${count} kişi kandı`
+:
+"Oyunun eklediği sahte cevaptı";
+
+}
+
+return`
+
+<div class="lb-row reveal-row">
+
+<div style="flex:1">
+
+<div style="font-weight:700;${opt.correct?"color:var(--mint)":""}">
+${opt.text}${opt.correct?" ✓":""}
+</div>
+
+<div class="reveal-sub">
+${sub}
+</div>
+
+</div>
+
+</div>
+
+`;
+
+}).join("");
+
+return`
+
+<div class="card">
+
+<h3>Cevaplar Açıklandı</h3>
+
+<div class="leaderboard">
+${rows}
+</div>
+
+</div>
+
+`;
+
+}
+
+
+/* =========================================================
+   ANA DURUM
+========================================================= */
+
+let mode=null;
+
+let players=[];
+
+let scores={};
+
+let currentRound=0;
+
+let currentQuestion=null;
+
+let currentCategory=null;
+
+let usedQuestions={};
+
+let wrongAnswers={};
+
+let answerStage=1;
+
+let currentPlayerIndex=0;
+
+let options=[];
+
+let selectedChoices={};
+
+/* Bu turda kimin kaç puan kazandığı — tur bitene kadar
+   "scores" içine işlenmez, yalnızca burada bekletilir.
+   Böylece kimse ara ekranlarda puanların değiştiğini görüp
+   kime gittiğini tahmin edemez. */
+let pendingGains={};
+
+let timer=null;
+
+let timeLeft=0;
+
+let timerTotal=0;
+
+
+/* =========================================================
+   ANA EKRAN
+========================================================= */
+
+function render(){
+
+if(mode===null){
+renderHome();
+return;
+}
+
+if(mode==="local"){
+renderLocal();
+return;
+}
+
+if(mode==="online"){
+renderOnline();
+return;
+}
+
+if(mode==="admin"){
+renderAdminGame();
+return;
+}
+
+}
+
+function renderLocal(){
+/* local ekranlar kendi fonksiyonları tarafından
+   doğrudan çiziliyor (chooseCategory, renderAnswer, vb.);
+   bu fonksiyon yalnızca mode==="local" olduğunda
+   ilk kurulum ekranına düşer. */
+renderLocalSetup();
+}
+
+function renderOnline(){
+if(roomState){
+renderOnlineGame();
+}else{
+renderOnlineSetup();
+}
+}
+
+
+/* =========================================================
+   HOME
+========================================================= */
+
+function renderHome(){
+
+document.getElementById("app").innerHTML=`
+
+<div class="topbar">
+<div class="brand">
+<span class="dot"></span>
+YALANCI
+</div>
+</div>
+
+<main>
+
+<div class="card">
+<div class="stage-label">Bilgi & Blöf</div>
+
+<h1 class="headline">
+Herkes yazar.<br>
+Bir tanesi doğrudur.
+</h1>
+
+<p class="sub">
+Doğru cevabı bul, rakiplerinin cevaplarına kanma
+ve kendi cevabınla onları kandır.
+</p>
+</div>
+
+
+<div class="card">
+
+<h2 class="headline" style="font-size:21px">
+📱 Elden Ele
+</h2>
+
+<p class="sub">
+Tek telefonla oynayın. Oyuncular sırayla cevap verir ve seçim yapar.
+</p>
+
+<button class="btn btn-primary"
+onclick="openLocalSetup()">
+Oyunu Kur
+</button>
+
+</div>
+
+
+<div class="card">
+
+<h2 class="headline" style="font-size:21px">
+🌐 Online Oyun
+</h2>
+
+<p class="sub">
+Bir oda oluşturun. QR kodu diğer oyuncularla paylaşın, herkes kendi telefonundan aynı anda oynasın.
+</p>
+
+<button class="btn btn-gold"
+onclick="openOnlineSetup()">
+Online Oyun
+</button>
+
+</div>
+
+<button class="leave-link" style="margin-top:16px" onclick="openAdmin()">
+⚙️ Yönetici Paneli
+</button>
+
+</main>
+`;
+}
+
+
+/* =========================================================
+   LOCAL SETUP
+========================================================= */
+
+function openLocalSetup(){
+
+mode="local";
+
+players=[];
+scores={};
+
+renderLocalSetup();
+}
+
+function renderLocalSetup(){
+
+document.getElementById("app").innerHTML=`
+
+<div class="topbar">
+<div class="brand">
+<span class="dot"></span>
+YALANCI
+</div>
+</div>
+
+<main>
+
+<div class="card">
+
+<div class="stage-label">
+Oyuncular
+</div>
+
+<h2 class="headline">
+Oyuncu isimlerini ekle
+</h2>
+
+<p class="sub">
+Oyuncuların isimlerini tek tek yaz.
+</p>
+
+<div class="player-input-row">
+
+<input
+type="text"
+id="playerName"
+placeholder="Oyuncu adı..."
+onkeydown="if(event.key==='Enter')addPlayer()"
+>
+
+<button
+class="btn btn-primary"
+style="margin-top:0;width:90px"
+onclick="addPlayer()">
+Ekle
+</button>
+
+</div>
+
+<div class="player-list">
+
+${
+players.map((p,i)=>`
+
+<div class="player-item">
+
+<span>${i+1}. ${p}</span>
+
+<button
+class="remove-btn"
+onclick="removePlayer(${i})">
+×
+</button>
+
+</div>
+
+`).join("")
+}
+
+</div>
+
+${
+players.length<2
+?
+`<p class="footnote">En az 2 oyuncu ekleyin.</p>`
+:
+`<button
+class="btn btn-gold"
+onclick="startLocalGame()">
+Oyunu Başlat
+</button>`
+}
+
+</div>
+
+
+<button
+class="btn btn-ghost"
+onclick="mode=null;render()">
+← Geri
+</button>
+
+</main>
+`;
+}
+
+function addPlayer(){
+
+const input=document.getElementById("playerName");
+
+const name=(input.value||"").trim();
+
+if(!name) return;
+
+if(players.includes(name)){
+alert("Bu isim zaten kullanılıyor.");
+return;
+}
+
+players.push(name);
+
+scores[name]=0;
+
+renderLocalSetup();
+}
+
+function removePlayer(index){
+
+const name=players[index];
+
+players.splice(index,1);
+
+delete scores[name];
+
+renderLocalSetup();
+}
+
+
+/* =========================================================
+   LOCAL GAME
+========================================================= */
+
+function startLocalGame(){
+
+currentRound=1;
+
+currentPlayerIndex=0;
+
+usedQuestions={};
+
+CATEGORIES.forEach(c=>{
+usedQuestions[c.id]=[];
+});
+
+chooseCategory();
+}
+
+function chooseCategory(){
+
+const player=players[currentPlayerIndex];
+
+document.getElementById("app").innerHTML=`
+
+<div class="topbar">
+
+<div class="brand">
+<span class="dot"></span>
+YALANCI
+</div>
+
+<div class="round-pill">
+Tur ${currentRound}
+</div>
+
+</div>
+
+${scoreBar()}
+
+<main>
+
+<div class="card pass-screen">
+
+<div class="avatar"
+style="background:#ff5d7322">
+👤
+</div>
+
+<div class="stage-label">
+Kategori Seçimi
+</div>
+
+<h2 class="headline">
+Sıra sende, ${player}!
+</h2>
+
+<p class="sub">
+Bu turun kategorisini sen seç.
+</p>
+
+<div class="cat-grid">
+
+${
+CATEGORIES.map(c=>{
+
+const remaining=
+c.questions.length-
+usedQuestions[c.id].length;
+
+return`
+
+<button
+class="cat-btn"
+${remaining<=0?"disabled":""}
+onclick="selectCategory('${c.id}')">
+
+<span class="cat-icon">${c.icon}</span>
+
+${c.name}
+
+<span class="cat-left">
+${remaining} soru
+</span>
+
+</button>
+
+`;
+
+}).join("")
+}
+
+</div>
+
+</div>
+
+</main>
+`;
+}
+
+function selectCategory(id){
+
+const category=getCategory(id);
+
+const available=category.questions
+.map((q,i)=>i)
+.filter(i=>!usedQuestions[id].includes(i));
+
+if(!available.length){
+chooseCategory();
+return;
+}
+
+const index=
+available[Math.floor(Math.random()*available.length)];
+
+usedQuestions[id].push(index);
+
+currentCategory=category;
+
+currentQuestion=category.questions[index];
+
+wrongAnswers={};
+
+players.forEach(p=>{
+wrongAnswers[p]=null;
+});
+
+currentPlayerIndex=0;
+
+passToAnswer();
+}
+
+function passToAnswer(){
+
+const player=players[currentPlayerIndex];
+
+document.getElementById("app").innerHTML=`
+
+${topbar()}
+
+${scoreBar()}
+
+<main>
+
+<div class="card pass-screen">
+
+<div class="avatar"
+style="background:#ff5d7322">
+👤
+</div>
+
+<div class="stage-label">
+Cevap Zamanı
+</div>
+
+<h2 class="headline">
+Sıra sende, ${player}!
+</h2>
+
+<p class="sub">
+Telefonu ${player}'e ver.
+Diğer oyuncular ekrana bakmasın.
+</p>
+
+<button
+class="btn btn-primary"
+onclick="startAnswer1()">
+Hazırım
+</button>
+
+</div>
+
+</main>
+`;
+}
+
+
+/* =========================================================
+   ANSWER 1
+========================================================= */
+
+function startAnswer1(){
+
+answerStage=1;
+
+renderAnswer();
+
+startTimer(
+ANSWER1_TIME,
+()=>{
+submitAnswer("")
+}
+);
+
+}
+
+function renderAnswer(){
+
+const player=players[currentPlayerIndex];
+
+const seconds=
+answerStage===1
+?
+ANSWER1_TIME
+:
+ANSWER2_TIME;
+
+document.getElementById("app").innerHTML=`
+
+${topbar()}
+
+${scoreBar()}
+
+<main>
+
+<div class="question-card">
+
+<div class="question-cat">
+${currentCategory.name}
+· ${player}
+</div>
+
+<div class="question-text">
+${currentQuestion.q}
+</div>
+
+<div class="timer-wrap">
+
+<div
+class="timer-ring"
+id="timerRing"
+style="--pct:100">
+
+<div class="inner">
+<span id="timerNum">${timeLeft||seconds}</span>
+</div>
+
+</div>
+
+</div>
+
+<input
+type="text"
+id="answerInput"
+placeholder="Cevabını yaz..."
+autocomplete="off"
+onkeydown="if(event.key==='Enter')submitAnswerFromInput()"
+>
+
+<button
+class="btn btn-primary"
+onclick="submitAnswerFromInput()">
+Cevabı Gönder
+</button>
+
+</div>
+
+<p class="footnote">
+
+${
+answerStage===1
+?
+"İlk cevap · 30 saniye"
+:
+"İkinci cevap · 20 saniye"
+}
+
+</p>
+
+</main>
+`;
+
+const input=document.getElementById("answerInput");
+
+if(input) input.focus();
+
+updateTimerDisplay();
+}
+
+function submitAnswerFromInput(){
+
+const input=document.getElementById("answerInput");
+
+submitAnswer(input?input.value:"");
+
+}
+
+function submitAnswer(text){
+
+clearInterval(timer);
+
+text=(text||"").trim();
+
+const player=players[currentPlayerIndex];
+
+const isCorrect=
+text!=="" &&
+normalize(text)===normalize(currentQuestion.correct);
+
+
+/* DOĞRU CEVAP YAZILDIYSA
+   HİÇBİR ŞEKİLDE OYUNCUNUN CEVABI OLARAK KAYDETME */
+
+if(isCorrect){
+
+showCorrectMessage();
+
+return;
+}
+
+
+/* Yanlış cevap */
+
+if(text){
+wrongAnswers[player]=text;
+}
+
+advanceAnswerPlayer();
+
+}
+
+function showCorrectMessage(){
+
+const player=players[currentPlayerIndex];
+
+document.getElementById("app").innerHTML=`
+
+${topbar()}
+
+${scoreBar()}
+
+<main>
+
+<div class="card pass-screen">
+
+<div style="font-size:50px">
+🎯
+</div>
+
+<div class="stage-label">
+Doğru Cevap!
+</div>
+
+<h2 class="headline">
+Cevabınız doğru!
+</h2>
+
+<p class="sub">
+Doğru cevabı yazdınız.
+Şimdi farklı bir cevap yazın.
+</p>
+
+<div class="card"
+style="margin-top:16px;background:#164d3d">
+
+<strong>
+Doğru cevap seçeneklerde olacak.
+</strong>
+
+</div>
+
+<button
+class="btn btn-primary"
+onclick="goSecondAnswer()">
+Farklı Cevap Yaz
+</button>
+
+</div>
+
+</main>
+`;
+}
+
+function goSecondAnswer(){
+
+answerStage=2;
+
+renderAnswer();
+
+startTimer(
+ANSWER2_TIME,
+()=>{
+submitAnswer("")
+}
+);
+
+}
+
+function advanceAnswerPlayer(){
+
+currentPlayerIndex++;
+
+if(currentPlayerIndex>=players.length){
+
+buildFinalOptions();
+
+return;
+}
+
+answerStage=1;
+
+passToAnswer();
+
+}
+
+
+/* =========================================================
+   FINAL OPTIONS
+========================================================= */
+
+function buildFinalOptions(){
+
+clearInterval(timer);
+
+options=attachOwners(
+buildOptions(
+currentQuestion,
+Object.values(wrongAnswers)
+),
+wrongAnswers
+);
+
+selectedChoices={};
+
+pendingGains={};
+
+currentPlayerIndex=0;
+
+passToSelection();
+
+}
+
+function passToSelection(){
+
+const player=players[currentPlayerIndex];
+
+document.getElementById("app").innerHTML=`
+
+${topbar()}
+
+${scoreBar()}
+
+<main>
+
+<div class="card pass-screen">
+
+<div class="avatar"
+style="background:#ffc85722">
+🗳️
+</div>
+
+<div class="stage-label">
+Doğruyu Bul
+</div>
+
+<h2 class="headline">
+Sıra sende, ${player}!
+</h2>
+
+<p class="sub">
+Telefonu ${player}'e ver.
+</p>
+
+<button
+class="btn btn-gold"
+onclick="showSelection()">
+Hazırım
+</button>
+
+</div>
+
+</main>
+`;
+}
+
+
+/* =========================================================
+   SELECTION
+========================================================= */
+
+function showSelection(){
+
+const player=players[currentPlayerIndex];
+
+const availableOptions=
+options.filter(o=>
+!(o.owners && o.owners.includes(player))
+);
+
+const letters=["A","B","C","D","E","F","G"];
+
+document.getElementById("app").innerHTML=`
+
+${topbar()}
+
+${scoreBar()}
+
+<main>
+
+<div class="card">
+
+<div class="stage-label">
+${player} · Doğruyu Bul
+</div>
+
+<h2 class="headline"
+style="font-size:20px">
+${currentQuestion.q}
+</h2>
+
+<p class="sub">
+Doğru cevabı seç. Kendi yazdığın cevap burada görünmüyor.
+</p>
+
+${
+availableOptions.map((o,i)=>`
+
+<button
+class="option-btn"
+onclick='chooseAnswer(${jsAttr(o.text)})'>
+
+<span class="option-letter">
+${letters[i]}
+</span>
+
+${o.text}
+
+</button>
+
+`).join("")
+}
+
+</div>
+
+</main>
+`;
+}
+
+function chooseAnswer(text){
+
+const player=players[currentPlayerIndex];
+
+selectedChoices[player]=text;
+
+const option=options.find(o=>o.text===text);
+
+if(option.correct){
+
+pendingGains[player]=(pendingGains[player]||0)+POINTS_FOR_CORRECT;
+
+showChoiceResult(true);
+
+}else{
+
+(option.owners||[]).forEach(name=>{
+if(name!==player){
+pendingGains[name]=(pendingGains[name]||0)+POINTS_PER_VOTE;
+}
+});
+
+showChoiceResult(false);
+
+}
+
+}
+
+function showChoiceResult(correct){
+
+/* Kime gittiği veya kimin yazdığı burada
+   ASLA gösterilmez — bu bilgi yalnızca
+   tur sonunda "Cevaplar Açıklandı"
+   bölümünde açıklanır. */
+
+document.getElementById("app").innerHTML=`
+
+${topbar()}
+
+${scoreBar()}
+
+<main>
+
+<div class="card pass-screen">
+
+<div style="font-size:50px">
+${correct?"🎯":"🃏"}
+</div>
+
+<h2 class="headline">
+${correct?"Doğru!":"Yanıltıcı cevap!"}
+</h2>
+
+<p class="sub">
+
+${
+correct
+?
+`Doğru cevabı buldun! +${POINTS_FOR_CORRECT} puan`
+:
+"Bu doğru cevap değildi. Kimin yazdığını ve kime puan gittiğini tur sonunda öğreneceksin!"
+}
+
+</p>
+
+<button
+class="btn btn-primary"
+onclick="nextSelector()">
+Devam Et
+</button>
+
+</div>
+
+</main>
+`;
+}
+
+function nextSelector(){
+
+currentPlayerIndex++;
+
+if(currentPlayerIndex>=players.length){
+
+showRoundResult();
+
+return;
+}
+
+passToSelection();
+
+}
+
+
+/* =========================================================
+   ROUND RESULT
+========================================================= */
+
+function showRoundResult(){
+
+/* Bu turda kazanılan puanlar ancak şimdi,
+   herkes seçimini bitirdikten sonra asıl skora işlenir. */
+
+Object.keys(pendingGains).forEach(name=>{
+scores[name]=(scores[name]||0)+pendingGains[name];
+});
+
+const sorted=[...players].sort(
+(a,b)=>(scores[b]||0)-(scores[a]||0)
+);
+
+document.getElementById("app").innerHTML=`
+
+${topbar()}
+
+${scoreBar()}
+
+<main>
+
+<div class="card"
+style="text-align:center">
+
+<div class="stage-label">
+Tur Sonucu
+</div>
+
+<h2 class="headline">
+Doğru cevap
+</h2>
+
+<div style="
+font-size:28px;
+color:var(--gold);
+font-weight:800;
+margin-top:10px">
+
+${currentQuestion.correct}
+
+</div>
+
+</div>
+
+${revealHTML(options,selectedChoices)}
+
+<div class="card">
+
+<h3>
+Sıralama
+</h3>
+
+<div class="leaderboard">
+
+${
+sorted.map((p,i)=>`
+
+<div class="lb-row">
+
+<div class="lb-rank">
+${i+1}
+</div>
+
+<div class="lb-name">
+${p}
+</div>
+
+${
+pendingGains[p]
+?
+`<div class="lb-delta">+${pendingGains[p]}</div>`
+:
+""
+}
+
+<div class="lb-pts">
+${scores[p]} puan
+</div>
+
+</div>
+
+`).join("")
+}
+
+</div>
+
+</div>
+
+<button
+class="btn btn-primary"
+onclick="nextRound()">
+
+Sonraki Soru
+
+</button>
+
+</main>
+`;
+}
+
+function nextRound(){
+
+const remaining=CATEGORIES.some(
+c=>usedQuestions[c.id].length<c.questions.length
+);
+
+if(!remaining || currentRound>=TOTAL_ROUNDS){
+
+showGameOver();
+
+return;
+}
+
+currentRound++;
+
+currentPlayerIndex=
+(currentPlayerIndex+1)%players.length;
+
+chooseCategory();
+
+}
+
+function showGameOver(){
+
+const sorted=[...players].sort(
+(a,b)=>(scores[b]||0)-(scores[a]||0)
+);
+
+document.getElementById("app").innerHTML=`
+
+${topbar()}
+
+<main>
+
+<div class="card pass-screen">
+
+<div style="font-size:60px">
+🏆
+</div>
+
+<h1 class="headline">
+Oyun Bitti!
+</h1>
+
+<p class="sub">
+Kazanan belli oldu.
+</p>
+
+</div>
+
+<div class="card">
+
+<div class="leaderboard">
+
+${
+sorted.map((p,i)=>`
+
+<div class="lb-row">
+
+<div class="lb-rank">
+${i+1}
+</div>
+
+<div class="lb-name">
+${p}
+</div>
+
+<div class="lb-pts">
+${scores[p]}
+</div>
+
+</div>
+
+`).join("")
+}
+
+</div>
+
+</div>
+
+<button
+class="btn btn-primary"
+onclick="mode=null;render()">
+Ana Menü
+</button>
+
+</main>
+`;
+}
+
+
+/* =========================================================
+   SCORE BAR / TOPBAR (yerel mod)
+========================================================= */
+
+function scoreBar(){
+
+return`
+
+<div class="scorebar">
+
+${
+players.map(p=>`
+
+<div class="score-chip">
+
+<div class="nm">
+${p}
+</div>
+
+<div class="pt">
+${scores[p]||0}
+</div>
+
+</div>
+
+`).join("")
+}
+
+</div>
+
+`;
+}
+
+function topbar(){
+
+return`
+
+<div class="topbar">
+
+<div class="brand">
+<span class="dot"></span>
+YALANCI
+</div>
+
+<div class="round-pill">
+Tur ${currentRound}
+</div>
+
+</div>
+
+`;
+}
+
+
+/* =========================================================
+   TIMER (hem yerel hem online modda kullanılır)
+========================================================= */
+
+function startTimer(seconds,onExpire){
+
+clearInterval(timer);
+
+timeLeft=seconds;
+
+timerTotal=seconds;
+
+updateTimerDisplay();
+
+timer=setInterval(()=>{
+
+timeLeft--;
+
+updateTimerDisplay();
+
+if(timeLeft<=0){
+
+clearInterval(timer);
+
+onExpire();
+
+}
+
+},1000);
+
+}
+
+function updateTimerDisplay(){
+
+const num=document.getElementById("timerNum");
+
+const ring=document.getElementById("timerRing");
+
+if(!num||!ring) return;
+
+num.textContent=timeLeft;
+
+const pct=
+timerTotal>0
+?
+(timeLeft/timerTotal)*100
+:
+100;
+
+ring.style.setProperty(
+"--pct",
+pct
+);
+
+}
+
+
+/* =========================================================
+   ONLINE — DURUM
+========================================================= */
+
+let roomCode=null;
+
+let isHost=false;
+
+let onlineName="";
+
+let onlinePlayers=[];
+
+let onlineScores={};
+
+let roomState=null;
+
+let roomPoll=null;
+
+let onlineLastRound=0;
+
+let onlineLocalAnswerStage="idle"; // idle | attempt1 | attempt2 | correct1 | correct2 | waiting
+
+let onlineMyWrong=null;
+
+let onlineLocalSelectStage="idle"; // idle | selecting | waiting
+
+let onlineMyChoice=null;
+
+/* Her poll'da tüm ekranı yeniden çizmek (özellikle QR kodunu
+   yeniden oluşturmak) telefon ekranında fark edilir bir
+   "titreme" yapıyordu. Bu yüzden oda verisinde gerçekten bir
+   değişiklik olduğunda çiziyoruz, olmadığında hiçbir şeye
+   dokunmuyoruz. */
+let lastRoomSnapshot=null;
+
+
+/*
+  =========================================================
+  FIREBASE AYARLARI — BURAYI DOLDUR
+  =========================================================
+  1. https://console.firebase.google.com/ adresine git.
+  2. "Add project" ile ücretsiz bir proje oluştur.
+  3. Sol menüden Build > Realtime Database > Create Database
+     > "Start in test mode" seç.
+  4. Sol üstteki dişli ikonundan Project settings > General >
+     "Your apps" > Web ( </> ) ikonuna tıkla, bir isim ver ve
+     kaydet. Sana gösterilecek firebaseConfig nesnesini
+     aşağıya olduğu gibi yapıştır.
+  =========================================================
+*/
+
+const firebaseConfig={
+apiKey: "AIzaSyAgSn_mzsqE2kDN5maQ-EMicD47zwjCzKM",
+authDomain: "yalanci-87f53.firebaseapp.com",
+databaseURL: "https://yalanci-87f53-default-rtdb.firebaseio.com",
+projectId: "yalanci-87f53",
+storageBucket: "yalanci-87f53.firebasestorage.app",
+messagingSenderId: "599963639919",
+appId: "1:599963639919:web:aea0b110ca12a1e16aad9a",
+measurementId: "G-MMC31DY4SH"
+};
+
+let db=null;
+
+let firebaseReady=false;
+
+let firebaseInitError=null;
+
+try{
+
+if(typeof firebase==="undefined"){
+
+throw new Error("Firebase SDK dosyaları yüklenemedi (internet bağlantısını kontrol et).");
+
+}
+
+if(firebaseConfig.apiKey && firebaseConfig.apiKey!=="BURAYA_YAPISTIR"){
+
+firebase.initializeApp(firebaseConfig);
+
+db=firebase.database();
+
+firebaseReady=true;
+
+}
+
+}catch(e){
+
+firebaseInitError=e.message;
+
+console.error("Firebase başlatılamadı:",e);
+
+}
+
+/*
+  Oda durumu artık gerçek bir Firebase Realtime Database'de
+  tutulur, bu yüzden herhangi bir cihazdan yapılan her
+  storageSet, aynı odaya bağlı tüm cihazlar tarafından
+  storageGet ile okunabilir. Firebase kurulmadıysa (yukarısı
+  hâlâ "BURAYA_YAPISTIR" ise) fonksiyonlar null/false döner ve
+  arayüz kullanıcıyı uyarır.
+*/
+
+async function storageGet(key){
+
+if(!firebaseReady) return null;
+
+try{
+
+const snap=await db.ref(key).once("value");
+
+const val=snap.val();
+
+return (val===null||val===undefined)?null:val;
+
+}catch(e){
+
+console.error("storageGet hatası:",e);
+
+return null;
+
+}
+
+}
+
+async function storageSet(key,value){
+
+if(!firebaseReady) return false;
+
+try{
+
+await db.ref(key).set(value);
+
+return true;
+
+}catch(e){
+
+console.error("storageSet hatası:",e);
+
+return false;
+
+}
+
+}
+
+
+/* =========================================================
+   SORU BANKASI — FIREBASE İLE SENKRON
+   =========================================================
+   Sorular artık koddan değil, Firebase'deki "questions_data"
+   düğümünden okunuyor. İlk açılışta Firebase boşsa, koddaki
+   varsayılan CATEGORIES verisiyle bir kere doldurulur. Ondan
+   sonra yönetici panelinden yapılan her değişiklik anında
+   tüm cihazlara (canlı dinleyici sayesinde) yansır.
+========================================================= */
+
+function fbDataToCategories(data){
+
+if(!data) return null;
+
+const arr=Object.keys(data).map(catId=>{
+
+const c=data[catId]||{};
+
+const qMap=c.questions||{};
+
+const questions=Object.keys(qMap).map(qid=>({
+
+q:qMap[qid].q,
+
+correct:qMap[qid].correct,
+
+extra:qMap[qid].extra||[]
+
+}));
+
+return{
+
+id:catId,
+
+name:c.name||catId,
+
+icon:c.icon||"❓",
+
+questions:questions
+
+};
+
+});
+
+return arr;
+
+}
+
+function categoryToFbShape(cat){
+
+const questions={};
+
+cat.questions.forEach((q,i)=>{
+
+const qid="q"+i+"_"+Math.random().toString(36).slice(2,8);
+
+questions[qid]={
+
+q:q.q,
+
+correct:q.correct,
+
+extra:q.extra||[]
+
+};
+
+});
+
+return{ name:cat.name, icon:cat.icon, questions:questions };
+
+}
+
+async function saveCategoriesToFirebase(){
+
+if(!firebaseReady){
+
+alert("Firebase ayarlı değil, değişiklikler kalıcı olarak kaydedilemiyor.");
+
+return false;
+
+}
+
+const shaped={};
+
+CATEGORIES.forEach(c=>{
+
+shaped[c.id]=categoryToFbShape(c);
+
+});
+
+return await storageSet("questions_data",shaped);
+
+}
+
+async function initQuestionBank(){
+
+if(!firebaseReady) return; // Firebase yoksa koddaki varsayılan sorular kullanılır
+
+try{
+
+const existing=await storageGet("questions_data");
+
+if(!existing){
+
+await saveCategoriesToFirebase();
+
+}else{
+
+const arr=fbDataToCategories(existing);
+
+if(arr && arr.length) CATEGORIES=arr;
+
+}
+
+db.ref("questions_data").on("value",snap=>{
+
+const val=snap.val();
+
+const arr=fbDataToCategories(val);
+
+if(arr && arr.length){
+
+CATEGORIES=arr;
+
+if(mode==="admin") renderAdminGame();
+
+}
+
+});
+
+}catch(e){
+
+console.error("Soru bankası yüklenemedi:",e);
+
+}
+
+}
+
+
+/* =========================================================
+   YÖNETİCİ PANELİ
+========================================================= */
+
+const ADMIN_PASSWORD="yalanci2026"; // Bunu kendi şifrenle değiştir
+
+let adminUnlocked=false;
+
+let adminScreen="home"; // "home" | category id
+
+function openAdmin(){
+
+if(!adminUnlocked){
+
+const pw=prompt("Yönetici şifresi:");
+
+if(pw!==ADMIN_PASSWORD){
+
+alert("Yanlış şifre.");
+
+return;
+
+}
+
+adminUnlocked=true;
+
+}
+
+mode="admin";
+
+adminScreen="home";
+
+renderAdminGame();
+
+}
+
+function escapeAttr(s){
+
+return (s||"").toString()
+
+.replace(/&/g,"&amp;")
+
+.replace(/"/g,"&quot;")
+
+.replace(/</g,"&lt;");
+
+}
+
+function slugCategoryId(name){
+
+const map={ç:"c",ğ:"g",ı:"i",ö:"o",ş:"s",ü:"u"};
+
+let s=(name||"").trim().toLocaleLowerCase("tr-TR");
+
+s=s.replace(/[çğıöşü]/g,ch=>map[ch]||ch);
+
+s=s.replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"");
+
+if(!s) s="kategori";
+
+let base=s,i=1;
+
+while(CATEGORIES.some(c=>c.id===s)){
+
+i++;
+
+s=base+"_"+i;
+
+}
+
+return s;
+
+}
+
+function renderAdminGame(){
+
+if(adminScreen==="home"){
+
+renderAdminHome();
+
+}else{
+
+renderAdminCategory(adminScreen);
+
+}
+
+}
+
+function renderAdminHome(){
+
+document.getElementById("app").innerHTML=`
+
+<div class="topbar">
+<div class="brand"><span class="dot"></span>YALANCI · Yönetici</div>
+</div>
+
+<main>
+
+${
+!firebaseReady
+?
+`<div class="card" style="border-color:var(--coral)">
+<p class="sub">Firebase ayarlı değil — buradan yapılan değişiklikler kalıcı olmaz ve online oyunculara yansımaz.</p>
+</div>`
+:
+""
+}
+
+<div class="card">
+
+<div class="stage-label">Yeni Kategori</div>
+
+<h2 class="headline" style="font-size:19px">Kategori Ekle</h2>
+
+<input type="text" id="adminCatName" placeholder="Kategori adı (örn. Müzik)">
+
+<input type="text" id="adminCatIcon" placeholder="Emoji (örn. 🎵)">
+
+<button class="btn btn-gold" onclick="adminAddCategory()">Kategori Ekle</button>
+
+</div>
+
+<div class="card">
+
+<h2 class="headline" style="font-size:19px">Kategoriler</h2>
+
+${
+CATEGORIES.map(c=>`
+
+<div class="lobby-row" style="justify-content:space-between;margin-top:10px">
+
+<div>${c.icon} <strong>${c.name}</strong> <span class="cat-left">(${c.questions.length} soru)</span></div>
+
+<div style="display:flex;gap:8px">
+
+<button class="btn btn-ghost" style="margin:0;padding:8px 14px;width:auto" onclick="renderAdminCategory('${c.id}')">Düzenle</button>
+
+<button class="btn btn-ghost" style="margin:0;padding:8px 14px;width:auto;color:var(--coral)" onclick="adminDeleteCategory('${c.id}')">Sil</button>
+
+</div>
+
+</div>
+
+`).join("")
+}
+
+</div>
+
+<button class="btn btn-ghost" onclick="adminUnlocked=false;mode=null;render()">← Ana Menü</button>
+
+</main>
+`;
+
+}
+
+async function adminAddCategory(){
+
+const name=(document.getElementById("adminCatName").value||"").trim();
+
+const icon=(document.getElementById("adminCatIcon").value||"❓").trim();
+
+if(!name){
+
+alert("Kategori adı gir.");
+
+return;
+
+}
+
+const id=slugCategoryId(name);
+
+CATEGORIES=[...CATEGORIES,{id,name,icon,questions:[]}];
+
+await saveCategoriesToFirebase();
+
+renderAdminHome();
+
+}
+
+async function adminDeleteCategory(id){
+
+if(!confirm("Bu kategoriyi ve tüm sorularını silmek istediğine emin misin?")) return;
+
+CATEGORIES=CATEGORIES.filter(c=>c.id!==id);
+
+await saveCategoriesToFirebase();
+
+renderAdminHome();
+
+}
+
+function renderAdminCategory(catId){
+
+adminScreen=catId;
+
+const cat=CATEGORIES.find(c=>c.id===catId);
+
+if(!cat){
+
+renderAdminHome();
+
+return;
+
+}
+
+document.getElementById("app").innerHTML=`
+
+<div class="topbar">
+<div class="brand"><span class="dot"></span>${cat.icon} ${cat.name}</div>
+</div>
+
+<main>
+
+<div class="card">
+
+<div class="stage-label">Yeni Soru</div>
+
+<h2 class="headline" style="font-size:18px">Soru Ekle</h2>
+
+<label class="field-label">Soru metni</label>
+<input type="text" id="newQ_q" placeholder="Örn. Türkiye'nin başkenti neresidir?">
+
+<label class="field-label">Doğru cevap</label>
+<input type="text" id="newQ_correct" placeholder="Örn. Ankara">
+
+<label class="field-label">Yanlış seçenekler (yeterli oyuncu cevabı olmazsa kullanılır)</label>
+<input type="text" id="newQ_extra1" placeholder="Yanlış seçenek 1">
+<input type="text" id="newQ_extra2" placeholder="Yanlış seçenek 2">
+<input type="text" id="newQ_extra3" placeholder="Yanlış seçenek 3">
+<input type="text" id="newQ_extra4" placeholder="Yanlış seçenek 4">
+
+<button class="btn btn-gold" onclick="adminAddQuestion('${catId}')">Soruyu Ekle</button>
+
+</div>
+
+<div class="card">
+
+<h2 class="headline" style="font-size:18px">Sorular (${cat.questions.length})</h2>
+
+${
+cat.questions.map((q,i)=>`
+
+<div class="card" style="background:var(--bg-deep);margin-top:12px">
+
+<label class="field-label">Soru</label>
+<input type="text" id="editQ_${i}_q" value="${escapeAttr(q.q)}">
+
+<label class="field-label">Doğru cevap</label>
+<input type="text" id="editQ_${i}_correct" value="${escapeAttr(q.correct)}">
+
+<label class="field-label">Yanlış seçenekler</label>
+<input type="text" id="editQ_${i}_extra1" value="${escapeAttr((q.extra||[])[0]||"")}">
+<input type="text" id="editQ_${i}_extra2" value="${escapeAttr((q.extra||[])[1]||"")}">
+<input type="text" id="editQ_${i}_extra3" value="${escapeAttr((q.extra||[])[2]||"")}">
+<input type="text" id="editQ_${i}_extra4" value="${escapeAttr((q.extra||[])[3]||"")}">
+
+<div style="display:flex;gap:8px;margin-top:10px">
+<button class="btn btn-primary" style="margin:0" onclick="adminSaveQuestion('${catId}',${i})">Kaydet</button>
+<button class="btn btn-ghost" style="margin:0;color:var(--coral)" onclick="adminDeleteQuestion('${catId}',${i})">Sil</button>
+</div>
+
+</div>
+
+`).join("")
+}
+
+</div>
+
+<button class="btn btn-ghost" onclick="renderAdminHome()">← Kategorilere Dön</button>
+
+</main>
+`;
+
+}
+
+function readQuestionForm(prefix){
+
+const q=(document.getElementById(prefix+"_q").value||"").trim();
+
+const correct=(document.getElementById(prefix+"_correct").value||"").trim();
+
+const extra=[1,2,3,4]
+
+.map(i=>(document.getElementById(prefix+"_extra"+i).value||"").trim())
+
+.filter(Boolean);
+
+if(!q||!correct||extra.length<2){
+
+alert("Soru metni, doğru cevap ve en az 2 yanlış seçenek girmelisin.");
+
+return null;
+
+}
+
+return{ q, correct, extra };
+
+}
+
+async function adminAddQuestion(catId){
+
+const data=readQuestionForm("newQ");
+
+if(!data) return;
+
+const cat=CATEGORIES.find(c=>c.id===catId);
+
+cat.questions.push(data);
+
+await saveCategoriesToFirebase();
+
+renderAdminCategory(catId);
+
+}
+
+async function adminSaveQuestion(catId,index){
+
+const data=readQuestionForm("editQ_"+index);
+
+if(!data) return;
+
+const cat=CATEGORIES.find(c=>c.id===catId);
+
+cat.questions[index]=data;
+
+const ok=await saveCategoriesToFirebase();
+
+if(ok) alert("Kaydedildi.");
+
+}
+
+async function adminDeleteQuestion(catId,index){
+
+if(!confirm("Bu soruyu silmek istediğine emin misin?")) return;
+
+const cat=CATEGORIES.find(c=>c.id===catId);
+
+cat.questions.splice(index,1);
+
+await saveCategoriesToFirebase();
+
+renderAdminCategory(catId);
+
+}
+
+
+/* =========================================================
+   ONLINE MENU
+========================================================= */
+
+function openOnlineSetup(){
+
+mode="online";
+
+onlineName="";
+
+renderOnlineSetup();
+
+}
+
+function renderOnlineSetup(){
+
+document.getElementById("app").innerHTML=`
+
+<div class="topbar">
+
+<div class="brand">
+<span class="dot"></span>
+YALANCI
+</div>
+
+</div>
+
+<main>
+
+${
+!firebaseReady
+?
+`
+<div class="card" style="border-color:var(--coral)">
+<div class="stage-label" style="color:var(--coral)">Kurulum eksik</div>
+<h2 class="headline" style="font-size:19px">Firebase ayarlanmadı</h2>
+<p class="sub">
+${
+firebaseInitError
+?
+`Teknik hata: ${firebaseInitError}`
+:
+`Online oda farklı cihazlar arasında çalışabilmesi için kodun içindeki
+<code>firebaseConfig</code> nesnesini kendi Firebase projenin bilgileriyle
+doldurman gerekiyor. Doldurulana kadar oda oluşturulamaz.`
+}
+</p>
+</div>
+`
+:
+""
+}
+
+<div class="card">
+
+<div class="stage-label">
+Online Oyun
+</div>
+
+<h2 class="headline">
+Oda Oluştur
+</h2>
+
+<p class="sub">
+Oyunu sen kur. Diğer oyuncular QR kod veya oda koduyla katılsın.
+</p>
+
+<input
+type="text"
+id="hostName"
+placeholder="Adın..."
+>
+
+<button
+class="btn btn-gold"
+onclick="createOnlineRoom()">
+Oda Oluştur
+</button>
+
+</div>
+
+
+<div class="card">
+
+<div class="stage-label">
+Oyuna Katıl
+</div>
+
+<h2 class="headline">
+Oda Kodu
+</h2>
+
+<input
+type="text"
+id="joinName"
+placeholder="Adın..."
+>
+
+<input
+type="text"
+id="joinCode"
+placeholder="Oda kodu..."
+style="text-transform:uppercase"
+>
+
+<button
+class="btn btn-primary"
+onclick="joinOnlineRoom()">
+Odaya Katıl
+</button>
+
+<p id="onlineSetupError" class="error-text"></p>
+
+</div>
+
+
+<button
+class="btn btn-ghost"
+onclick="mode=null;render()">
+← Geri
+</button>
+
+</main>
+`;
+}
+
+function showOnlineSetupError(msg){
+
+const el=document.getElementById("onlineSetupError");
+
+if(el) el.textContent=msg;
+else alert(msg);
+
+}
+
+
+/* =========================================================
+   CREATE ROOM
+========================================================= */
+
+async function createOnlineRoom(){
+
+if(!firebaseReady){
+
+showOnlineSetupError("Önce Firebase ayarlarını tamamlamalısın (yukarıdaki uyarıya bak).");
+
+return;
+
+}
+
+const name=
+(document.getElementById("hostName").value||"").trim();
+
+if(!name){
+
+showOnlineSetupError("Adını gir.");
+
+return;
+
+}
+
+onlineName=name;
+
+roomCode=generateRoomCode();
+
+isHost=true;
+
+const usedQ={};
+
+CATEGORIES.forEach(c=>{ usedQ[c.id]=[]; });
+
+const room={
+phase:"lobby",
+host:name,
+players:[name],
+scores:{[name]:0},
+round:0,
+pickerIndex:0,
+usedQuestions:usedQ,
+categoryId:null,
+question:null,
+options:null,
+roundChoices:null
+};
+
+roomState=room;
+
+const ok=await storageSet(
+"YALANCI_ROOM_"+roomCode,
+room,
+true
+);
+
+if(!ok){
+
+roomState=null;
+
+roomCode=null;
+
+isHost=false;
+
+showOnlineSetupError("Oda oluşturulamadı (Firebase'e yazma başarısız oldu). İnternet bağlantını ve Firebase ayarlarını kontrol et.");
+
+return;
+
+}
+
+startRoomPolling();
+
+}
+
+
+/* =========================================================
+   JOIN ROOM
+========================================================= */
+
+async function joinOnlineRoom(){
+
+if(!firebaseReady){
+
+showOnlineSetupError("Önce Firebase ayarlarını tamamlamalısın (yukarıdaki uyarıya bak).");
+
+return;
+
+}
+
+const name=
+(document.getElementById("joinName").value||"").trim();
+
+const code=
+(document.getElementById("joinCode").value||"")
+.trim()
+.toUpperCase();
+
+if(!name||!code){
+
+showOnlineSetupError("Ad ve oda kodunu gir.");
+
+return;
+
+}
+
+const room=
+normalizeRoom(await storageGet(
+"YALANCI_ROOM_"+code,
+true
+));
+
+if(!room){
+
+showOnlineSetupError("Oda bulunamadı. Kodu kontrol et.");
+
+return;
+
+}
+
+if(room.phase!=="lobby"){
+
+showOnlineSetupError("Bu oyun zaten başladı.");
+
+return;
+
+}
+
+if(!room.players.includes(name)){
+
+room.players.push(name);
+
+room.scores[name]=0;
+
+const ok=await storageSet(
+"YALANCI_ROOM_"+code,
+room,
+true
+);
+
+if(!ok){
+
+showOnlineSetupError("Odaya katılamadın (Firebase'e yazma başarısız oldu). İnternet bağlantını kontrol et ve tekrar dene.");
+
+return;
+
+}
+
+}
+
+onlineName=name;
+
+roomCode=code;
+
+isHost=false;
+
+roomState=room;
+
+startRoomPolling();
+
+}
+
+
+/* =========================================================
+   ONLINE LOBBY
+========================================================= */
+
+function renderOnlineLobby(){
+
+if(!roomCode) return;
+
+const url=
+location.href.split("?")[0]+
+"?room="+roomCode;
+
+document.getElementById("app").innerHTML=`
+
+<div class="topbar">
+
+<div class="brand">
+<span class="dot"></span>
+YALANCI
+</div>
+
+<div class="round-pill">
+Lobby
+</div>
+
+</div>
+
+<main>
+
+<div class="card">
+
+<div class="stage-label">
+Oda Kodu
+</div>
+
+<div class="code-box">
+${roomCode}
+</div>
+
+<div class="qr-wrap">
+
+<div id="qrcode"></div>
+
+</div>
+
+<p class="sub" style="text-align:center">
+
+QR kodu diğer oyunculara göster.
+Telefonlarıyla tarayıp oyuna katılabilirler.
+
+</p>
+
+</div>
+
+
+<div class="card">
+
+<h3>
+Oyuncular
+</h3>
+
+<div class="lobby-list">
+
+${
+(roomState?.players||[]).map((p,i)=>`
+
+<div class="lobby-row">
+
+<div style="
+width:36px;
+height:36px;
+border-radius:10px;
+background:#ff5d7322;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:800">
+
+${p.charAt(0).toUpperCase()}
+
+</div>
+
+<div>
+${p}
+</div>
+
+${
+p===roomState.host
+?
+`<span class="cat-left">Kurucu</span>`
+:
+""
+}
+
+</div>
+
+`).join("")
+}
+
+</div>
+
+</div>
+
+
+${
+isHost
+?
+`
+
+<button
+class="btn btn-primary"
+${(roomState?.players||[]).length<2?"disabled":""}
+onclick="startOnlineGame()">
+
+Oyunu Başlat
+
+</button>
+
+${
+(roomState?.players||[]).length<2
+?
+`<p class="footnote">Başlamak için en az 2 oyuncu gerekir.</p>`
+:
+""
+}
+
+`
+:
+`
+
+<div class="card waiting">
+
+<div style="font-size:40px">
+⏳
+</div>
+
+<p class="sub">
+Kurucunun oyunu başlatması bekleniyor...
+</p>
+
+</div>
+
+`
+}
+
+<button class="btn btn-ghost" onclick="manualRefreshRoom()">
+🔄 Listeyi Yenile
+</button>
+
+<button class="leave-link" style="margin-top:14px" onclick="leaveOnlineRoom()">
+Odadan çık
+</button>
+
+</main>
+`;
+
+
+/* QR */
+
+const qr=document.getElementById("qrcode");
+
+if(qr && window.QRCode){
+
+qr.innerHTML="";
+
+new QRCode(qr,{
+text:url,
+width:180,
+height:180
+});
+
+}
+
+}
+
+
+/* =========================================================
+   ONLINE — OYUN AKIŞI (kategori · cevap · seçim · sonuç)
+========================================================= */
+
+function onlineTopbar(){
+
+return`
+
+<div class="topbar">
+
+<div class="brand">
+<span class="dot"></span>
+YALANCI
+</div>
+
+<div style="display:flex;align-items:center;gap:10px">
+
+<div class="round-pill">
+${roomState.round?"Tur "+roomState.round:"Lobby"} · ${roomCode}
+</div>
+
+<button class="leave-link" onclick="leaveOnlineRoom()">Çık</button>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+function onlineScoreBar(){
+
+return`
+
+<div class="scorebar">
+
+${
+(roomState.players||[]).map(p=>`
+
+<div class="score-chip">
+<div class="nm">${p}</div>
+<div class="pt">${(roomState.scores&&roomState.scores[p])||0}</div>
+</div>
+
+`).join("")
+}
+
+</div>
+
+`;
+
+}
+
+function renderOnlineGame(){
+
+if(!roomState) return;
+
+if(roomState.phase==="lobby"){ renderOnlineLobby(); return; }
+if(roomState.phase==="category_pick"){ renderOnlineCategoryPick(); return; }
+if(roomState.phase==="answering"){ renderOnlineAnswering(); return; }
+if(roomState.phase==="select"){ renderOnlineSelect(); return; }
+if(roomState.phase==="round_result"){ renderOnlineRoundResult(); return; }
+if(roomState.phase==="game_over"){ renderOnlineGameOver(); return; }
+
+}
+
+async function startOnlineGame(){
+
+if(!isHost) return;
+
+try{
+
+const room=roomState;
+
+room.phase="category_pick";
+
+room.round=1;
+
+room.pickerIndex=0;
+
+room.players.forEach(p=>{
+room.scores[p]=room.scores[p]||0;
+});
+
+const ok=await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+
+if(!ok){
+
+alert("Oyun başlatılamadı: Firebase'e yazma başarısız oldu. İnternet bağlantını kontrol et ve tekrar dene.");
+
+return;
+
+}
+
+roomState=room;
+
+renderOnlineGame();
+
+}catch(e){
+
+console.error("startOnlineGame hatası:",e);
+
+alert("Beklenmeyen bir hata oluştu: "+e.message);
+
+}
+
+}
+
+function renderOnlineCategoryPick(){
+
+const pickerName=
+roomState.players[roomState.pickerIndex%roomState.players.length];
+
+const isMine=pickerName===onlineName;
+
+document.getElementById("app").innerHTML=`
+
+${onlineTopbar()}
+
+${onlineScoreBar()}
+
+<main>
+
+${
+isMine
+?
+`
+<div class="card">
+
+<div class="stage-label">Senin sıran</div>
+
+<h2 class="headline">Bir kategori seç</h2>
+
+<div class="cat-grid">
+
+${
+CATEGORIES.map(c=>{
+
+const remaining=
+c.questions.length-
+((roomState.usedQuestions||{})[c.id]||[]).length;
+
+return`
+
+<button class="cat-btn" ${remaining<=0?"disabled":""}
+onclick="onlineSelectCategory('${c.id}')">
+<span class="cat-icon">${c.icon}</span>
+${c.name}
+<span class="cat-left">${remaining} soru</span>
+</button>
+
+`;
+
+}).join("")
+}
+
+</div>
+
+</div>
+`
+:
+`
+<div class="card pass-screen">
+<div class="avatar" style="background:#ff5d7322">👤</div>
+<div class="stage-label">Bekleniyor</div>
+<h2 class="headline">${pickerName} kategori seçiyor…</h2>
+</div>
+`
+}
+
+</main>
+`;
+
+}
+
+async function onlineSelectCategory(id){
+
+try{
+
+const room=roomState;
+
+const category=getCategory(id);
+
+const used=(room.usedQuestions||{})[id]||[];
+
+const available=category.questions
+.map((q,i)=>i)
+.filter(i=>!used.includes(i));
+
+if(!available.length) return;
+
+const index=
+available[Math.floor(Math.random()*available.length)];
+
+used.push(index);
+
+room.usedQuestions=room.usedQuestions||{};
+
+room.usedQuestions[id]=used;
+
+room.categoryId=id;
+
+room.question={
+...category.questions[index],
+categoryName:category.name
+};
+
+room.options=null;
+
+room.roundChoices=null;
+
+room.phase="answering";
+
+room.answeringStartedAt=Date.now();
+
+const ok=await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+
+if(!ok){
+
+alert("Kategori kaydedilemedi: Firebase'e yazma başarısız oldu. Tekrar dene.");
+
+return;
+
+}
+
+roomState=room;
+
+renderOnlineGame();
+
+}catch(e){
+
+console.error("onlineSelectCategory hatası:",e);
+
+alert("Beklenmeyen bir hata oluştu: "+e.message);
+
+}
+
+}
+
+function renderOnlineAnswering(){
+
+const q=roomState.question;
+
+if(onlineLocalAnswerStage==="attempt1"||onlineLocalAnswerStage==="attempt2"){
+
+const seconds=
+onlineLocalAnswerStage==="attempt1"
+?
+ANSWER1_TIME
+:
+ANSWER2_TIME;
+
+document.getElementById("app").innerHTML=`
+
+${onlineTopbar()}
+${onlineScoreBar()}
+
+<main>
+
+<div class="question-card">
+
+<div class="question-cat">${q.categoryName} · Sen: ${onlineName}</div>
+
+<div class="question-text">${q.q}</div>
+
+<div class="timer-wrap">
+<div class="timer-ring" id="timerRing" style="--pct:100">
+<div class="inner"><span id="timerNum">${timeLeft||seconds}</span></div>
+</div>
+</div>
+
+<input type="text" id="answerInput" placeholder="Cevabını yaz..."
+autocomplete="off"
+onkeydown="if(event.key==='Enter')onlineSubmitFromInput()">
+
+<button class="btn btn-primary" onclick="onlineSubmitFromInput()">
+Cevabı Gönder
+</button>
+
+</div>
+
+<p class="footnote">
+${onlineLocalAnswerStage==="attempt1"?"İlk cevap · 30 saniye":"İkinci cevap · 20 saniye"}
+— diğer oyuncular da aynı anda yazıyor.
+</p>
+
+</main>
+`;
+
+const input=document.getElementById("answerInput");
+
+if(input) input.focus();
+
+updateTimerDisplay();
+
+}else if(onlineLocalAnswerStage==="correct1"||onlineLocalAnswerStage==="correct2"){
+
+document.getElementById("app").innerHTML=`
+
+${onlineTopbar()}
+${onlineScoreBar()}
+
+<main>
+
+<div class="card pass-screen">
+
+<div style="font-size:50px">🎯</div>
+
+<h2 class="headline">Cevabınız doğru!</h2>
+
+<p class="sub">
+Başka bir cevap verin. Doğru cevabınız seçeneklere eklenmeyecek.
+</p>
+
+<button class="btn btn-primary"
+onclick="${onlineLocalAnswerStage==='correct1'?'onlineGoSecondAnswer()':'onlineFinishAfterSecondCorrect()'}">
+Devam Et
+</button>
+
+</div>
+
+</main>
+`;
+
+}else{
+
+document.getElementById("app").innerHTML=`
+
+${onlineTopbar()}
+${onlineScoreBar()}
+
+<main>
+
+<div class="card pass-screen">
+
+<div style="font-size:40px">✅</div>
+
+<h2 class="headline">Cevabın gönderildi</h2>
+
+<p class="sub">Diğer oyuncular bekleniyor…</p>
+
+</div>
+
+</main>
+`;
+
+}
+
+}
+
+function onlineSubmitFromInput(){
+
+const input=document.getElementById("answerInput");
+
+onlineSubmitAnswer(input?input.value:"");
+
+}
+
+function onlineSubmitAnswer(text){
+
+clearInterval(timer);
+
+text=(text||"").trim();
+
+const isCorrect=
+text!=="" &&
+normalize(text)===normalize(roomState.question.correct);
+
+if(isCorrect){
+
+onlineLocalAnswerStage=
+onlineLocalAnswerStage==="attempt1"?"correct1":"correct2";
+
+renderOnlineGame();
+
+return;
+
+}
+
+onlineFinalizeAnswer(text||null);
+
+}
+
+function onlineGoSecondAnswer(){
+
+onlineLocalAnswerStage="attempt2";
+
+renderOnlineGame();
+
+startTimer(ANSWER2_TIME,()=>onlineSubmitAnswer(""));
+
+}
+
+function onlineFinishAfterSecondCorrect(){
+
+onlineFinalizeAnswer(null);
+
+}
+
+async function onlineFinalizeAnswer(wrongOrNull){
+
+onlineMyWrong=wrongOrNull;
+
+onlineLocalAnswerStage="waiting";
+
+renderOnlineGame();
+
+await storageSet(
+roomKey(roomCode,"ans",roomState.round,onlineName),
+{wrong:wrongOrNull},
+true
+);
+
+}
+
+function renderOnlineSelect(){
+
+if(onlineLocalSelectStage==="selecting"){
+
+const myOptions=(roomState.options||[]).filter(o=>
+!(o.owners||[]).includes(onlineName)
+);
+
+const letters=["A","B","C","D","E","F","G"];
+
+document.getElementById("app").innerHTML=`
+
+${onlineTopbar()}
+${onlineScoreBar()}
+
+<main>
+
+<div class="card">
+
+<div class="stage-label">Doğruyu Bul</div>
+
+<h2 class="headline" style="font-size:20px">${roomState.question.q}</h2>
+
+<p class="sub">Doğru cevabı seç. Kendi yazdığın cevap burada görünmüyor.</p>
+
+${
+myOptions.map((o,i)=>`
+
+<button class="option-btn" onclick='onlineChooseAnswer(${jsAttr(o.text)})'>
+<span class="option-letter">${letters[i]}</span>
+${o.text}
+</button>
+
+`).join("")
+}
+
+</div>
+
+</main>
+`;
+
+}else{
+
+document.getElementById("app").innerHTML=`
+
+${onlineTopbar()}
+${onlineScoreBar()}
+
+<main>
+
+<div class="card pass-screen">
+
+<div style="font-size:40px">🗳️</div>
+
+<h2 class="headline">Seçimin gönderildi</h2>
+
+<p class="sub">Diğer oyuncular bekleniyor…</p>
+
+</div>
+
+</main>
+`;
+
+}
+
+}
+
+async function onlineChooseAnswer(text){
+
+onlineMyChoice=text;
+
+onlineLocalSelectStage="waiting";
+
+renderOnlineGame();
+
+await storageSet(
+roomKey(roomCode,"cho",roomState.round,onlineName),
+{choice:text},
+true
+);
+
+}
+
+function renderOnlineRoundResult(){
+
+const sorted=[...roomState.players].sort(
+(a,b)=>(roomState.scores[b]||0)-(roomState.scores[a]||0)
+);
+
+document.getElementById("app").innerHTML=`
+
+${onlineTopbar()}
+${onlineScoreBar()}
+
+<main>
+
+<div class="card" style="text-align:center">
+
+<div class="stage-label">Tur Sonucu</div>
+
+<h2 class="headline">Doğru cevap</h2>
+
+<div style="font-size:28px;color:var(--gold);font-weight:800;margin-top:10px">
+${roomState.question.correct}
+</div>
+
+</div>
+
+${revealHTML(roomState.options,roomState.roundChoices)}
+
+<div class="card">
+
+<h3>Sıralama</h3>
+
+<div class="leaderboard">
+
+${
+sorted.map((p,i)=>`
+
+<div class="lb-row">
+<div class="lb-rank">${i+1}</div>
+<div class="lb-name">${p}</div>
+${
+(roomState.lastGain&&roomState.lastGain[p])
+?
+`<div class="lb-delta">+${roomState.lastGain[p]}</div>`
+:
+""
+}
+<div class="lb-pts">${roomState.scores[p]||0} puan</div>
+</div>
+
+`).join("")
+}
+
+</div>
+
+</div>
+
+${
+isHost
+?
+`<button class="btn btn-primary" onclick="onlineNextRound()">Sonraki Soru</button>`
+:
+`<div class="card waiting"><p class="sub">Kurucunun sonraki soruyu başlatması bekleniyor…</p></div>`
+}
+
+</main>
+`;
+
+}
+
+async function onlineNextRound(){
+
+if(!isHost) return;
+
+const room=roomState;
+
+const remaining=CATEGORIES.some(
+c=>(room.usedQuestions[c.id]||[]).length<c.questions.length
+);
+
+if(!remaining || room.round>=TOTAL_ROUNDS){
+
+room.phase="game_over";
+
+await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+
+roomState=room;
+
+renderOnlineGame();
+
+return;
+
+}
+
+room.round++;
+
+room.pickerIndex=(room.pickerIndex+1)%room.players.length;
+
+room.phase="category_pick";
+
+await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+
+roomState=room;
+
+renderOnlineGame();
+
+}
+
+function renderOnlineGameOver(){
+
+const sorted=[...roomState.players].sort(
+(a,b)=>(roomState.scores[b]||0)-(roomState.scores[a]||0)
+);
+
+document.getElementById("app").innerHTML=`
+
+${onlineTopbar()}
+
+<main>
+
+<div class="card pass-screen">
+<div style="font-size:60px">🏆</div>
+<h1 class="headline">Oyun Bitti!</h1>
+</div>
+
+<div class="card">
+<div class="leaderboard">
+
+${
+sorted.map((p,i)=>`
+
+<div class="lb-row">
+<div class="lb-rank">${i+1}</div>
+<div class="lb-name">${p}</div>
+<div class="lb-pts">${roomState.scores[p]||0}</div>
+</div>
+
+`).join("")
+}
+
+</div>
+</div>
+
+<button class="btn btn-primary" onclick="leaveOnlineRoom()">Ana Menü</button>
+
+</main>
+`;
+
+}
+
+function leaveOnlineRoom(){
+
+if(roomPoll){ clearInterval(roomPoll); }
+
+roomPoll=null;
+
+clearInterval(timer);
+
+roomCode=null;
+
+isHost=false;
+
+roomState=null;
+
+onlineName="";
+
+onlineLastRound=0;
+
+onlineLocalAnswerStage="idle";
+
+onlineMyWrong=null;
+
+onlineLocalSelectStage="idle";
+
+onlineMyChoice=null;
+
+lastRoomSnapshot=null;
+
+mode=null;
+
+render();
+
+}
+
+
+/* =========================================================
+   ONLINE POLLING
+========================================================= */
+
+function startRoomPolling(){
+
+if(roomPoll){
+clearInterval(roomPoll);
+}
+
+lastRoomSnapshot=null;
+
+renderOnlineGame();
+
+pollRoom();
+
+roomPoll=setInterval(
+pollRoom,
+1200
+);
+
+}
+
+/*
+  Telefon kilitlenince veya uygulama arka plana atılınca
+  tarayıcılar setInterval'i yavaşlatır/durdurur — bu yüzden
+  ana ekran, ikinci oyuncu katılsa bile bunu göremeyebilir.
+  Sekme/telefon tekrar aktif olduğu anda hemen bir kez daha
+  sorgu atarak bunu düzeltiyoruz.
+*/
+
+let visibilityListenerAdded=false;
+
+if(!visibilityListenerAdded){
+
+document.addEventListener("visibilitychange",()=>{
+
+if(document.visibilityState==="visible" && roomCode){
+
+pollRoom();
+
+}
+
+});
+
+visibilityListenerAdded=true;
+
+}
+
+function manualRefreshRoom(){
+
+if(roomCode){
+
+pollRoom();
+
+}
+
+}
+
+async function pollRoom(){
+
+if(!roomCode) return;
+
+const room=
+normalizeRoom(await storageGet(
+"YALANCI_ROOM_"+roomCode,
+true
+));
+
+if(!room) return;
+
+roomState=room;
+
+onlinePlayers=room.players||[];
+
+onlineScores=room.scores||{};
+
+if(room.round!==onlineLastRound){
+
+onlineLastRound=room.round;
+
+onlineLocalAnswerStage="idle";
+onlineMyWrong=null;
+onlineLocalSelectStage="idle";
+onlineMyChoice=null;
+
+}
+
+if(isHost){
+
+await hostMaybeAdvance();
+
+}
+
+let justEntered=false;
+
+if(roomState.phase==="answering" && onlineLocalAnswerStage==="idle"){
+
+onlineLocalAnswerStage="attempt1";
+
+justEntered=true;
+
+}
+
+if(roomState.phase==="select" && onlineLocalSelectStage==="idle"){
+
+onlineLocalSelectStage="selecting";
+
+justEntered=true;
+
+}
+
+const stageBusy=
+onlineLocalAnswerStage==="attempt1"||
+onlineLocalAnswerStage==="attempt2";
+
+const snapshot=JSON.stringify({
+
+r:roomState,
+
+a:onlineLocalAnswerStage,
+
+s:onlineLocalSelectStage
+
+});
+
+const changed=snapshot!==lastRoomSnapshot;
+
+if(justEntered || (!stageBusy && changed)){
+
+renderOnlineGame();
+
+lastRoomSnapshot=snapshot;
+
+}
+
+if(justEntered && roomState.phase==="answering"){
+
+startTimer(ANSWER1_TIME,()=>onlineSubmitAnswer(""));
+
+}
+
+}
+
+async function hostMaybeAdvance(){
+
+const room=roomState;
+
+if(!room) return;
+
+/* Bir oyuncu bir sebeple hiç cevap/seçim göndermezse
+   (uygulamayı kapattı, bağlantısı koptu, vb.) oyun sonsuza
+   kadar onu beklemesin diye bir üst zaman sınırı koyuyoruz.
+   Süre dolunca, cevap vermeyenler o turda "cevapsız" kabul
+   edilip oyun devam eder. */
+
+const ANSWER_PHASE_TIMEOUT_MS=(ANSWER1_TIME+ANSWER2_TIME+15)*1000;
+
+const SELECT_PHASE_TIMEOUT_MS=45*1000;
+
+if(room.phase==="answering"){
+
+const wrongMap={};
+
+let allIn=true;
+
+for(const name of room.players){
+
+const a=await storageGet(
+roomKey(roomCode,"ans",room.round,name),
+true
+);
+
+if(a){
+wrongMap[name]=a.wrong;
+}else{
+allIn=false;
+}
+
+}
+
+const timedOut=
+room.answeringStartedAt &&
+(Date.now()-room.answeringStartedAt>ANSWER_PHASE_TIMEOUT_MS);
+
+if(allIn||timedOut){
+
+room.players.forEach(name=>{
+if(!(name in wrongMap)) wrongMap[name]=null;
+});
+
+room.options=attachOwners(
+buildOptions(room.question,Object.values(wrongMap)),
+wrongMap
+);
+
+room.phase="select";
+
+room.selectStartedAt=Date.now();
+
+await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+
+roomState=room;
+
+}
+
+}else if(room.phase==="select"){
+
+const choiceMap={};
+
+let allIn=true;
+
+for(const name of room.players){
+
+const c=await storageGet(
+roomKey(roomCode,"cho",room.round,name),
+true
+);
+
+if(c){
+choiceMap[name]=c.choice;
+}else{
+allIn=false;
+}
+
+}
+
+const timedOut=
+room.selectStartedAt &&
+(Date.now()-room.selectStartedAt>SELECT_PHASE_TIMEOUT_MS);
+
+if(allIn||timedOut){
+
+const gains={};
+
+room.players.forEach(name=>{
+
+const choiceText=choiceMap[name];
+
+if(choiceText===undefined) return; // hiç seçim yapmadı, puan yok
+
+const opt=(room.options||[]).find(o=>o.text===choiceText);
+
+if(!opt) return;
+
+if(opt.correct){
+
+room.scores[name]=(room.scores[name]||0)+POINTS_FOR_CORRECT;
+
+gains[name]=(gains[name]||0)+POINTS_FOR_CORRECT;
+
+}else if(opt.owners && opt.owners.length){
+
+opt.owners.forEach(owner=>{
+
+if(owner!==name){
+room.scores[owner]=(room.scores[owner]||0)+POINTS_PER_VOTE;
+gains[owner]=(gains[owner]||0)+POINTS_PER_VOTE;
+}
+
+});
+
+}
+
+});
+
+room.roundChoices=choiceMap;
+
+room.lastGain=gains;
+
+room.phase="round_result";
+
+await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+
+roomState=room;
+
+}
+
+}
+
+}
+
+
+/* =========================================================
+   AUTO JOIN FROM QR
+========================================================= */
+
+function checkRoomFromURL(){
+
+const params=
+new URLSearchParams(
+window.location.search
+);
+
+const room=params.get("room");
+
+if(!room) return;
+
+mode="online";
+
+setTimeout(()=>{
+
+renderOnlineSetup();
+
+const code=document.getElementById("joinCode");
+
+if(code){
+code.value=room.toUpperCase();
+}
+
+const nameField=document.getElementById("joinName");
+
+if(nameField) nameField.focus();
+
+},0);
+
+}
+
+
+/* =========================================================
+   INIT
+========================================================= */
+
+render();
+
+checkRoomFromURL();
+
+initQuestionBank();
+
+</script></body>
+</html>
