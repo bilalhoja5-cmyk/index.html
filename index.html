@@ -2389,6 +2389,8 @@ console.error("Firebase başlatılamadı:",e);
   arayüz kullanıcıyı uyarır.
 */
 
+let lastStorageError=null;
+
 async function storageGet(key){
 
 if(!firebaseReady) return null;
@@ -2402,6 +2404,8 @@ const val=snap.val();
 return (val===null||val===undefined)?null:val;
 
 }catch(e){
+
+lastStorageError=(e && (e.code||e.message))||String(e);
 
 console.error("storageGet hatası:",e);
 
@@ -2422,6 +2426,8 @@ await db.ref(key).set(value);
 return true;
 
 }catch(e){
+
+lastStorageError=(e && (e.code||e.message))||String(e);
 
 console.error("storageSet hatası:",e);
 
@@ -3118,7 +3124,7 @@ roomCode=null;
 
 isHost=false;
 
-showOnlineSetupError("Oda oluşturulamadı (Firebase'e yazma başarısız oldu). İnternet bağlantını ve Firebase ayarlarını kontrol et.");
+showOnlineSetupError("Oda oluşturulamadı (Firebase'e yazma başarısız oldu). Teknik detay: "+(lastStorageError||"bilinmiyor")+" — Firebase Console > Realtime Database > Rules kısmını kontrol et.");
 
 return;
 
@@ -3195,7 +3201,7 @@ true
 
 if(!ok){
 
-showOnlineSetupError("Odaya katılamadın (Firebase'e yazma başarısız oldu). İnternet bağlantını kontrol et ve tekrar dene.");
+showOnlineSetupError("Odaya katılamadın (Firebase'e yazma başarısız oldu). Teknik detay: "+(lastStorageError||"bilinmiyor")+" — Firebase Console > Realtime Database > Rules kısmını kontrol et.");
 
 return;
 
@@ -3481,7 +3487,7 @@ const ok=await storageSet("YALANCI_ROOM_"+roomCode,room,true);
 
 if(!ok){
 
-alert("Oyun başlatılamadı: Firebase'e yazma başarısız oldu. İnternet bağlantını kontrol et ve tekrar dene.");
+alert("Oyun başlatılamadı: Firebase'e yazma başarısız oldu. Teknik detay: "+(lastStorageError||"bilinmiyor"));
 
 return;
 
@@ -3612,7 +3618,7 @@ const ok=await storageSet("YALANCI_ROOM_"+roomCode,room,true);
 
 if(!ok){
 
-alert("Kategori kaydedilemedi: Firebase'e yazma başarısız oldu. Tekrar dene.");
+alert("Kategori kaydedilemedi: Firebase'e yazma başarısız oldu. Teknik detay: "+(lastStorageError||"bilinmiyor"));
 
 return;
 
