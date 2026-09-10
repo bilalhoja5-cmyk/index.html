@@ -6,16 +6,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
 :root{
-  --bg:#171029;
-  --bg-deep:#0f0a1c;
-  --panel:#241a3a;
-  --panel-2:#2c2047;
-  --line:rgba(245,239,230,.10);
-  --coral:#ff5d73;
+  --bg:#0c1326;
+  --bg-deep:#060a17;
+  --panel:#141d38;
+  --panel-2:#1a2647;
+  --line:rgba(219,232,255,.12);
+  --coral:#3d7bff;
   --gold:#ffc857;
   --mint:#4ade80;
-  --ink:#f5efe6;
-  --ink-dim:#b9a9c9;
+  --ink:#eef3ff;
+  --ink-dim:#93a5cf;
   --radius:20px;
 }
 
@@ -26,8 +26,8 @@ html,body{height:100%}
 body{
   margin:0;
   background:
-    radial-gradient(circle at 15% 0%,#3a2560 0%,transparent 45%),
-    radial-gradient(circle at 100% 30%,#2a1f4a 0%,transparent 50%),
+    radial-gradient(circle at 15% 0%,#1d3a8f 0%,transparent 45%),
+    radial-gradient(circle at 100% 30%,#12275c 0%,transparent 50%),
     var(--bg);
   color:var(--ink);
   font-family:'Inter',system-ui,sans-serif;
@@ -182,6 +182,13 @@ main{
   line-height:1.35;
 }
 
+.word-hint{
+  font-family:'Inter',sans-serif;
+  font-size:14px;
+  font-weight:500;
+  color:var(--ink-dim);
+}
+
 .timer-wrap{
   display:flex;
   align-items:center;
@@ -296,6 +303,34 @@ input[type=text]:focus{
   padding:50px 20px;
 }
 
+.gameover-card{
+  text-align:center;
+  padding:44px 20px;
+  background:
+    radial-gradient(circle at 50% 0%,#ffc85733 0%,transparent 60%),
+    var(--panel);
+  border-color:#ffc85755;
+}
+
+.gameover-trophy{
+  font-size:64px;
+  animation:trophy-bounce 1.8s ease-in-out infinite;
+  filter:drop-shadow(0 0 20px #ffc85788);
+}
+
+@keyframes trophy-bounce{
+  0%,100%{transform:translateY(0) rotate(-2deg)}
+  50%{transform:translateY(-8px) rotate(2deg)}
+}
+
+.gameover-winner{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:800;
+  font-size:22px;
+  color:#ffd76a;
+  margin-top:6px;
+}
+
 .avatar{
   width:84px;
   height:84px;
@@ -333,6 +368,17 @@ input[type=text]:focus{
   opacity:.3;
 }
 
+.cat-btn-selected{
+  border-color:var(--coral);
+  background:#3d7bff1a;
+}
+
+.time-choice-row{
+  display:flex;
+  gap:10px;
+  margin-top:8px;
+}
+
 .cat-icon{
   font-size:26px;
 }
@@ -348,7 +394,7 @@ input[type=text]:focus{
   margin-top:16px;
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:10px;
 }
 
 .lb-row{
@@ -356,25 +402,69 @@ input[type=text]:focus{
   align-items:center;
   gap:12px;
   background:var(--bg-deep);
-  border:1px solid var(--line);
+  border:1.5px solid var(--line);
   border-radius:14px;
   padding:12px 14px;
+  position:relative;
+  overflow:hidden;
+}
+
+.lb-row-gold{
+  border-color:#ffc857;
+  background:linear-gradient(120deg,#3a2f0f,var(--bg-deep) 60%);
+  box-shadow:0 0 22px -4px #ffc85788;
+  transform:scale(1.03);
+}
+
+.lb-row-silver{
+  border-color:#cbd5e1;
+  background:linear-gradient(120deg,#2a3040,var(--bg-deep) 60%);
+  box-shadow:0 0 14px -6px #cbd5e166;
+}
+
+.lb-row-bronze{
+  border-color:#d98a4a;
+  background:linear-gradient(120deg,#3a2515,var(--bg-deep) 60%);
+  box-shadow:0 0 14px -6px #d98a4a55;
 }
 
 .lb-rank{
-  width:26px;
-  height:26px;
-  border-radius:8px;
+  width:30px;
+  height:30px;
+  border-radius:9px;
   background:var(--panel-2);
   display:flex;
   align-items:center;
   justify-content:center;
   font-weight:700;
+  font-size:15px;
+  flex:none;
+}
+
+.lb-rank-gold{
+  background:linear-gradient(145deg,#ffd76a,#e8a318);
+  color:#332000;
+  font-size:19px;
+}
+
+.lb-rank-silver{
+  background:linear-gradient(145deg,#eef2f8,#a9b6c7);
+  color:#1c2534;
+  font-size:19px;
+}
+
+.lb-rank-bronze{
+  background:linear-gradient(145deg,#e2995c,#a85e2c);
+  color:#2a1400;
+  font-size:19px;
 }
 
 .lb-name{
   flex:1;
   font-weight:600;
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 
 .lb-delta{
@@ -388,11 +478,29 @@ input[type=text]:focus{
   color:var(--gold);
 }
 
+.lb-pts-gold{
+  font-size:24px;
+  color:#ffd76a;
+  text-shadow:0 0 14px #ffc85799;
+}
+
 .footnote{
   font-size:12px;
   color:var(--ink-dim);
   text-align:center;
   margin-top:14px;
+  line-height:1.5;
+}
+
+.answer-notice{
+  background:#164d3d;
+  color:var(--mint);
+  border-radius:12px;
+  padding:12px 14px;
+  font-weight:700;
+  font-size:14px;
+  text-align:center;
+  margin:12px 0;
   line-height:1.5;
 }
 
@@ -432,6 +540,76 @@ input[type=text]:focus{
   background:var(--bg-deep);
 }
 
+.avatar-mini{
+  width:30px;
+  height:30px;
+  border-radius:9px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+  flex:none;
+}
+
+.avatar-picker{
+  margin-top:14px;
+  padding:14px;
+  border-radius:16px;
+  background:var(--bg-deep);
+  border:1.5px solid var(--line);
+}
+
+.avatar-picker-preview{
+  width:56px;
+  height:56px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+  margin:0 auto 12px;
+}
+
+.avatar-picker-grid{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:8px;
+}
+
+.avatar-choice{
+  aspect-ratio:1;
+  border-radius:10px;
+  border:1.5px solid var(--line);
+  background:var(--panel);
+  font-size:18px;
+  cursor:pointer;
+}
+
+.avatar-choice-selected{
+  border-color:var(--coral);
+  background:#3d7bff22;
+}
+
+.avatar-picker-colors{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+  justify-content:center;
+}
+
+.avatar-color-choice{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  border:2px solid transparent;
+  cursor:pointer;
+  padding:0;
+}
+
+.avatar-color-selected{
+  border-color:var(--ink);
+}
+
 .qr-wrap{
   display:flex;
   justify-content:center;
@@ -454,6 +632,27 @@ input[type=text]:focus{
   border:1.5px dashed var(--gold);
   border-radius:16px;
   padding:16px;
+  flex:1;
+}
+
+.code-box-row{
+  display:flex;
+  align-items:stretch;
+  gap:8px;
+}
+
+.copy-code-btn{
+  flex:none;
+  width:84px;
+  background:var(--panel-2);
+  border:1.5px solid var(--line);
+  color:var(--ink);
+  border-radius:14px;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  white-space:normal;
+  line-height:1.3;
 }
 
 .lobby-list{
@@ -509,10 +708,21 @@ input[type=text]:focus{
    AYARLAR
 ========================================================= */
 
-const ANSWER1_TIME = 30;
-const ANSWER2_TIME = 20;
+/* Cevap yazma süresi (hem Elden Ele hem Online) — tek
+   aşamalı yazma penceresi: doğru cevap yazılırsa seçenek
+   olarak kaydedilmez, sadece bir sonraki oyuncuya geçilir
+   (eskiden ayrı 30+20 sn'lik iki deneme vardı, artık tek
+   45 sn'lik pencere var). */
+const WRITING_TIME = 45;
 
-const POINTS_FOR_CORRECT = 1;
+/* Kategori seçimi için süre (hem Elden Ele hem Online). */
+const CATEGORY_PICK_TIME = 20;
+
+/* Doğruyu bulma (seçim) aşaması için süre (hem Elden Ele
+   hem Online). */
+const SELECTION_TIME = 30;
+
+const POINTS_FOR_CORRECT = 2;
 const POINTS_PER_VOTE = 1;
 
 const MIN_OPTIONS = 5;
@@ -521,6 +731,20 @@ const MIN_OPTIONS = 5;
    toplam soru sayısına bakılmaksızın). Değiştirmek kolay:
    sadece bu sayıyı güncelle. */
 const TOTAL_ROUNDS = 10;
+
+/* =========================================================
+   AVATAR SİSTEMİ (emoji + renk — genişletilebilir)
+========================================================= */
+
+const AVATAR_EMOJIS=[
+"🦊","🐼","🐸","🐵","🦁","🐯",
+"🐨","🐰","🐙","🦄","🐲","🦉"
+];
+
+const AVATAR_COLORS=[
+"#3d7bff","#ffc857","#4ade80","#f472b6",
+"#a78bfa","#fb923c","#38bdf8","#f87171"
+];
 
 
 /* =========================================================
@@ -793,6 +1017,114 @@ correct:"Universal Serial Bus",
 extra:["United System Bus","Universal Standard Board","Unified Serial Board","Universal System Bridge"]
 }
 ]
+},
+
+{
+id:"garip",
+name:"Garip Bilgiler",
+icon:"🤯",
+questions:[
+{
+q:"Ahtapotların toplam kaç kalbi vardır?",
+correct:"3",
+extra:["1","2","4","5"]
+},
+{
+q:"Bal, uygun koşullarda bozulmadan binlerce yıl saklanabilir. Arkeologlar Mısır'da kaç yıllık yenilebilir bal örnekleri buldu?",
+correct:"3000 yıl",
+extra:["500 yıl","1000 yıl","100 yıl","10000 yıl"]
+},
+{
+q:"Tarihteki en kısa savaş olarak bilinen Anglo-Zanzibar Savaşı yaklaşık kaç dakika sürdü?",
+correct:"38 dakika",
+extra:["12 dakika","90 dakika","5 dakika","60 dakika"]
+},
+{
+q:"Ahtapotların kanı hangi renktedir?",
+correct:"Mavi",
+extra:["Yeşil","Mor","Kırmızı","Sarı"]
+},
+{
+q:"Muz, botanik sınıflandırmaya göre hangi meyve türüne girer?",
+correct:"Üzümsü meyve",
+extra:["Sert kabuklu meyve","Taşlı meyve","Turunçgil","Kabuklu yemiş"]
+},
+{
+q:"İnsan vücudundaki en sert doku hangisidir?",
+correct:"Diş minesi",
+extra:["Kemik","Tırnak","Kıkırdak","Deri"]
+},
+{
+q:"Flamingoların pembe rengi asıl olarak hangi besinden gelir?",
+correct:"Karides",
+extra:["Yosun","Balık","Karınca","Midye"]
+},
+{
+q:"Buzul çölleri de dahil edildiğinde, dünyanın en büyük çölü hangisidir?",
+correct:"Antarktika",
+extra:["Sahra Çölü","Gobi Çölü","Arabistan Çölü","Kalahari Çölü"]
+},
+{
+q:"Venüs gezegeninde bir gün mü daha uzun sürer, yoksa bir yıl mı?",
+correct:"Bir gün",
+extra:["Bir yıl","İkisi eşittir","Bir ay","Bir mevsim"]
+},
+{
+q:"Işık, Güneş'ten Dünya'ya ulaşmak için ortalama kaç dakika sürer?",
+correct:"8 dakika",
+extra:["1 dakika","30 dakika","60 dakika","3 dakika"]
+},
+{
+q:"Yetişkin bir tavuğun ağzında ortalama kaç diş bulunur?",
+correct:"0",
+extra:["8","2","32","16"]
+},
+{
+q:"2014'te yapılan bir araştırmaya göre insan burnu tahminen kaç farklı kokuyu ayırt edebilir?",
+correct:"1 trilyon",
+extra:["10 bin","1 milyon","100","1 milyar"]
+},
+{
+q:"Wombat (Avustralya'ya özgü bir kese hayvanı) hangi şekilde dışkı çıkarır?",
+correct:"Küp şeklinde",
+extra:["Küre şeklinde","Silindir şeklinde","Piramit şeklinde","Yıldız şeklinde"]
+},
+{
+q:"Eyfel Kulesi, sıcak yaz günlerinde ısı genleşmesiyle yaklaşık kaç santimetre uzayabilir?",
+correct:"15 santimetre",
+extra:["1 santimetre","50 santimetre","5 santimetre","100 santimetre"]
+},
+{
+q:"Karidesin kalbi vücudunun hangi bölgesinde bulunur?",
+correct:"Kafasında",
+extra:["Kuyruğunda","Karnında","Sırtında","Bacaklarında"]
+},
+{
+q:"İnsan vücudundaki kemiklerin yaklaşık yüzde kaçı ayaklarda bulunur?",
+correct:"%25",
+extra:["%10","%50","%5","%40"]
+},
+{
+q:"Ay'da atmosfer olmadığı için, astronotların bıraktığı ayak izleri tahminen ne kadar süre kalıcı kalabilir?",
+correct:"Milyonlarca yıl",
+extra:["Birkaç gün","Birkaç ay","Yüz yıl","Bin yıl"]
+},
+{
+q:"Domates botanik açıdan meyve mi yoksa sebze mi kabul edilir?",
+correct:"Meyve",
+extra:["Sebze","Kök","Tahıl","Baklagil"]
+},
+{
+q:"İnsan DNA'sının yaklaşık yüzde kaçının muzla ortak olduğu tahmin edilmektedir?",
+correct:"%60",
+extra:["%10","%90","%25","%1"]
+},
+{
+q:"Ahtapotların kaç beyni vardır?",
+correct:"9",
+extra:["1","3","5","12"]
+}
+]
 }
 
 ];
@@ -804,6 +1136,153 @@ extra:["United System Bus","Universal Standard Board","Unified Serial Board","Un
 
 function normalize(text){
 return (text||"").trim().toLocaleLowerCase("tr-TR");
+}
+
+/* =========================================================
+   AKILLI CEVAP KARŞILAŞTIRMA (yazım hatası + birim toleransı)
+========================================================= */
+
+/* İki metin arasındaki Levenshtein (düzenleme) mesafesini
+   hesaplar — küçük yazım farklarını (örn. "ahmet" / "ahmed")
+   tolere edebilmek için. */
+function levenshteinDistance(a,b){
+
+const m=a.length, n=b.length;
+
+if(m===0) return n;
+if(n===0) return m;
+
+let prev=Array.from({length:n+1},(_,i)=>i);
+
+for(let i=1;i<=m;i++){
+
+const curr=[i];
+
+for(let j=1;j<=n;j++){
+
+const cost=a[i-1]===b[j-1]?0:1;
+
+curr[j]=Math.min(
+prev[j]+1,
+curr[j-1]+1,
+prev[j-1]+cost
+);
+
+}
+
+prev=curr;
+
+}
+
+return prev[n];
+}
+
+/* Metnin başındaki sayıyı ayıklar (örn. "12 dakika" -> "12").
+   Birim toleransı için kullanılır. */
+function leadingNumber(text){
+
+const m=(text||"").trim().match(/^-?\d+([.,]\d+)?/);
+
+return m?m[0].replace(",","."):null;
+
+}
+
+/* Kullanıcının yazdığı cevap ile doğru cevabı (veya
+   karşılaştırılan herhangi iki metni) akıllıca eşleştirir:
+   1) Birebir eşleşme.
+   2) Birim toleransı: "12" ile "12 dakika" aynı sayılır
+      (biri sadece sayıdan, diğeri sayı+birimden oluşuyorsa).
+   3) Küçük yazım hataları (Levenshtein mesafesi metin
+      uzunluğuna göre değişen bir eşiğin altındaysa kabul
+      edilir) — Türkçe karakter farkları dahil her cevap için
+      geçerli, özel bir durum değil. */
+function answersMatch(userText,correctText){
+
+const a=normalize(userText);
+const b=normalize(correctText);
+
+if(!a) return false;
+if(a===b) return true;
+
+const numA=leadingNumber(a);
+const numB=leadingNumber(b);
+
+/* Doğru cevap sayısal bir değerse (örn. "2002", "32"),
+   yazım hatası toleransı KESİNLİKLE uygulanmaz — "2003"
+   ile "2002" bir yazım hatası değil, tamamen farklı ve
+   yanlış bir cevaptır. Sayılar için sadece iki durum kabul
+   edilir: birebir aynı sayı, ya da birim toleransı (aşağıda). */
+const bIsPureNumber=numB!==null && b.slice(numB.length).trim()==="";
+
+if(bIsPureNumber){
+
+if(numA!==null && numA===numB && a.slice(numA.length).trim()===""){
+return true;
+}
+
+/* Kullanıcı sayıya birim eklemiş olabilir (örn. doğru
+   cevap "12", kullanıcı "12 dakika" yazmış) — bu da kabul
+   edilir. Ama farklı bir sayı asla kabul edilmez. */
+if(numA!==null && numA===numB){
+return true;
+}
+
+return false;
+
+}
+
+if(numA!==null && numB!==null && numA===numB){
+
+const restA=a.slice(numA.length).trim();
+const restB=b.slice(numB.length).trim();
+
+/* İkisinden biri sadece sayıdan oluşuyorsa (birim
+   eklenmemişse) eşleşmiş say. */
+if(!restA || !restB) return true;
+
+}
+
+/* Yazım hatası (Levenshtein) toleransı sadece kelime bazlı
+   cevaplar için geçerli — herhangi bir taraf tamamen sayısal
+   bir değerse (yukarıdaki durumların hiçbirine girmediyse),
+   bir rakam farkı asla "yazım hatası" sayılmaz. */
+const aIsPureNumber=/^\d+([.,]\d+)?$/.test(a);
+const bIsFullyNumeric=/^\d+([.,]\d+)?$/.test(b);
+
+if(aIsPureNumber||bIsFullyNumeric) return false;
+
+const maxLen=Math.max(a.length,b.length);
+
+if(maxLen===0) return false;
+
+const distance=levenshteinDistance(a,b);
+
+/* Kısa cevaplarda daha sıkı, uzun cevaplarda biraz daha
+   geniş bir tolerans eşiği. */
+const threshold=
+maxLen<=5?1:
+maxLen<=10?2:
+3;
+
+return distance<=threshold;
+
+}
+
+/* Soru metninin yanına, doğru cevabın kaç kelimeden
+   oluştuğunu gösteren küçük bir ipucu ekler
+   (örn. "(Cevap 2 kelime)"). */
+function answerWordHint(question){
+
+const count=(question&&question.correct||"")
+.trim()
+.split(/\s+/)
+.filter(Boolean)
+.length;
+
+return count>0
+?` <span class="word-hint">(Cevap ${count} kelime)</span>`
+:"";
+
 }
 
 /* Bazı cevap metinleri kesme işareti (') içerebilir
@@ -829,6 +1308,14 @@ return a;
 
 function getCategory(id){
 return CATEGORIES.find(c=>c.id===id);
+}
+
+/* Bir oyuncunun avatarını döndürür (emoji+renk). Kayıtlı
+   avatarı yoksa (eski oda verisi, vb.) güvenli bir varsayılan
+   döner ki hiçbir yerde "undefined" ile karşılaşılmasın. */
+function avatarFor(name,avatarsMap){
+return (avatarsMap&&avatarsMap[name])||
+{emoji:"👤",color:"#3d7bff"};
 }
 
 function generateRoomCode(){
@@ -880,6 +1367,15 @@ room.scores=room.scores||{};
 
 room.players=room.players||[];
 
+room.avatars=room.avatars||{};
+
+room.selectedCategoryIds=
+(Array.isArray(room.selectedCategoryIds)&&room.selectedCategoryIds.length)
+?room.selectedCategoryIds
+:CATEGORIES.map(c=>c.id);
+
+room.questionTime=room.questionTime||45;
+
 return room;
 
 }
@@ -900,7 +1396,7 @@ if(!answer) continue;
 
 const normalized=normalize(answer);
 
-if(normalized===normalize(question.correct)) continue;
+if(answersMatch(answer,question.correct)) continue;
 
 if(used.has(normalized)) continue;
 
@@ -922,7 +1418,7 @@ if(result.length>=MIN_OPTIONS-1) break;
 
 const normalized=normalize(extra);
 
-if(normalized===normalize(question.correct)) continue;
+if(answersMatch(extra,question.correct)) continue;
 
 if(used.has(normalized)) continue;
 
@@ -1058,6 +1554,18 @@ let players=[];
 
 let scores={};
 
+/* Oyuncu avatarları: {isim:{emoji,color}}. Şimdilik
+   emoji+renk kombinasyonu — ileride ücretli gerçek
+   çizim/rozet tasarımlarıyla değiştirilebilir, sistem
+   buna göre genişletilebilir tasarlandı (bkz. DECISIONS §7). */
+let playerAvatars={};
+
+/* Avatar seçim ekranında henüz bir oyuncuya kaydedilmemiş,
+   o an seçili olan emoji/renk. */
+let pendingAvatarEmoji=AVATAR_EMOJIS[0];
+
+let pendingAvatarColor=AVATAR_COLORS[0];
+
 let currentRound=0;
 
 let currentQuestion=null;
@@ -1068,9 +1576,14 @@ let usedQuestions={};
 
 let wrongAnswers={};
 
-let answerStage=1;
-
 let currentPlayerIndex=0;
+
+/* Elden Ele modunda SADECE "kategori seçme sırası" için —
+   currentPlayerIndex ile karıştırılmamalı (o, her turun
+   içindeki cevap-yazma/seçim sırasını takip eder ve her
+   turda sıfırlanır). categoryPickerIndex ise turlar arasında
+   bağımsız şekilde ilerler. */
+let categoryPickerIndex=0;
 
 let options=[];
 
@@ -1251,6 +1764,41 @@ Oyuncu isimlerini ekle
 Oyuncuların isimlerini tek tek yaz.
 </p>
 
+<div class="avatar-picker">
+
+<div class="avatar-picker-preview"
+style="background:${pendingAvatarColor}22;color:${pendingAvatarColor}">
+${pendingAvatarEmoji}
+</div>
+
+<div class="avatar-picker-grid">
+${
+AVATAR_EMOJIS.map(e=>`
+<button
+type="button"
+class="avatar-choice ${e===pendingAvatarEmoji?"avatar-choice-selected":""}"
+onclick='pickPendingAvatarEmoji(${jsAttr(e)});renderLocalSetup()'>
+${e}
+</button>
+`).join("")
+}
+</div>
+
+<div class="avatar-picker-colors">
+${
+AVATAR_COLORS.map(c=>`
+<button
+type="button"
+class="avatar-color-choice ${c===pendingAvatarColor?"avatar-color-selected":""}"
+style="background:${c}"
+onclick="pickPendingAvatarColor('${c}');renderLocalSetup()">
+</button>
+`).join("")
+}
+</div>
+
+</div>
+
 <div class="player-input-row">
 
 <input
@@ -1272,11 +1820,18 @@ Ekle
 <div class="player-list">
 
 ${
-players.map((p,i)=>`
+players.map((p,i)=>{
+
+const av=avatarFor(p,playerAvatars);
+
+return`
 
 <div class="player-item">
 
-<span>${i+1}. ${p}</span>
+<span style="display:flex;align-items:center;gap:10px">
+<span class="avatar-mini" style="background:${av.color}22">${av.emoji}</span>
+${i+1}. ${p}
+</span>
 
 <button
 class="remove-btn"
@@ -1286,7 +1841,9 @@ onclick="removePlayer(${i})">
 
 </div>
 
-`).join("")
+`;
+
+}).join("")
 }
 
 </div>
@@ -1316,6 +1873,18 @@ onclick="mode=null;render()">
 `;
 }
 
+function pickPendingAvatarEmoji(e){
+
+pendingAvatarEmoji=e;
+
+}
+
+function pickPendingAvatarColor(c){
+
+pendingAvatarColor=c;
+
+}
+
 function addPlayer(){
 
 const input=document.getElementById("playerName");
@@ -1333,6 +1902,23 @@ players.push(name);
 
 scores[name]=0;
 
+playerAvatars[name]={
+emoji:pendingAvatarEmoji,
+color:pendingAvatarColor
+};
+
+/* Bir sonraki oyuncu için farklı bir varsayılan emoji/renk
+   göster, aynı avatarı tekrar tekrar seçmek zorunda kalmasın. */
+const emojiIdx=
+(AVATAR_EMOJIS.indexOf(pendingAvatarEmoji)+1)%AVATAR_EMOJIS.length;
+
+const colorIdx=
+(AVATAR_COLORS.indexOf(pendingAvatarColor)+1)%AVATAR_COLORS.length;
+
+pendingAvatarEmoji=AVATAR_EMOJIS[emojiIdx];
+
+pendingAvatarColor=AVATAR_COLORS[colorIdx];
+
 renderLocalSetup();
 }
 
@@ -1343,6 +1929,8 @@ const name=players[index];
 players.splice(index,1);
 
 delete scores[name];
+
+delete playerAvatars[name];
 
 renderLocalSetup();
 }
@@ -1358,6 +1946,8 @@ currentRound=1;
 
 currentPlayerIndex=0;
 
+categoryPickerIndex=0;
+
 usedQuestions={};
 
 CATEGORIES.forEach(c=>{
@@ -1369,7 +1959,7 @@ chooseCategory();
 
 function chooseCategory(){
 
-const player=players[currentPlayerIndex];
+const player=players[categoryPickerIndex];
 
 document.getElementById("app").innerHTML=`
 
@@ -1393,8 +1983,8 @@ ${scoreBar()}
 <div class="card pass-screen">
 
 <div class="avatar"
-style="background:#ff5d7322">
-👤
+style="background:${avatarFor(player,playerAvatars).color}22">
+${avatarFor(player,playerAvatars).emoji}
 </div>
 
 <div class="stage-label">
@@ -1408,6 +1998,12 @@ Sıra sende, ${player}!
 <p class="sub">
 Bu turun kategorisini sen seç.
 </p>
+
+<div class="timer-wrap">
+<div class="timer-ring" id="timerRing" style="--pct:100">
+<div class="inner"><span id="timerNum">${CATEGORY_PICK_TIME}</span></div>
+</div>
+</div>
 
 <div class="cat-grid">
 
@@ -1446,9 +2042,33 @@ ${remaining} soru
 
 </main>
 `;
+
+startTimer(CATEGORY_PICK_TIME,autoPickCategory);
+
+}
+
+/* Süre dolduğunda, kalan sorusu olan kategorilerden
+   rastgele birini seçer — oyun asla süresiz askıda kalmaz. */
+function autoPickCategory(){
+
+const available=CATEGORIES.filter(c=>
+c.questions.length-usedQuestions[c.id].length>0
+);
+
+if(!available.length){
+showGameOver();
+return;
+}
+
+const pick=available[Math.floor(Math.random()*available.length)];
+
+selectCategory(pick.id);
+
 }
 
 function selectCategory(id){
+
+clearInterval(timer);
 
 const category=getCategory(id);
 
@@ -1496,8 +2116,8 @@ ${scoreBar()}
 <div class="card pass-screen">
 
 <div class="avatar"
-style="background:#ff5d7322">
-👤
+style="background:${avatarFor(player,playerAvatars).color}22">
+${avatarFor(player,playerAvatars).emoji}
 </div>
 
 <div class="stage-label">
@@ -1532,12 +2152,10 @@ Hazırım
 
 function startAnswer1(){
 
-answerStage=1;
-
 renderAnswer();
 
 startTimer(
-ANSWER1_TIME,
+WRITING_TIME,
 ()=>{
 submitAnswer("")
 }
@@ -1545,16 +2163,9 @@ submitAnswer("")
 
 }
 
-function renderAnswer(){
+function renderAnswer(notice){
 
 const player=players[currentPlayerIndex];
-
-const seconds=
-answerStage===1
-?
-ANSWER1_TIME
-:
-ANSWER2_TIME;
 
 document.getElementById("app").innerHTML=`
 
@@ -1572,7 +2183,7 @@ ${currentCategory.name}
 </div>
 
 <div class="question-text">
-${currentQuestion.q}
+${currentQuestion.q}${answerWordHint(currentQuestion)}
 </div>
 
 <div class="timer-wrap">
@@ -1583,12 +2194,23 @@ id="timerRing"
 style="--pct:100">
 
 <div class="inner">
-<span id="timerNum">${timeLeft||seconds}</span>
+<span id="timerNum">${timeLeft||WRITING_TIME}</span>
 </div>
 
 </div>
 
 </div>
+
+${
+notice
+?
+`<div class="answer-notice">
+🎯 Doğru cevap! Kimse anlamasın diye farklı bir
+cevap yaz.
+</div>`
+:
+""
+}
 
 <input
 type="text"
@@ -1607,15 +2229,7 @@ Cevabı Gönder
 </div>
 
 <p class="footnote">
-
-${
-answerStage===1
-?
-"İlk cevap · 30 saniye"
-:
-"İkinci cevap · 20 saniye"
-}
-
+Cevap yazma süresi · ${WRITING_TIME} saniye
 </p>
 
 </main>
@@ -1638,102 +2252,39 @@ submitAnswer(input?input.value:"");
 
 function submitAnswer(text){
 
-clearInterval(timer);
-
 text=(text||"").trim();
 
 const player=players[currentPlayerIndex];
 
 const isCorrect=
 text!=="" &&
-normalize(text)===normalize(currentQuestion.correct);
+answersMatch(text,currentQuestion.correct);
 
 
 /* DOĞRU CEVAP YAZILDIYSA
-   HİÇBİR ŞEKİLDE OYUNCUNUN CEVABI OLARAK KAYDETME */
+   HİÇBİR ŞEKİLDE OYUNCUNUN CEVABI OLARAK KAYDETME —
+   oyuncuya farklı bir (yanıltıcı) cevap yazması için tekrar
+   sorulur. Süre DURMAZ, aynı 45 saniyelik pencere içinde
+   devam eder. */
 
 if(isCorrect){
 
-showCorrectMessage();
+renderAnswer(true);
 
 return;
 }
 
 
-/* Yanlış cevap */
+/* Yanlış cevap (ya da süre doldu / boş gönderildi) —
+   turu burada kesin olarak bitir. */
+
+clearInterval(timer);
 
 if(text){
 wrongAnswers[player]=text;
 }
 
 advanceAnswerPlayer();
-
-}
-
-function showCorrectMessage(){
-
-const player=players[currentPlayerIndex];
-
-document.getElementById("app").innerHTML=`
-
-${topbar()}
-
-${scoreBar()}
-
-<main>
-
-<div class="card pass-screen">
-
-<div style="font-size:50px">
-🎯
-</div>
-
-<div class="stage-label">
-Doğru Cevap!
-</div>
-
-<h2 class="headline">
-Cevabınız doğru!
-</h2>
-
-<p class="sub">
-Doğru cevabı yazdınız.
-Şimdi farklı bir cevap yazın.
-</p>
-
-<div class="card"
-style="margin-top:16px;background:#164d3d">
-
-<strong>
-Doğru cevap seçeneklerde olacak.
-</strong>
-
-</div>
-
-<button
-class="btn btn-primary"
-onclick="goSecondAnswer()">
-Farklı Cevap Yaz
-</button>
-
-</div>
-
-</main>
-`;
-}
-
-function goSecondAnswer(){
-
-answerStage=2;
-
-renderAnswer();
-
-startTimer(
-ANSWER2_TIME,
-()=>{
-submitAnswer("")
-}
-);
 
 }
 
@@ -1747,8 +2298,6 @@ buildFinalOptions();
 
 return;
 }
-
-answerStage=1;
 
 passToAnswer();
 
@@ -1863,6 +2412,12 @@ ${currentQuestion.q}
 Doğru cevabı seç. Kendi yazdığın cevap burada görünmüyor.
 </p>
 
+<div class="timer-wrap">
+<div class="timer-ring" id="timerRing" style="--pct:100">
+<div class="inner"><span id="timerNum">${SELECTION_TIME}</span></div>
+</div>
+</div>
+
 ${
 availableOptions.map((o,i)=>`
 
@@ -1885,9 +2440,27 @@ ${o.text}
 
 </main>
 `;
+
+startTimer(SELECTION_TIME,()=>autoSelectAnswer(availableOptions));
+
+}
+
+/* Süre dolduğunda, o oyuncu adına kalan seçenekler arasından
+   rastgele birini seçer — oyun asla askıda kalmaz. */
+function autoSelectAnswer(availableOptions){
+
+if(!availableOptions.length) return;
+
+const pick=
+availableOptions[Math.floor(Math.random()*availableOptions.length)];
+
+chooseAnswer(pick.text);
+
 }
 
 function chooseAnswer(text){
+
+clearInterval(timer);
 
 const player=players[currentPlayerIndex];
 
@@ -2099,8 +2672,8 @@ return;
 
 currentRound++;
 
-currentPlayerIndex=
-(currentPlayerIndex+1)%players.length;
+categoryPickerIndex=
+(categoryPickerIndex+1)%players.length;
 
 chooseCategory();
 
@@ -2112,15 +2685,23 @@ const sorted=[...players].sort(
 (a,b)=>(scores[b]||0)-(scores[a]||0)
 );
 
+const winner=sorted[0];
+
+const medalClass=i=>
+i===0?"gold":i===1?"silver":i===2?"bronze":"";
+
+const medalIcon=i=>
+i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1);
+
 document.getElementById("app").innerHTML=`
 
 ${topbar()}
 
 <main>
 
-<div class="card pass-screen">
+<div class="card gameover-card">
 
-<div style="font-size:60px">
+<div class="gameover-trophy">
 🏆
 </div>
 
@@ -2129,8 +2710,12 @@ Oyun Bitti!
 </h1>
 
 <p class="sub">
-Kazanan belli oldu.
+Kazanan
 </p>
+
+<div class="gameover-winner">
+${avatarFor(winner,playerAvatars).emoji} ${winner}
+</div>
 
 </div>
 
@@ -2139,25 +2724,31 @@ Kazanan belli oldu.
 <div class="leaderboard">
 
 ${
-sorted.map((p,i)=>`
+sorted.map((p,i)=>{
 
-<div class="lb-row">
+const mc=medalClass(i);
 
-<div class="lb-rank">
-${i+1}
+return`
+
+<div class="lb-row ${mc?"lb-row-"+mc:""}">
+
+<div class="lb-rank ${mc?"lb-rank-"+mc:""}">
+${medalIcon(i)}
 </div>
 
 <div class="lb-name">
-${p}
+${avatarFor(p,playerAvatars).emoji} ${p}
 </div>
 
-<div class="lb-pts">
+<div class="lb-pts ${mc==="gold"?"lb-pts-gold":""}">
 ${scores[p]}
 </div>
 
 </div>
 
-`).join("")
+`;
+
+}).join("")
 }
 
 </div>
@@ -2191,7 +2782,7 @@ players.map(p=>`
 <div class="score-chip">
 
 <div class="nm">
-${p}
+${avatarFor(p,playerAvatars).emoji} ${p}
 </div>
 
 <div class="pt">
@@ -2298,6 +2889,11 @@ let onlineName="";
 
 let onlinePlayers=[];
 
+/* Host'un oda kurarken seçtiği ayarlar — oyun başlamadan
+   önce lobide düzenlenir, "Oyunu Başlat" ile odaya yazılır. */
+let hostSelectedCategoryIds=null;
+let hostQuestionTime=45;
+
 let onlineScores={};
 
 let roomState=null;
@@ -2306,7 +2902,16 @@ let roomPoll=null;
 
 let onlineLastRound=0;
 
-let onlineLocalAnswerStage="idle"; // idle | attempt1 | attempt2 | correct1 | correct2 | waiting
+/* Kategori seçim ekranının görsel geri sayımının hangi tur
+   için başlatıldığını izler — round başına sadece bir kez
+   başlatılsın diye. */
+let onlineCategoryTimerRound=null;
+
+let onlineLocalAnswerStage="idle"; // idle | attempt1 | waiting
+
+/* Yazma aşamasında oyuncuya "doğru cevap, farklı bir tane
+   yaz" bildirimi gösterilsin mi? */
+let onlineAnswerNotice=false;
 
 let onlineMyWrong=null;
 
@@ -2979,6 +3584,50 @@ doldurman gerekiyor. Doldurulana kadar oda oluşturulamaz.`
 <div class="card">
 
 <div class="stage-label">
+Avatarın
+</div>
+
+<div class="avatar-picker" style="border:none;background:transparent;padding:0">
+
+<div class="avatar-picker-preview"
+style="background:${pendingAvatarColor}22;color:${pendingAvatarColor}">
+${pendingAvatarEmoji}
+</div>
+
+<div class="avatar-picker-grid">
+${
+AVATAR_EMOJIS.map(e=>`
+<button
+type="button"
+class="avatar-choice ${e===pendingAvatarEmoji?"avatar-choice-selected":""}"
+onclick='pickPendingAvatarEmoji(${jsAttr(e)});renderOnlineSetup()'>
+${e}
+</button>
+`).join("")
+}
+</div>
+
+<div class="avatar-picker-colors">
+${
+AVATAR_COLORS.map(c=>`
+<button
+type="button"
+class="avatar-color-choice ${c===pendingAvatarColor?"avatar-color-selected":""}"
+style="background:${c}"
+onclick="pickPendingAvatarColor('${c}');renderOnlineSetup()">
+</button>
+`).join("")
+}
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="stage-label">
 Online Oyun
 </div>
 
@@ -3063,6 +3712,35 @@ else alert(msg);
    CREATE ROOM
 ========================================================= */
 
+function toggleHostCategory(id){
+
+if(!hostSelectedCategoryIds) hostSelectedCategoryIds=CATEGORIES.map(c=>c.id);
+
+if(hostSelectedCategoryIds.includes(id)){
+
+/* En az bir kategori seçili kalmalı. */
+if(hostSelectedCategoryIds.length===1) return;
+
+hostSelectedCategoryIds=hostSelectedCategoryIds.filter(x=>x!==id);
+
+}else{
+
+hostSelectedCategoryIds=[...hostSelectedCategoryIds,id];
+
+}
+
+renderOnlineLobby();
+
+}
+
+function setHostQuestionTime(t){
+
+hostQuestionTime=t;
+
+renderOnlineLobby();
+
+}
+
 async function createOnlineRoom(){
 
 if(!firebaseReady){
@@ -3090,6 +3768,10 @@ roomCode=generateRoomCode();
 
 isHost=true;
 
+hostSelectedCategoryIds=CATEGORIES.map(c=>c.id);
+
+hostQuestionTime=45;
+
 const usedQ={};
 
 CATEGORIES.forEach(c=>{ usedQ[c.id]=[]; });
@@ -3099,6 +3781,7 @@ phase:"lobby",
 host:name,
 players:[name],
 scores:{[name]:0},
+avatars:{[name]:{emoji:pendingAvatarEmoji,color:pendingAvatarColor}},
 round:0,
 pickerIndex:0,
 usedQuestions:usedQ,
@@ -3129,6 +3812,8 @@ showOnlineSetupError("Oda oluşturulamadı (Firebase'e yazma başarısız oldu).
 return;
 
 }
+
+saveOnlineSession();
 
 startRoomPolling();
 
@@ -3179,7 +3864,13 @@ return;
 
 }
 
-if(room.phase!=="lobby"){
+const isReturningPlayer=room.players.includes(name);
+
+/* Oyun zaten başladıysa, sadece daha önce bu odada olan
+   (yani bağlantısı kopmuş / yanlışlıkla çıkmış) bir oyuncunun
+   geri dönmesine izin veriyoruz — yeni bir oyuncunun devam
+   eden bir oyuna katılması engellenir. */
+if(room.phase!=="lobby" && !isReturningPlayer){
 
 showOnlineSetupError("Bu oyun zaten başladı.");
 
@@ -3187,11 +3878,15 @@ return;
 
 }
 
-if(!room.players.includes(name)){
+if(!isReturningPlayer){
 
 room.players.push(name);
 
 room.scores[name]=0;
+
+room.avatars=room.avatars||{};
+
+room.avatars[name]={emoji:pendingAvatarEmoji,color:pendingAvatarColor};
 
 const ok=await storageSet(
 "YALANCI_ROOM_"+code,
@@ -3213,9 +3908,15 @@ onlineName=name;
 
 roomCode=code;
 
-isHost=false;
+/* Geri dönen kişi odanın kurucusuysa (host), host yetkisini
+   de geri kazanır — yoksa oyun, host'un bağlantısı koptuğu an
+   kalıcı olarak askıda kalır (hiçbir istemci faz geçişlerini
+   yönetemez). */
+isHost=(name===room.host);
 
 roomState=room;
+
+saveOnlineSession();
 
 startRoomPolling();
 
@@ -3229,6 +3930,12 @@ startRoomPolling();
 function renderOnlineLobby(){
 
 if(!roomCode) return;
+
+/* Oda tazeyken (henüz Firebase'e hiç ayar yazılmadıysa)
+   host'un yerel seçimlerini başlat. */
+if(isHost && !hostSelectedCategoryIds){
+hostSelectedCategoryIds=CATEGORIES.map(c=>c.id);
+}
 
 const url=
 location.href.split("?")[0]+
@@ -3257,8 +3964,20 @@ Lobby
 Oda Kodu
 </div>
 
+<div class="code-box-row">
+
 <div class="code-box">
 ${roomCode}
+</div>
+
+<button
+type="button"
+class="copy-code-btn"
+id="copyCodeBtn"
+onclick="copyRoomCode()">
+📋 Kopyala
+</button>
+
 </div>
 
 <div class="qr-wrap">
@@ -3286,7 +4005,11 @@ Oyuncular
 <div class="lobby-list">
 
 ${
-(roomState?.players||[]).map((p,i)=>`
+(roomState?.players||[]).map((p,i)=>{
+
+const av=avatarFor(p,roomState.avatars);
+
+return`
 
 <div class="lobby-row">
 
@@ -3294,13 +4017,13 @@ ${
 width:36px;
 height:36px;
 border-radius:10px;
-background:#ff5d7322;
+background:${av.color}22;
 display:flex;
 align-items:center;
 justify-content:center;
-font-weight:800">
+font-size:18px">
 
-${p.charAt(0).toUpperCase()}
+${av.emoji}
 
 </div>
 
@@ -3318,7 +4041,9 @@ p===roomState.host
 
 </div>
 
-`).join("")
+`;
+
+}).join("")
 }
 
 </div>
@@ -3331,9 +4056,69 @@ isHost
 ?
 `
 
+<div class="card">
+
+<h3>Kategoriler</h3>
+
+<p class="sub">Bu oyunda hangi kategoriler kullanılsın?</p>
+
+<div class="cat-grid">
+
+${
+CATEGORIES.map(c=>{
+
+const checked=hostSelectedCategoryIds.includes(c.id);
+
+return`
+
+<button
+class="cat-btn ${checked?"cat-btn-selected":""}"
+onclick="toggleHostCategory('${c.id}')">
+<span class="cat-icon">${c.icon}</span>
+${c.name}
+<span class="cat-left">${checked?"✓ Seçili":"Seçilmedi"}</span>
+</button>
+
+`;
+
+}).join("")
+}
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>Soru Süresi</h3>
+
+<p class="sub">
+Kategori seçimi, cevap yazma ve doğru cevabı bulma
+aşamalarının hepsi bu süreyi kullanır.
+</p>
+
+<div class="time-choice-row">
+
+${
+[30,45,60].map(t=>`
+
+<button
+class="btn ${hostQuestionTime===t?"btn-primary":"btn-ghost"}"
+style="flex:1"
+onclick="setHostQuestionTime(${t})">
+${t} sn
+</button>
+
+`).join("")
+}
+
+</div>
+
+</div>
+
 <button
 class="btn btn-primary"
-${(roomState?.players||[]).length<2?"disabled":""}
+${(roomState?.players||[]).length<2||!hostSelectedCategoryIds.length?"disabled":""}
 onclick="startOnlineGame()">
 
 Oyunu Başlat
@@ -3344,6 +4129,10 @@ ${
 (roomState?.players||[]).length<2
 ?
 `<p class="footnote">Başlamak için en az 2 oyuncu gerekir.</p>`
+:
+!hostSelectedCategoryIds.length
+?
+`<p class="footnote">En az bir kategori seçmelisin.</p>`
 :
 ""
 }
@@ -3439,7 +4228,7 @@ ${
 (roomState.players||[]).map(p=>`
 
 <div class="score-chip">
-<div class="nm">${p}</div>
+<div class="nm">${avatarFor(p,roomState.avatars).emoji} ${p}</div>
 <div class="pt">${(roomState.scores&&roomState.scores[p])||0}</div>
 </div>
 
@@ -3473,7 +4262,16 @@ try{
 
 const room=roomState;
 
+room.selectedCategoryIds=
+hostSelectedCategoryIds&&hostSelectedCategoryIds.length
+?hostSelectedCategoryIds
+:CATEGORIES.map(c=>c.id);
+
+room.questionTime=hostQuestionTime||45;
+
 room.phase="category_pick";
+
+room.categoryPickStartedAt=Date.now();
 
 room.round=1;
 
@@ -3532,10 +4330,16 @@ isMine
 
 <h2 class="headline">Bir kategori seç</h2>
 
+<div class="timer-wrap">
+<div class="timer-ring" id="timerRing" style="--pct:100">
+<div class="inner"><span id="timerNum">${roomState.questionTime||45}</span></div>
+</div>
+</div>
+
 <div class="cat-grid">
 
 ${
-CATEGORIES.map(c=>{
+CATEGORIES.filter(c=>(roomState.selectedCategoryIds||[]).includes(c.id)).map(c=>{
 
 const remaining=
 c.questions.length-
@@ -3562,7 +4366,7 @@ ${c.name}
 :
 `
 <div class="card pass-screen">
-<div class="avatar" style="background:#ff5d7322">👤</div>
+<div class="avatar" style="background:${avatarFor(pickerName,roomState.avatars).color}22">${avatarFor(pickerName,roomState.avatars).emoji}</div>
 <div class="stage-label">Bekleniyor</div>
 <h2 class="headline">${pickerName} kategori seçiyor…</h2>
 </div>
@@ -3575,6 +4379,8 @@ ${c.name}
 }
 
 async function onlineSelectCategory(id){
+
+clearInterval(timer);
 
 try{
 
@@ -3642,14 +4448,7 @@ function renderOnlineAnswering(){
 
 const q=roomState.question;
 
-if(onlineLocalAnswerStage==="attempt1"||onlineLocalAnswerStage==="attempt2"){
-
-const seconds=
-onlineLocalAnswerStage==="attempt1"
-?
-ANSWER1_TIME
-:
-ANSWER2_TIME;
+if(onlineLocalAnswerStage==="attempt1"){
 
 document.getElementById("app").innerHTML=`
 
@@ -3662,13 +4461,24 @@ ${onlineScoreBar()}
 
 <div class="question-cat">${q.categoryName} · Sen: ${onlineName}</div>
 
-<div class="question-text">${q.q}</div>
+<div class="question-text">${q.q}${answerWordHint(q)}</div>
 
 <div class="timer-wrap">
 <div class="timer-ring" id="timerRing" style="--pct:100">
-<div class="inner"><span id="timerNum">${timeLeft||seconds}</span></div>
+<div class="inner"><span id="timerNum">${timeLeft||roomState.questionTime||45}</span></div>
 </div>
 </div>
+
+${
+onlineAnswerNotice
+?
+`<div class="answer-notice">
+🎯 Doğru cevap! Kimse anlamasın diye farklı bir
+cevap yaz.
+</div>`
+:
+""
+}
 
 <input type="text" id="answerInput" placeholder="Cevabını yaz..."
 autocomplete="off"
@@ -3681,7 +4491,7 @@ Cevabı Gönder
 </div>
 
 <p class="footnote">
-${onlineLocalAnswerStage==="attempt1"?"İlk cevap · 30 saniye":"İkinci cevap · 20 saniye"}
+Cevap yazma süresi · ${roomState.questionTime||45} saniye
 — diğer oyuncular da aynı anda yazıyor.
 </p>
 
@@ -3693,35 +4503,6 @@ const input=document.getElementById("answerInput");
 if(input) input.focus();
 
 updateTimerDisplay();
-
-}else if(onlineLocalAnswerStage==="correct1"||onlineLocalAnswerStage==="correct2"){
-
-document.getElementById("app").innerHTML=`
-
-${onlineTopbar()}
-${onlineScoreBar()}
-
-<main>
-
-<div class="card pass-screen">
-
-<div style="font-size:50px">🎯</div>
-
-<h2 class="headline">Cevabınız doğru!</h2>
-
-<p class="sub">
-Başka bir cevap verin. Doğru cevabınız seçeneklere eklenmeyecek.
-</p>
-
-<button class="btn btn-primary"
-onclick="${onlineLocalAnswerStage==='correct1'?'onlineGoSecondAnswer()':'onlineFinishAfterSecondCorrect()'}">
-Devam Et
-</button>
-
-</div>
-
-</main>
-`;
 
 }else{
 
@@ -3759,18 +4540,17 @@ onlineSubmitAnswer(input?input.value:"");
 
 function onlineSubmitAnswer(text){
 
-clearInterval(timer);
-
 text=(text||"").trim();
 
 const isCorrect=
 text!=="" &&
-normalize(text)===normalize(roomState.question.correct);
+answersMatch(text,roomState.question.correct);
 
 if(isCorrect){
 
-onlineLocalAnswerStage=
-onlineLocalAnswerStage==="attempt1"?"correct1":"correct2";
+/* Süre DURMAZ — aynı yazma penceresi içinde farklı
+   (yanıltıcı) bir cevap yazması için tekrar sorulur. */
+onlineAnswerNotice=true;
 
 renderOnlineGame();
 
@@ -3778,23 +4558,9 @@ return;
 
 }
 
+clearInterval(timer);
+
 onlineFinalizeAnswer(text||null);
-
-}
-
-function onlineGoSecondAnswer(){
-
-onlineLocalAnswerStage="attempt2";
-
-renderOnlineGame();
-
-startTimer(ANSWER2_TIME,()=>onlineSubmitAnswer(""));
-
-}
-
-function onlineFinishAfterSecondCorrect(){
-
-onlineFinalizeAnswer(null);
 
 }
 
@@ -3803,6 +4569,8 @@ async function onlineFinalizeAnswer(wrongOrNull){
 onlineMyWrong=wrongOrNull;
 
 onlineLocalAnswerStage="waiting";
+
+onlineAnswerNotice=false;
 
 renderOnlineGame();
 
@@ -3838,6 +4606,12 @@ ${onlineScoreBar()}
 <h2 class="headline" style="font-size:20px">${roomState.question.q}</h2>
 
 <p class="sub">Doğru cevabı seç. Kendi yazdığın cevap burada görünmüyor.</p>
+
+<div class="timer-wrap">
+<div class="timer-ring" id="timerRing" style="--pct:100">
+<div class="inner"><span id="timerNum">${roomState.questionTime||45}</span></div>
+</div>
+</div>
 
 ${
 myOptions.map((o,i)=>`
@@ -3882,6 +4656,8 @@ ${onlineScoreBar()}
 }
 
 async function onlineChooseAnswer(text){
+
+clearInterval(timer);
 
 onlineMyChoice=text;
 
@@ -3972,7 +4748,9 @@ if(!isHost) return;
 
 const room=roomState;
 
-const remaining=CATEGORIES.some(
+const remaining=CATEGORIES
+.filter(c=>(room.selectedCategoryIds||[]).includes(c.id))
+.some(
 c=>(room.usedQuestions[c.id]||[]).length<c.questions.length
 );
 
@@ -3996,6 +4774,8 @@ room.pickerIndex=(room.pickerIndex+1)%room.players.length;
 
 room.phase="category_pick";
 
+room.categoryPickStartedAt=Date.now();
+
 await storageSet("YALANCI_ROOM_"+roomCode,room,true);
 
 roomState=room;
@@ -4010,30 +4790,48 @@ const sorted=[...roomState.players].sort(
 (a,b)=>(roomState.scores[b]||0)-(roomState.scores[a]||0)
 );
 
+const winner=sorted[0];
+
+const medalClass=i=>
+i===0?"gold":i===1?"silver":i===2?"bronze":"";
+
+const medalIcon=i=>
+i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1);
+
 document.getElementById("app").innerHTML=`
 
 ${onlineTopbar()}
 
 <main>
 
-<div class="card pass-screen">
-<div style="font-size:60px">🏆</div>
+<div class="card gameover-card">
+<div class="gameover-trophy">🏆</div>
 <h1 class="headline">Oyun Bitti!</h1>
+<p class="sub">Kazanan</p>
+<div class="gameover-winner">
+${avatarFor(winner,roomState.avatars).emoji} ${winner}
+</div>
 </div>
 
 <div class="card">
 <div class="leaderboard">
 
 ${
-sorted.map((p,i)=>`
+sorted.map((p,i)=>{
 
-<div class="lb-row">
-<div class="lb-rank">${i+1}</div>
-<div class="lb-name">${p}</div>
-<div class="lb-pts">${roomState.scores[p]||0}</div>
+const mc=medalClass(i);
+
+return`
+
+<div class="lb-row ${mc?"lb-row-"+mc:""}">
+<div class="lb-rank ${mc?"lb-rank-"+mc:""}">${medalIcon(i)}</div>
+<div class="lb-name">${avatarFor(p,roomState.avatars).emoji} ${p}</div>
+<div class="lb-pts ${mc==="gold"?"lb-pts-gold":""}">${roomState.scores[p]||0}</div>
 </div>
 
-`).join("")
+`;
+
+}).join("")
 }
 
 </div>
@@ -4066,6 +4864,8 @@ onlineLastRound=0;
 
 onlineLocalAnswerStage="idle";
 
+onlineAnswerNotice=false;
+
 onlineMyWrong=null;
 
 onlineLocalSelectStage="idle";
@@ -4074,9 +4874,99 @@ onlineMyChoice=null;
 
 lastRoomSnapshot=null;
 
+clearOnlineSession();
+
 mode=null;
 
 render();
+
+}
+
+
+/* =========================================================
+   OTURUM HATIRLAMA (bağlantı koparsa geri dönebilmek için)
+========================================================= */
+
+/* Bir oyuncu yanlışlıkla sekmeyi kapatır ya da bağlantısı
+   koparsa, sayfayı tekrar açtığında kaldığı yerden devam
+   edebilsin diye oda kodu ve ismi tarayıcıda saklanır. Bu
+   veri sadece bu cihazda kalır, Firebase'e gönderilmez. */
+
+function saveOnlineSession(){
+
+try{
+
+localStorage.setItem(
+"yalanci_session",
+JSON.stringify({roomCode:roomCode,name:onlineName})
+);
+
+}catch(e){
+
+/* localStorage kullanılamıyorsa (gizli sekme, vb.)
+   sessizce yoksay — oturum hatırlama devre dışı kalır
+   ama oyun normal şekilde çalışmaya devam eder. */
+
+}
+
+}
+
+function clearOnlineSession(){
+
+try{
+
+localStorage.removeItem("yalanci_session");
+
+}catch(e){}
+
+}
+
+async function tryAutoRejoin(){
+
+let saved=null;
+
+try{
+
+saved=JSON.parse(localStorage.getItem("yalanci_session")||"null");
+
+}catch(e){
+
+return false;
+
+}
+
+if(!saved||!saved.roomCode||!saved.name) return false;
+
+const room=
+normalizeRoom(await storageGet(
+"YALANCI_ROOM_"+saved.roomCode,
+true
+));
+
+/* Oda artık yoksa ya da bu isim odadan çıkarılmışsa
+   (örn. oyun çoktan bitmiş ve host yeni bir oda açmış),
+   saklı oturumu temizle ve normal ana ekranı göster. */
+if(!room||!room.players.includes(saved.name)){
+
+clearOnlineSession();
+
+return false;
+
+}
+
+onlineName=saved.name;
+
+roomCode=saved.roomCode;
+
+isHost=(saved.name===room.host);
+
+roomState=room;
+
+mode="online";
+
+startRoomPolling();
+
+return true;
 
 }
 
@@ -4130,6 +5020,73 @@ visibilityListenerAdded=true;
 
 }
 
+function copyRoomCode(){
+
+if(!roomCode) return;
+
+const btn=document.getElementById("copyCodeBtn");
+
+function showCopied(){
+if(!btn) return;
+const original=btn.textContent;
+btn.textContent="✅ Kopyalandı!";
+setTimeout(()=>{ btn.textContent=original; },1500);
+}
+
+if(navigator.clipboard && navigator.clipboard.writeText){
+
+navigator.clipboard.writeText(roomCode)
+.then(showCopied)
+.catch(()=>{ fallbackCopyRoomCode(); });
+
+}else{
+
+fallbackCopyRoomCode();
+
+}
+
+}
+
+/* Eski tarayıcılar veya izin verilmeyen ortamlar için
+   navigator.clipboard çalışmazsa bu yedek yöntem kullanılır. */
+function fallbackCopyRoomCode(){
+
+const temp=document.createElement("textarea");
+
+temp.value=roomCode;
+
+temp.style.position="fixed";
+
+temp.style.opacity="0";
+
+document.body.appendChild(temp);
+
+temp.focus();
+
+temp.select();
+
+try{
+
+document.execCommand("copy");
+
+const btn=document.getElementById("copyCodeBtn");
+
+if(btn){
+const original=btn.textContent;
+btn.textContent="✅ Kopyalandı!";
+setTimeout(()=>{ btn.textContent=original; },1500);
+}
+
+}catch(e){
+
+alert("Kod kopyalanamadı, elle yazman gerekebilir: "+roomCode);
+
+}
+
+document.body.removeChild(temp);
+
+}
+
 function manualRefreshRoom(){
 
 if(roomCode){
@@ -4163,6 +5120,7 @@ if(room.round!==onlineLastRound){
 onlineLastRound=room.round;
 
 onlineLocalAnswerStage="idle";
+onlineAnswerNotice=false;
 onlineMyWrong=null;
 onlineLocalSelectStage="idle";
 onlineMyChoice=null;
@@ -4171,7 +5129,18 @@ onlineMyChoice=null;
 
 if(isHost){
 
+try{
+
 await hostMaybeAdvance();
+
+}catch(e){
+
+/* Beklenmeyen bir hata tüm yoklama döngüsünü
+   durdurmasın — bir sonraki yoklamada (1.2 sn sonra)
+   tekrar denenecek. */
+console.error("hostMaybeAdvance hatası:",e);
+
+}
 
 }
 
@@ -4194,8 +5163,7 @@ justEntered=true;
 }
 
 const stageBusy=
-onlineLocalAnswerStage==="attempt1"||
-onlineLocalAnswerStage==="attempt2";
+onlineLocalAnswerStage==="attempt1";
 
 const snapshot=JSON.stringify({
 
@@ -4219,7 +5187,50 @@ lastRoomSnapshot=snapshot;
 
 if(justEntered && roomState.phase==="answering"){
 
-startTimer(ANSWER1_TIME,()=>onlineSubmitAnswer(""));
+/* Kalan süreyi turun gerçek başlangıç zamanına göre
+   hesapla — sonradan katılan/yeniden bağlanan bir oyuncu
+   fazladan süre kazanmasın. */
+const elapsed=
+roomState.answeringStartedAt
+?Math.floor((Date.now()-roomState.answeringStartedAt)/1000)
+:0;
+
+const remaining=Math.max(1,(roomState.questionTime||45)-elapsed);
+
+startTimer(remaining,()=>onlineSubmitAnswer(""));
+
+}
+
+if(justEntered && roomState.phase==="select"){
+
+const elapsed=
+roomState.selectStartedAt
+?Math.floor((Date.now()-roomState.selectStartedAt)/1000)
+:0;
+
+const remaining=Math.max(1,(roomState.questionTime||45)-elapsed);
+
+startTimer(remaining,()=>onlineChooseAnswer(""));
+
+}
+
+if(roomState.phase==="category_pick" &&
+onlineCategoryTimerRound!==roomState.round){
+
+onlineCategoryTimerRound=roomState.round;
+
+const elapsed=
+roomState.categoryPickStartedAt
+?Math.floor((Date.now()-roomState.categoryPickStartedAt)/1000)
+:0;
+
+const remaining=Math.max(1,(roomState.questionTime||45)-elapsed);
+
+/* Bu sayaç sadece görsel — gerçek zaman aşımı güvenliği
+   host tarafında hostMaybeAdvance() içinde yönetiliyor,
+   bu yüzden süre dolduğunda burada ekstra bir işlem
+   yapmıyoruz (host otomatik olarak devam ettirecek). */
+startTimer(remaining,()=>{});
 
 }
 
@@ -4237,9 +5248,85 @@ if(!room) return;
    Süre dolunca, cevap vermeyenler o turda "cevapsız" kabul
    edilip oyun devam eder. */
 
-const ANSWER_PHASE_TIMEOUT_MS=(ANSWER1_TIME+ANSWER2_TIME+15)*1000;
+const qTime=room.questionTime||45;
 
-const SELECT_PHASE_TIMEOUT_MS=45*1000;
+/* Ağ gecikmesi için küçük bir tolerans payı — ama görünür
+   sayaç sıfırlandıktan sonra oyuncuyu "askıda" hissettirecek
+   kadar uzun değil. */
+const ANSWER_PHASE_TIMEOUT_MS=(qTime+5)*1000;
+
+const SELECT_PHASE_TIMEOUT_MS=(qTime+5)*1000;
+
+const CATEGORY_PICK_TIMEOUT_MS=(qTime+5)*1000;
+
+/* Sıradaki oyuncu kategori seçmeden süre dolarsa (uygulamayı
+   kapattı, bağlantısı koptu, vb.), oyun sonsuza kadar onu
+   beklemesin diye host adına rastgele bir kategori seçilir —
+   tıpkı Elden Ele modundaki otomatik seçim gibi. */
+if(room.phase==="category_pick"){
+
+const timedOut=
+room.categoryPickStartedAt &&
+(Date.now()-room.categoryPickStartedAt>CATEGORY_PICK_TIMEOUT_MS);
+
+if(timedOut){
+
+const available=CATEGORIES.filter(c=>
+(room.selectedCategoryIds||[]).includes(c.id) &&
+c.questions.length-((room.usedQuestions||{})[c.id]||[]).length>0
+);
+
+if(!available.length){
+
+room.phase="game_over";
+
+await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+
+roomState=room;
+
+return;
+
+}
+
+const pick=available[Math.floor(Math.random()*available.length)];
+
+const used=(room.usedQuestions||{})[pick.id]||[];
+
+const idxAvailable=pick.questions
+.map((q,i)=>i)
+.filter(i=>!used.includes(i));
+
+const index=
+idxAvailable[Math.floor(Math.random()*idxAvailable.length)];
+
+used.push(index);
+
+room.usedQuestions=room.usedQuestions||{};
+
+room.usedQuestions[pick.id]=used;
+
+room.categoryId=pick.id;
+
+room.question={
+...pick.questions[index],
+categoryName:pick.name
+};
+
+room.options=null;
+
+room.roundChoices=null;
+
+room.phase="answering";
+
+room.answeringStartedAt=Date.now();
+
+await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+
+roomState=room;
+
+}
+
+}
 
 if(room.phase==="answering"){
 
@@ -4248,6 +5335,8 @@ const wrongMap={};
 let allIn=true;
 
 for(const name of room.players){
+
+try{
 
 const a=await storageGet(
 roomKey(roomCode,"ans",room.round,name),
@@ -4258,6 +5347,15 @@ if(a){
 wrongMap[name]=a.wrong;
 }else{
 allIn=false;
+}
+
+}catch(e){
+
+/* Geçici bir okuma hatası tüm kontrolü durdurmasın —
+   bu oyuncu henüz cevaplamamış say, bir sonraki
+   yoklamada (1.2 sn sonra) tekrar denenecek. */
+allIn=false;
+
 }
 
 }
@@ -4295,6 +5393,8 @@ let allIn=true;
 
 for(const name of room.players){
 
+try{
+
 const c=await storageGet(
 roomKey(roomCode,"cho",room.round,name),
 true
@@ -4304,6 +5404,12 @@ if(c){
 choiceMap[name]=c.choice;
 }else{
 allIn=false;
+}
+
+}catch(e){
+
+allIn=false;
+
 }
 
 }
@@ -4409,6 +5515,17 @@ render();
 checkRoomFromURL();
 
 initQuestionBank();
+
+/* Sayfa yeniden açıldığında, daha önce bir online odaya
+   katılmışsa (bağlantı koptu, sekme kapandı, vb.) otomatik
+   olarak kaldığı yerden devam etmeyi dener. QR koddan gelen
+   taze bir katılma isteği varsa (?room=...), buna öncelik
+   verilir ve otomatik geri dönme denenmez. */
+if(firebaseReady && !new URLSearchParams(window.location.search).get("room")){
+
+tryAutoRejoin();
+
+}
 
 </script></body>
 </html>
