@@ -692,10 +692,33 @@ input[type=text]:focus{
   align-items:flex-start;
 }
 
+.reveal-answer-text{
+  font-weight:800;
+  font-size:19px;
+}
+
 .reveal-sub{
-  font-size:12px;
+  margin-top:6px;
+}
+
+.reveal-line{
+  font-size:15px;
   color:var(--ink-dim);
-  margin-top:2px;
+  line-height:1.6;
+  font-weight:500;
+}
+
+.reveal-line b{
+  color:var(--ink);
+  font-weight:800;
+}
+
+.reveal-line-mint{
+  color:#7fe3ad;
+}
+
+.reveal-line-mint b{
+  color:var(--mint);
 }
 
 @media(max-width:600px){
@@ -1134,12 +1157,27 @@ extra:["1","3","5","12"]
    YARDIMCI FONKSİYONLAR
 ========================================================= */
 
+/* Metni karşılaştırmaya hazır hale getirir:
+   - baş/son boşlukları temizler
+   - birden fazla boşluğu teke indirir
+   - basit noktalama işaretlerini yok sayar (. , ! ? : ; ' " - / ( ))
+   - Türkçe'ye özgü doğru harf küçültme kuralını kullanır
+     (İ→i, I→ı — toLocaleLowerCase("tr-TR") bunu doğru yapar,
+     genel .toLowerCase() YANLIŞ yapardı). */
 function normalize(text){
-return (text||"").trim().toLocaleLowerCase("tr-TR");
+
+return (text||"")
+.trim()
+.replace(/[.,!?:;'"\-\/()]/g,"")
+.replace(/\s+/g," ")
+.trim()
+.toLocaleLowerCase("tr-TR");
+
 }
 
 /* =========================================================
-   AKILLI CEVAP KARŞILAŞTIRMA (yazım hatası + birim toleransı)
+   MERKEZİ CEVAP DOĞRULAMA SİSTEMİ
+   (isAnswerCorrect — tüm oyunda TEK doğruluk kaynağı)
 ========================================================= */
 
 /* İki metin arasındaki Levenshtein (düzenleme) mesafesini
@@ -1178,7 +1216,8 @@ return prev[n];
 }
 
 /* Metnin başındaki sayıyı ayıklar (örn. "12 dakika" -> "12").
-   Birim toleransı için kullanılır. */
+   Birim toleransı için kullanılır: doğru cevap "12 dakika"
+   olsa bile oyuncu sadece "12" yazarsa doğru sayılır. */
 function leadingNumber(text){
 
 const m=(text||"").trim().match(/^-?\d+([.,]\d+)?/);
@@ -1187,19 +1226,24 @@ return m?m[0].replace(",","."):null;
 
 }
 
-/* Kullanıcının yazdığı cevap ile doğru cevabı (veya
-   karşılaştırılan herhangi iki metni) akıllıca eşleştirir:
+/* Zaten normalize edilmiş (küçük harf, boşluk/noktalama
+   temizlenmiş) İKİ metni karşılaştırır. Sırasıyla:
    1) Birebir eşleşme.
-   2) Birim toleransı: "12" ile "12 dakika" aynı sayılır
-      (biri sadece sayıdan, diğeri sayı+birimden oluşuyorsa).
-   3) Küçük yazım hataları (Levenshtein mesafesi metin
-      uzunluğuna göre değişen bir eşiğin altındaysa kabul
-      edilir) — Türkçe karakter farkları dahil her cevap için
-      geçerli, özel bir durum değil. */
-function answersMatch(userText,correctText){
-
-const a=normalize(userText);
-const b=normalize(correctText);
+   2) Birim toleransı — doğru cevap sayı+birimse (örn.
+      "12 dakika") ve oyuncu sadece sayıyı yazdıysa ("12"),
+      doğru sayılır. Ama farklı bir SAYI asla kabul edilmez
+      ("2003" ile "2002" yazım hatası değil, yanlış cevaptır).
+   3) Küçük yazım hatası toleransı — SADECE kelime bazlı
+      cevaplar için, sayısal cevaplar için asla. Yanlış
+      pozitifleri önlemek için cevap ne kadar kısaysa eşik o
+      kadar sıkı: 3 karaktere kadar tolerans YOK (tek harf
+      farkı kısa kelimelerde neredeyse her zaman başka,
+      geçerli bir kelime/isim anlamına gelir — "Muş"/"Kuş"
+      gibi), 4-7 karakterde en fazla 1 harf farkı, 8+ karakterde
+      en fazla 2 harf farkı. Anlamca/telaffuzca yakın ama
+      yazılışça uzak kelimeler ASLA kabul edilmez, çünkü bu
+      "yazım hatası" değil "farklı cevap" demektir. */
+function fuzzyTextMatch(a,b){
 
 if(!a) return false;
 if(a===b) return true;
@@ -1207,27 +1251,14 @@ if(a===b) return true;
 const numA=leadingNumber(a);
 const numB=leadingNumber(b);
 
-/* Doğru cevap sayısal bir değerse (örn. "2002", "32"),
-   yazım hatası toleransı KESİNLİKLE uygulanmaz — "2003"
-   ile "2002" bir yazım hatası değil, tamamen farklı ve
-   yanlış bir cevaptır. Sayılar için sadece iki durum kabul
-   edilir: birebir aynı sayı, ya da birim toleransı (aşağıda). */
 const bIsPureNumber=numB!==null && b.slice(numB.length).trim()==="";
 
 if(bIsPureNumber){
 
-if(numA!==null && numA===numB && a.slice(numA.length).trim()===""){
-return true;
-}
-
-/* Kullanıcı sayıya birim eklemiş olabilir (örn. doğru
-   cevap "12", kullanıcı "12 dakika" yazmış) — bu da kabul
-   edilir. Ama farklı bir sayı asla kabul edilmez. */
-if(numA!==null && numA===numB){
-return true;
-}
-
-return false;
+/* Doğru cevap sayısalsa: sadece birebir aynı sayı (birim
+   fark etmeksizin) kabul edilir. Yazım hatası toleransı
+   sayılara KESİNLİKLE uygulanmaz. */
+return numA!==null && numA===numB;
 
 }
 
@@ -1242,39 +1273,86 @@ if(!restA || !restB) return true;
 
 }
 
-/* Yazım hatası (Levenshtein) toleransı sadece kelime bazlı
-   cevaplar için geçerli — herhangi bir taraf tamamen sayısal
-   bir değerse (yukarıdaki durumların hiçbirine girmediyse),
-   bir rakam farkı asla "yazım hatası" sayılmaz. */
-const aIsPureNumber=/^\d+([.,]\d+)?$/.test(a);
+/* Herhangi bir taraf tamamen sayısalsa ve yukarıdaki
+   durumların hiçbirine girmediyse, kelime bazlı yazım
+   hatası toleransı uygulanmaz. */
+const aIsFullyNumeric=/^\d+([.,]\d+)?$/.test(a);
 const bIsFullyNumeric=/^\d+([.,]\d+)?$/.test(b);
 
-if(aIsPureNumber||bIsFullyNumeric) return false;
+if(aIsFullyNumeric||bIsFullyNumeric) return false;
 
 const maxLen=Math.max(a.length,b.length);
 
 if(maxLen===0) return false;
 
+/* Kısa cevaplarda (≤3 karakter) yazım hatası toleransı
+   tamamen kapalı — yanlış pozitif riski çok yüksek. */
+if(maxLen<=3) return false;
+
 const distance=levenshteinDistance(a,b);
 
-/* Kısa cevaplarda daha sıkı, uzun cevaplarda biraz daha
-   geniş bir tolerans eşiği. */
 const threshold=
-maxLen<=5?1:
-maxLen<=10?2:
-3;
+maxLen<=7?1:
+2;
 
 return distance<=threshold;
 
 }
 
-/* Soru metninin yanına, doğru cevabın kaç kelimeden
-   oluştuğunu gösteren küçük bir ipucu ekler
-   (örn. "(Cevap 2 kelime)"). */
+/* OYUNDAKİ TEK DOĞRULUK KAYNAĞI: bir oyuncunun yazdığı
+   cevabın, verilen soru için doğru sayılıp sayılmayacağına
+   karar verir. question.correct ile ve (varsa) her
+   question.aliases[] öğesiyle karşılaştırır — herhangi biriyle
+   eşleşirse doğru kabul edilir. Local ve Online oyunun HER
+   YERİNDE bu fonksiyon kullanılır, böylece iki mod arasında
+   asla tutarsızlık olmaz. */
+function isAnswerCorrect(userAnswer,question){
+
+if(!question) return false;
+
+const a=normalize(userAnswer);
+
+if(!a) return false;
+
+const candidates=[question.correct,...(question.aliases||[])]
+.filter(Boolean);
+
+return candidates.some(c=>fuzzyTextMatch(a,normalize(c)));
+
+}
+
+/* Geriye dönük uyumluluk için: iki ham metni doğrudan
+   karşılaştırmak isteyen eski çağrılar hâlâ çalışsın diye
+   ince bir sarmalayıcı (alias desteği olmadan, tek bir
+   doğru metne karşı). Yeni kod isAnswerCorrect() kullanmalı. */
+function answersMatch(userText,correctText){
+return fuzzyTextMatch(normalize(userText),normalize(correctText));
+}
+
+/* Soru metninin yanına, beklenen cevabın türüne göre küçük
+   bir ipucu ekler:
+   - Doğru cevap sayısalsa (birim olsa da olmasa da,
+     örn. "12" ya da "12 dakika"): "(Cevap bir sayı)"
+   - Değilse, kaç kelimeden oluştuğunu gösterir:
+     "(Cevap 2 kelime)" */
 function answerWordHint(question){
 
-const count=(question&&question.correct||"")
-.trim()
+const correct=(question&&question.correct)||"";
+
+const trimmed=correct.trim();
+
+const num=leadingNumber(trimmed);
+
+const isNumericAnswer=
+num!==null && /^\d/.test(trimmed);
+
+if(isNumericAnswer){
+
+return ` <span class="word-hint">(Cevap bir sayı)</span>`;
+
+}
+
+const count=trimmed
 .split(/\s+/)
 .filter(Boolean)
 .length;
@@ -1396,7 +1474,7 @@ if(!answer) continue;
 
 const normalized=normalize(answer);
 
-if(answersMatch(answer,question.correct)) continue;
+if(isAnswerCorrect(answer,question)) continue;
 
 if(used.has(normalized)) continue;
 
@@ -1418,7 +1496,7 @@ if(result.length>=MIN_OPTIONS-1) break;
 
 const normalized=normalize(extra);
 
-if(answersMatch(extra,question.correct)) continue;
+if(isAnswerCorrect(extra,question)) continue;
 
 if(used.has(normalized)) continue;
 
@@ -1465,43 +1543,49 @@ return options;
 
 }
 
-/* Tur sonunda gösterilen "kim ne yazdı" açıklama kutusu.
-   choicesMap: {oyuncuAdı: seçtiği metin} */
+/* Tur sonunda gösterilen "kim ne yazdı, kim neyi seçti"
+   açıklama kutusu. choicesMap: {oyuncuAdı: seçtiği metin} */
 
 function revealHTML(options,choicesMap){
 
 const map=choicesMap||{};
 
+const votersFor=text=>
+Object.keys(map).filter(name=>map[name]===text);
+
 const rows=(options||[]).map(opt=>{
 
-const count=Object.values(map).filter(c=>c===opt.text).length;
+const voters=votersFor(opt.text);
 
 let sub;
 
 if(opt.correct){
 
-sub=count>0
+sub=voters.length>0
 ?
-`${count} kişi doğruyu buldu → her biri +${POINTS_FOR_CORRECT} puan`
+`<div class="reveal-line reveal-line-mint">🎯 Doğruyu bulanlar: <b>${voters.join(", ")}</b> → her biri +${POINTS_FOR_CORRECT} puan</div>`
 :
-"Kimse bulamadı";
+`<div class="reveal-line">Kimse bulamadı.</div>`;
 
 }else if(opt.owners && opt.owners.length){
 
-sub=`${opt.owners.join(", ")} yazmıştı`+
-(count>0
+sub=
+`<div class="reveal-line">✍️ Kim yazdı: <b>${opt.owners.join(", ")}</b></div>`+
+(voters.length>0
 ?
-` · ${count} kişi seçti → +${POINTS_PER_VOTE} puan`
+`<div class="reveal-line reveal-line-mint">🗳️ Kim seçti: <b>${voters.join(", ")}</b> → ${opt.owners.join(", ")} +${POINTS_PER_VOTE} puan (oy başına)</div>`
 :
-" · kimse seçmedi");
+`<div class="reveal-line">🗳️ Kimse seçmedi.</div>`);
 
 }else{
 
-sub=count>0
+sub=
+`<div class="reveal-line">🤖 Oyunun eklediği sahte cevaptı.</div>`+
+(voters.length>0
 ?
-`Oyunun eklediği sahte cevaptı · ${count} kişi kandı`
+`<div class="reveal-line">🗳️ Kananlar: <b>${voters.join(", ")}</b> (puan yok)</div>`
 :
-"Oyunun eklediği sahte cevaptı";
+`<div class="reveal-line">Kimse kanmadı.</div>`);
 
 }
 
@@ -1511,7 +1595,7 @@ return`
 
 <div style="flex:1">
 
-<div style="font-weight:700;${opt.correct?"color:var(--mint)":""}">
+<div class="reveal-answer-text" style="${opt.correct?"color:var(--mint)":""}">
 ${opt.text}${opt.correct?" ✓":""}
 </div>
 
@@ -1565,6 +1649,21 @@ let playerAvatars={};
 let pendingAvatarEmoji=AVATAR_EMOJIS[0];
 
 let pendingAvatarColor=AVATAR_COLORS[0];
+
+/* Online kurulum ekranındaki isim/kod alanları — DOM'da değil
+   burada tutulur ki emoji/renk seçince ekran yeniden
+   çizildiğinde (renderOnlineSetup()) kullanıcının o ana kadar
+   yazdığı hiçbir şey (QR koddan gelen oda kodu dahil) silinmesin. */
+let onlineSetupHostName="";
+
+let onlineSetupJoinName="";
+
+let onlineSetupJoinCode="";
+
+/* Kullanıcı bir oda linki/QR kodundan mı geldi? Öyleyse zaten
+   katılmak istediği belli olduğundan "Oda Oluştur" kartı
+   gizlenir, sadece avatar + isim + katıl akışı gösterilir. */
+let cameFromShareLink=false;
 
 let currentRound=0;
 
@@ -2258,7 +2357,7 @@ const player=players[currentPlayerIndex];
 
 const isCorrect=
 text!=="" &&
-answersMatch(text,currentQuestion.correct);
+isAnswerCorrect(text,currentQuestion);
 
 
 /* DOĞRU CEVAP YAZILDIYSA
@@ -2900,6 +2999,17 @@ let roomState=null;
 
 let roomPoll=null;
 
+/* Firebase'e yazan tek seferlik online işlemler (oda kur,
+   odaya katıl, oyunu başlat, kategori seç, sonraki tur) için
+   ortak "meşgul" kilidi. Bu işlemler async olduğundan ve
+   düğmeler yazma işlemi bitene kadar ekranda tıklanabilir
+   kaldığından, hızlı bir çift dokunuş aynı işlemi iki kez
+   tetikleyip round/kategori sayaçlarının çift artmasına ya da
+   yarışan Firebase yazmalarına yol açabiliyordu. Bu kilit
+   bunu engeller: işlem sürerken aynı türden yeni bir çağrı
+   sessizce yok sayılır. */
+let onlineActionBusy=false;
+
 let onlineLastRound=0;
 
 /* Kategori seçim ekranının görsel geri sayımının hangi tur
@@ -3538,6 +3648,10 @@ mode="online";
 
 onlineName="";
 
+/* Normal menüden buraya gelindiyse (QR/link değil), "Oda
+   Oluştur" kartı her zaman görünür olmalı. */
+cameFromShareLink=false;
+
 renderOnlineSetup();
 
 }
@@ -3625,6 +3739,12 @@ onclick="pickPendingAvatarColor('${c}');renderOnlineSetup()">
 </div>
 
 
+${
+cameFromShareLink
+?
+""
+:
+`
 <div class="card">
 
 <div class="stage-label">
@@ -3643,6 +3763,8 @@ Oyunu sen kur. Diğer oyuncular QR kod veya oda koduyla katılsın.
 type="text"
 id="hostName"
 placeholder="Adın..."
+value="${escapeAttr(onlineSetupHostName)}"
+oninput="onlineSetupHostName=this.value"
 >
 
 <button
@@ -3652,6 +3774,8 @@ Oda Oluştur
 </button>
 
 </div>
+`
+}
 
 
 <div class="card">
@@ -3668,6 +3792,8 @@ Oda Kodu
 type="text"
 id="joinName"
 placeholder="Adın..."
+value="${escapeAttr(onlineSetupJoinName)}"
+oninput="onlineSetupJoinName=this.value"
 >
 
 <input
@@ -3675,6 +3801,8 @@ type="text"
 id="joinCode"
 placeholder="Oda kodu..."
 style="text-transform:uppercase"
+value="${escapeAttr(onlineSetupJoinCode)}"
+oninput="onlineSetupJoinCode=this.value"
 >
 
 <button
@@ -3743,6 +3871,8 @@ renderOnlineLobby();
 
 async function createOnlineRoom(){
 
+if(onlineActionBusy) return;
+
 if(!firebaseReady){
 
 showOnlineSetupError("Önce Firebase ayarlarını tamamlamalısın (yukarıdaki uyarıya bak).");
@@ -3761,6 +3891,10 @@ showOnlineSetupError("Adını gir.");
 return;
 
 }
+
+onlineActionBusy=true;
+
+try{
 
 onlineName=name;
 
@@ -3795,9 +3929,7 @@ roomState=room;
 
 const ok=await storageSet(
 "YALANCI_ROOM_"+roomCode,
-room,
-true
-);
+room);
 
 if(!ok){
 
@@ -3816,6 +3948,12 @@ return;
 saveOnlineSession();
 
 startRoomPolling();
+
+}finally{
+
+onlineActionBusy=false;
+
+}
 
 }
 
@@ -3850,11 +3988,15 @@ return;
 
 }
 
+if(onlineActionBusy) return;
+
+onlineActionBusy=true;
+
+try{
+
 const room=
 normalizeRoom(await storageGet(
-"YALANCI_ROOM_"+code,
-true
-));
+"YALANCI_ROOM_"+code));
 
 if(!room){
 
@@ -3890,9 +4032,7 @@ room.avatars[name]={emoji:pendingAvatarEmoji,color:pendingAvatarColor};
 
 const ok=await storageSet(
 "YALANCI_ROOM_"+code,
-room,
-true
-);
+room);
 
 if(!ok){
 
@@ -3919,6 +4059,12 @@ roomState=room;
 saveOnlineSession();
 
 startRoomPolling();
+
+}finally{
+
+onlineActionBusy=false;
+
+}
 
 }
 
@@ -4258,6 +4404,10 @@ async function startOnlineGame(){
 
 if(!isHost) return;
 
+if(onlineActionBusy) return;
+
+onlineActionBusy=true;
+
 try{
 
 const room=roomState;
@@ -4281,7 +4431,7 @@ room.players.forEach(p=>{
 room.scores[p]=room.scores[p]||0;
 });
 
-const ok=await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+const ok=await storageSet("YALANCI_ROOM_"+roomCode,room);
 
 if(!ok){
 
@@ -4300,6 +4450,10 @@ renderOnlineGame();
 console.error("startOnlineGame hatası:",e);
 
 alert("Beklenmeyen bir hata oluştu: "+e.message);
+
+}finally{
+
+onlineActionBusy=false;
 
 }
 
@@ -4380,6 +4534,10 @@ ${c.name}
 
 async function onlineSelectCategory(id){
 
+if(onlineActionBusy) return;
+
+onlineActionBusy=true;
+
 clearInterval(timer);
 
 try{
@@ -4420,7 +4578,7 @@ room.phase="answering";
 
 room.answeringStartedAt=Date.now();
 
-const ok=await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+const ok=await storageSet("YALANCI_ROOM_"+roomCode,room);
 
 if(!ok){
 
@@ -4439,6 +4597,10 @@ renderOnlineGame();
 console.error("onlineSelectCategory hatası:",e);
 
 alert("Beklenmeyen bir hata oluştu: "+e.message);
+
+}finally{
+
+onlineActionBusy=false;
 
 }
 
@@ -4544,7 +4706,7 @@ text=(text||"").trim();
 
 const isCorrect=
 text!=="" &&
-answersMatch(text,roomState.question.correct);
+isAnswerCorrect(text,roomState.question);
 
 if(isCorrect){
 
@@ -4576,9 +4738,7 @@ renderOnlineGame();
 
 await storageSet(
 roomKey(roomCode,"ans",roomState.round,onlineName),
-{wrong:wrongOrNull},
-true
-);
+{wrong:wrongOrNull});
 
 }
 
@@ -4667,9 +4827,7 @@ renderOnlineGame();
 
 await storageSet(
 roomKey(roomCode,"cho",roomState.round,onlineName),
-{choice:text},
-true
-);
+{choice:text});
 
 }
 
@@ -4746,6 +4904,12 @@ async function onlineNextRound(){
 
 if(!isHost) return;
 
+if(onlineActionBusy) return;
+
+onlineActionBusy=true;
+
+try{
+
 const room=roomState;
 
 const remaining=CATEGORIES
@@ -4758,7 +4922,7 @@ if(!remaining || room.round>=TOTAL_ROUNDS){
 
 room.phase="game_over";
 
-await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+await storageSet("YALANCI_ROOM_"+roomCode,room);
 
 roomState=room;
 
@@ -4776,11 +4940,23 @@ room.phase="category_pick";
 
 room.categoryPickStartedAt=Date.now();
 
-await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+await storageSet("YALANCI_ROOM_"+roomCode,room);
 
 roomState=room;
 
 renderOnlineGame();
+
+}catch(e){
+
+console.error("onlineNextRound hatası:",e);
+
+alert("Beklenmeyen bir hata oluştu: "+e.message);
+
+}finally{
+
+onlineActionBusy=false;
+
+}
 
 }
 
@@ -4939,9 +5115,7 @@ if(!saved||!saved.roomCode||!saved.name) return false;
 
 const room=
 normalizeRoom(await storageGet(
-"YALANCI_ROOM_"+saved.roomCode,
-true
-));
+"YALANCI_ROOM_"+saved.roomCode));
 
 /* Oda artık yoksa ya da bu isim odadan çıkarılmışsa
    (örn. oyun çoktan bitmiş ve host yeni bir oda açmış),
@@ -5103,9 +5277,7 @@ if(!roomCode) return;
 
 const room=
 normalizeRoom(await storageGet(
-"YALANCI_ROOM_"+roomCode,
-true
-));
+"YALANCI_ROOM_"+roomCode));
 
 if(!room) return;
 
@@ -5187,30 +5359,22 @@ lastRoomSnapshot=snapshot;
 
 if(justEntered && roomState.phase==="answering"){
 
-/* Kalan süreyi turun gerçek başlangıç zamanına göre
-   hesapla — sonradan katılan/yeniden bağlanan bir oyuncu
-   fazladan süre kazanmasın. */
-const elapsed=
-roomState.answeringStartedAt
-?Math.floor((Date.now()-roomState.answeringStartedAt)/1000)
-:0;
-
-const remaining=Math.max(1,(roomState.questionTime||45)-elapsed);
-
-startTimer(remaining,()=>onlineSubmitAnswer(""));
+/* ÖNEMLİ: kalan süreyi ASLA başka bir cihazın (host'un)
+   yazdığı zaman damgasıyla bu cihazın kendi saatini
+   karşılaştırarak hesaplama — telefonların saatleri birbirini
+   tutmayabilir (senkronize değildir), bu da bazı oyuncuların
+   neredeyse hiç süresi kalmamış gibi görünmesine yol açar.
+   Bunun yerine her cihaz, o aşamaya girdiği an kendi tam
+   süresini yerel olarak başlatır. Süre aşımı güvenliği zaten
+   host'un kendi saatiyle kendi yazdığı zaman damgasını
+   karşılaştırdığı hostMaybeAdvance() içinde ayrıca sağlanıyor. */
+startTimer(roomState.questionTime||45,()=>onlineSubmitAnswer(""));
 
 }
 
 if(justEntered && roomState.phase==="select"){
 
-const elapsed=
-roomState.selectStartedAt
-?Math.floor((Date.now()-roomState.selectStartedAt)/1000)
-:0;
-
-const remaining=Math.max(1,(roomState.questionTime||45)-elapsed);
-
-startTimer(remaining,()=>onlineChooseAnswer(""));
+startTimer(roomState.questionTime||45,()=>onlineChooseAnswer(""));
 
 }
 
@@ -5219,18 +5383,25 @@ onlineCategoryTimerRound!==roomState.round){
 
 onlineCategoryTimerRound=roomState.round;
 
-const elapsed=
-roomState.categoryPickStartedAt
-?Math.floor((Date.now()-roomState.categoryPickStartedAt)/1000)
-:0;
-
-const remaining=Math.max(1,(roomState.questionTime||45)-elapsed);
-
 /* Bu sayaç sadece görsel — gerçek zaman aşımı güvenliği
-   host tarafında hostMaybeAdvance() içinde yönetiliyor,
-   bu yüzden süre dolduğunda burada ekstra bir işlem
-   yapmıyoruz (host otomatik olarak devam ettirecek). */
-startTimer(remaining,()=>{});
+   host tarafında hostMaybeAdvance() içinde (host'un kendi
+   saatiyle) yönetiliyor, bu yüzden süre dolduğunda burada
+   ekstra bir işlem yapmıyoruz (host otomatik olarak devam
+   ettirecek). */
+startTimer(roomState.questionTime||45,()=>{});
+
+}
+
+/* Oyun bittiyse (herkes "Oyun Bitti!" ekranını gördü), artık
+   round/faz değişecek bir şey kalmadığından yoklamayı
+   durduruyoruz — boşuna pil/veri tüketmesin. Kullanıcı "Ana
+   Menü"ye basınca zaten leaveOnlineRoom() ayrıca temizler;
+   bu sadece erken, gereksiz yoklamaları önler. */
+if(roomState.phase==="game_over" && roomPoll){
+
+clearInterval(roomPoll);
+
+roomPoll=null;
 
 }
 
@@ -5280,7 +5451,7 @@ if(!available.length){
 
 room.phase="game_over";
 
-await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+await storageSet("YALANCI_ROOM_"+roomCode,room);
 
 roomState=room;
 
@@ -5320,7 +5491,7 @@ room.phase="answering";
 
 room.answeringStartedAt=Date.now();
 
-await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+await storageSet("YALANCI_ROOM_"+roomCode,room);
 
 roomState=room;
 
@@ -5339,9 +5510,7 @@ for(const name of room.players){
 try{
 
 const a=await storageGet(
-roomKey(roomCode,"ans",room.round,name),
-true
-);
+roomKey(roomCode,"ans",room.round,name));
 
 if(a){
 wrongMap[name]=a.wrong;
@@ -5379,7 +5548,7 @@ room.phase="select";
 
 room.selectStartedAt=Date.now();
 
-await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+await storageSet("YALANCI_ROOM_"+roomCode,room);
 
 roomState=room;
 
@@ -5396,9 +5565,7 @@ for(const name of room.players){
 try{
 
 const c=await storageGet(
-roomKey(roomCode,"cho",room.round,name),
-true
-);
+roomKey(roomCode,"cho",room.round,name));
 
 if(c){
 choiceMap[name]=c.choice;
@@ -5459,7 +5626,7 @@ room.lastGain=gains;
 
 room.phase="round_result";
 
-await storageSet("YALANCI_ROOM_"+roomCode,room,true);
+await storageSet("YALANCI_ROOM_"+roomCode,room);
 
 roomState=room;
 
@@ -5487,15 +5654,16 @@ if(!room) return;
 
 mode="online";
 
+/* cameFromShareLink: bu ekranın QR/oda-linkiyle mi açıldığını
+   işaretler — "Oda Oluştur" kartı bu durumda gizlenir, çünkü
+   linkle gelen kişi zaten katılmak istiyordur. */
+cameFromShareLink=true;
+
+onlineSetupJoinCode=room.toUpperCase();
+
 setTimeout(()=>{
 
 renderOnlineSetup();
-
-const code=document.getElementById("joinCode");
-
-if(code){
-code.value=room.toUpperCase();
-}
 
 const nameField=document.getElementById("joinName");
 
