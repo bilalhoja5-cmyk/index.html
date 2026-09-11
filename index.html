@@ -2999,6 +2999,19 @@ let roomState=null;
 
 let roomPoll=null;
 
+/* "answering" fazının host tarafından ne zaman gözlemlendiğini
+   SADECE host'un kendi saatiyle takip eder. Kategori seçimini
+   (ve dolayısıyla answeringStartedAt yazımını) host olmayan
+   bir oyuncu da yapabildiğinden, o zaman damgasını host'un
+   Date.now()'uyla karşılaştırmak — farklı telefonların saatleri
+   senkron olmayabileceğinden — süre aşımı güvenliğini yanlış
+   şekilde hiç tetiklenmez hale getirebilirdi (host'unkinden
+   ileri bir saatte yazılmış bir zaman damgası, host'un
+   Date.now()'undan hep büyük çıkar). Bunun yerine host, bu
+   faza kendi saatiyle ilk girdiği anı kaydeder. */
+let hostAnsweringTrackKey=null;
+let hostAnsweringObservedAt=null;
+
 /* Firebase'e yazan tek seferlik online işlemler (oda kur,
    odaya katıl, oyunu başlat, kategori seç, sonraki tur) için
    ortak "meşgul" kilidi. Bu işlemler async olduğundan ve
@@ -3149,6 +3162,34 @@ console.error("storageSet hatası:",e);
 return false;
 
 }
+
+}
+
+/* Bir cevap/seçim gönderimi gibi KRİTİK yazmalar için: arayüz
+   zaten "gönderildi" gösterdiğinden, yazma sessizce başarısız
+   olursa oyuncu sonsuza kadar (aslında hiçbir şey kaydedilmeden)
+   "bekleniyor" ekranında asılı kalır — host da onu asla
+   cevaplamış saymaz. Bu yüzden birkaç kez otomatik tekrar
+   dener; hepsi başarısız olursa çağıran tarafa false döner ki
+   kullanıcıya dürüstçe "gönderilemedi" gösterilip tekrar
+   denemesi sağlanabilsin. */
+async function storageSetWithRetry(key,value,attempts){
+
+attempts=attempts||3;
+
+for(let i=0;i<attempts;i++){
+
+const ok=await storageSet(key,value);
+
+if(ok) return true;
+
+if(i<attempts-1){
+await new Promise(r=>setTimeout(r,800));
+}
+
+}
+
+return false;
 
 }
 
@@ -4736,9 +4777,26 @@ onlineAnswerNotice=false;
 
 renderOnlineGame();
 
-await storageSet(
+const ok=await storageSetWithRetry(
 roomKey(roomCode,"ans",roomState.round,onlineName),
-{wrong:wrongOrNull});
+{wrong:wrongOrNull}
+);
+
+if(!ok){
+
+/* Yazma birkaç denemeden sonra hâlâ başarısız oldu —
+   kullanıcıyı "gönderildi" ekranında YANLIŞ bir güvenle
+   sonsuza kadar bırakmayalım. Gerçek durumu göster ve tekrar
+   denemesine izin ver. */
+onlineLocalAnswerStage="attempt1";
+
+alert("Cevabın kaydedilemedi (bağlantı sorunu). Lütfen tekrar gönder. Teknik detay: "+(lastStorageError||"bilinmiyor"));
+
+renderOnlineGame();
+
+startTimer(roomState.questionTime||45,()=>onlineSubmitAnswer(""));
+
+}
 
 }
 
@@ -4825,9 +4883,24 @@ onlineLocalSelectStage="waiting";
 
 renderOnlineGame();
 
-await storageSet(
+const ok=await storageSetWithRetry(
 roomKey(roomCode,"cho",roomState.round,onlineName),
-{choice:text});
+{choice:text}
+);
+
+if(!ok){
+
+/* Aynı sebep: yazma başarısız olduysa kullanıcıyı yanlış
+   bir "gönderildi" ekranında bırakmayalım. */
+onlineLocalSelectStage="selecting";
+
+alert("Seçimin kaydedilemedi (bağlantı sorunu). Lütfen tekrar seç. Teknik detay: "+(lastStorageError||"bilinmiyor"));
+
+renderOnlineGame();
+
+startTimer(roomState.questionTime||45,()=>onlineChooseAnswer(""));
+
+}
 
 }
 
@@ -5530,8 +5603,18 @@ allIn=false;
 }
 
 const timedOut=
-room.answeringStartedAt &&
-(Date.now()-room.answeringStartedAt>ANSWER_PHASE_TIMEOUT_MS);
+(()=>{
+
+const key=roomCode+":"+room.round;
+
+if(hostAnsweringTrackKey!==key){
+hostAnsweringTrackKey=key;
+hostAnsweringObservedAt=Date.now();
+}
+
+return (Date.now()-hostAnsweringObservedAt)>ANSWER_PHASE_TIMEOUT_MS;
+
+})();
 
 if(allIn||timedOut){
 
