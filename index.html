@@ -93,6 +93,7 @@ h3{
   align-items:center;
   justify-content:space-between;
   padding:18px 20px 8px;
+  flex:none;
 }
 
 .brand{
@@ -144,6 +145,16 @@ h3{
   padding:2px 20px 16px;
   overflow-x:auto;
   scrollbar-width:none;
+  /* ÖNEMLİ — kırpılma düzeltmesi:
+     Bu satır bir flex kolonunun (#app) çocuğu. "overflow-x:auto"
+     verildiği anda CSS kuralları gereği overflow'u artık
+     "visible" olmadığından, bu elemanın otomatik en küçük
+     boyutu (min-height:auto) 0'a düşer — yani sayfa içeriği
+     uzun olduğunda flex düzeni bu satırı ezip kısaltabilir ve
+     içindeki puan kutucukları yukarıdan kesik görünür.
+     flex:none bunu tamamen engeller: satır her zaman kendi
+     doğal yüksekliğinde kalır. */
+  flex:none;
 }
 
 .scorebar::-webkit-scrollbar{display:none}
@@ -349,6 +360,41 @@ main{
   font-weight:700;
   line-height:1.32;
   letter-spacing:-.01em;
+}
+
+/* Soru görseli (isteğe bağlı). Yükseklik sınırlı tutuluyor ki
+   telefonda sayaç ve cevap kutusu ekrandan taşmasın. */
+.question-image-wrap{
+  margin-top:14px;
+  border-radius:var(--radius-sm);
+  overflow:hidden;
+  background:var(--bg-deep);
+  border:1px solid var(--line);
+}
+
+.question-image{
+  display:block;
+  width:100%;
+  max-height:200px;
+  object-fit:contain;
+  background:var(--bg-deep);
+}
+
+/* Doğruyu bulma ekranındaki küçültülmüş hatırlatma görseli */
+.recap-image-wrap{
+  margin-top:10px;
+  border-radius:var(--radius-sm);
+  overflow:hidden;
+  background:var(--bg-deep);
+  border:1px solid var(--line);
+}
+
+.recap-image{
+  display:block;
+  width:100%;
+  max-height:120px;
+  object-fit:contain;
+  background:var(--bg-deep);
 }
 
 .word-hint{
@@ -1043,6 +1089,11 @@ const MIN_OPTIONS = 5;
    sadece bu sayıyı güncelle. */
 const TOTAL_ROUNDS = 10;
 
+/* Bir oyunda yer alabilecek en fazla oyuncu sayısı (her iki
+   mod için de geçerli). Online modda oda kurucusu (host) da
+   bu sayıya dahildir: yani 1 host + 7 katılımcı = 8 oyuncu. */
+const MAX_PLAYERS = 8;
+
 /* =========================================================
    AVATAR SİSTEMİ (emoji + renk — genişletilebilir)
 ========================================================= */
@@ -1098,6 +1149,111 @@ extra:["Brezilya","Kolombiya","Guyana","Ekvador"]
 q:"Yüzölçümü bakımından dünyanın en büyük gölü (tuzlu su dahil) hangisidir?",
 correct:"Hazar Denizi",
 extra:["Aral Gölü","Ölü Deniz","Titicaca Gölü","Viktorya Gölü"]
+},
+{
+q:"Ağrı Dağı'nın yüksekliği kaç metredir?",
+correct:"5137",
+extra:["4810","4500","5500","6200"]
+},
+{
+q:"Türkiye sınırları içinde doğup yine Türkiye'de denize dökülen en uzun nehir hangisidir?",
+correct:"Kızılırmak",
+extra:["Sakarya","Yeşilırmak","Fırat","Susurluk"]
+},
+{
+q:"Türkiye'nin en büyük gölü hangisidir?",
+correct:"Van Gölü",
+extra:["Tuz Gölü","Beyşehir Gölü","Eğirdir Gölü","İznik Gölü"]
+},
+{
+q:"Yüzölçümü bakımından Türkiye'nin en büyük ili hangisidir?",
+correct:"Konya",
+extra:["Ankara","Sivas","Erzurum","Van"]
+},
+{
+q:"Türkiye'nin kara sınırı bulunan kaç komşu ülkesi vardır?",
+correct:"8",
+extra:["5","6","7","10"]
+},
+{
+q:"Yüzölçümü bakımından Türkiye'nin en küçük ili hangisidir?",
+correct:"Yalova",
+extra:["Kilis","Rize","Bartın","Düzce"]
+},
+{
+q:"Dünyanın en büyük okyanusu hangisidir?",
+correct:"Pasifik Okyanusu",
+extra:["Atlas Okyanusu","Hint Okyanusu","Arktik Okyanusu","Güney Okyanusu"]
+},
+{
+q:"Afrika kıtasının en yüksek dağı hangisidir?",
+correct:"Kilimanjaro",
+extra:["Kenya Dağı","Atlas Dağları","Ruwenzori","Elgon Dağı"]
+},
+{
+q:"Avustralya'nın başkenti neresidir?",
+correct:"Canberra",
+extra:["Sidney","Melbourne","Brisbane","Perth"]
+},
+{
+q:"Kanada'nın başkenti neresidir?",
+correct:"Ottawa",
+extra:["Toronto","Montreal","Vancouver","Quebec"]
+},
+{
+q:"Brezilya'nın başkenti neresidir?",
+correct:"Brasilia",
+extra:["Rio de Janeiro","Sao Paulo","Salvador","Belo Horizonte"]
+},
+{
+q:"Ekvatorun uzunluğu yaklaşık kaç kilometredir?",
+correct:"40000",
+extra:["10000","25000","60000","100000"]
+},
+{
+q:"Japonya'nın en yüksek dağı hangisidir?",
+correct:"Fuji",
+extra:["Kita","Hotaka","Ontake","Asama"]
+},
+{
+q:"Süveyş Kanalı hangi iki denizi birbirine bağlar?",
+correct:"Akdeniz ve Kızıldeniz",
+extra:["Karadeniz ve Akdeniz","Hazar ve Karadeniz","Arap Denizi ve Kızıldeniz","Marmara ve Ege"]
+},
+{
+q:"Kapadokya hangi coğrafi bölgemizde yer alır?",
+correct:"İç Anadolu",
+extra:["Doğu Anadolu","Akdeniz","Karadeniz","Ege"]
+},
+{
+q:"Pamukkale travertenleri hangi ilimizde bulunur?",
+correct:"Denizli",
+extra:["Antalya","Muğla","Afyonkarahisar","Isparta"]
+},
+{
+q:"Nemrut Dağı'ndaki dev heykeller hangi ilimizde bulunur?",
+correct:"Adıyaman",
+extra:["Malatya","Şanlıurfa","Gaziantep","Diyarbakır"]
+},
+{
+q:"Efes Antik Kenti hangi ilimizde bulunur?",
+correct:"İzmir",
+extra:["Aydın","Muğla","Manisa","Denizli"]
+},
+{
+q:"Everest Dağı hangi iki ülkenin sınırında yer alır?",
+correct:"Nepal ve Çin",
+extra:["Hindistan ve Nepal","Çin ve Butan","Pakistan ve Çin","Nepal ve Hindistan"]
+},
+{
+q:"Yüzölçümü bakımından dünyanın en küçük ülkesi hangisidir?",
+correct:"Vatikan",
+extra:["Monako","San Marino","Nauru","Liechtenstein"]
+},
+{
+q:"Hiçbir ülkenin egemenliğinde bulunmayan kıta hangisidir?",
+correct:"Antarktika",
+extra:["Okyanusya","Grönland","Sibirya","Amazon"]
 }
 ]
 },
@@ -1135,7 +1291,106 @@ extra:["Oxford Üniversitesi","Bologna Üniversitesi","El-Ezher Üniversitesi","
 {
 q:"İlk modern Olimpiyat Oyunları hangi yıl düzenlenmiştir?",
 correct:"1896",
-extra:["1900","1892","1904","1912"]
+extra:["1900","1892","1904","1912"]},
+{
+q:"Nobel Barış Ödülü hangi ülkede verilmektedir?",
+correct:"Norveç",
+extra:["İsveç","Danimarka","Finlandiya","İsviçre"]
+},
+{
+q:"Olimpiyat bayrağında kaç halka bulunur?",
+correct:"5",
+extra:["4","6","7","3"]
+},
+{
+q:"Yaz Olimpiyat Oyunları kaç yılda bir düzenlenir?",
+correct:"4",
+extra:["2","3","5","6"]
+},
+{
+q:"Yetişkin bir insan iskeletinde kaç kemik bulunur?",
+correct:"206",
+extra:["180","198","215","230"]
+},
+{
+q:"Standart bir piyanoda kaç tuş bulunur?",
+correct:"88",
+extra:["76","82","92","100"]
+},
+{
+q:"Türk alfabesinde kaç harf bulunur?",
+correct:"29",
+extra:["26","28","30","31"]
+},
+{
+q:"Dünyanın Yedi Harikası'ndan günümüze ulaşabilen tek yapı hangisidir?",
+correct:"Keops Piramidi",
+extra:["Babil Asma Bahçeleri","Rodos Heykeli","İskenderiye Feneri","Artemis Tapınağı"]
+},
+{
+q:"Mona Lisa tablosu hangi müzede sergilenmektedir?",
+correct:"Louvre",
+extra:["Prado","Uffizi","British Museum","Hermitage"]
+},
+{
+q:"Birleşmiş Milletler hangi yıl kurulmuştur?",
+correct:"1945",
+extra:["1919","1939","1948","1950"]
+},
+{
+q:"Birleşmiş Milletler Güvenlik Konseyi'nin kaç daimi üyesi vardır?",
+correct:"5",
+extra:["3","7","10","15"]
+},
+{
+q:"İstiklal Marşı'nın şairi kimdir?",
+correct:"Mehmet Akif Ersoy",
+extra:["Namık Kemal","Tevfik Fikret","Yahya Kemal","Ziya Gökalp"]
+},
+{
+q:"İstiklal Marşı hangi yıl resmi marş olarak kabul edilmiştir?",
+correct:"1921",
+extra:["1920","1923","1924","1925"]
+},
+{
+q:"Türkiye Cumhuriyeti'nin ikinci cumhurbaşkanı kimdir?",
+correct:"İsmet İnönü",
+extra:["Celal Bayar","Cemal Gürsel","Fevzi Çakmak","Refik Saydam"]
+},
+{
+q:"Nobel Edebiyat Ödülü kazanan ilk Türk yazar kimdir?",
+correct:"Orhan Pamuk",
+extra:["Yaşar Kemal","Nazım Hikmet","Sabahattin Ali","Ahmet Hamdi Tanpınar"]
+},
+{
+q:"'Hamlet' oyununun yazarı kimdir?",
+correct:"William Shakespeare",
+extra:["Charles Dickens","Oscar Wilde","Christopher Marlowe","Ben Jonson"]
+},
+{
+q:"'Suç ve Ceza' romanının yazarı kimdir?",
+correct:"Dostoyevski",
+extra:["Tolstoy","Çehov","Gogol","Turgenyev"]
+},
+{
+q:"Kızılhaç örgütünün kurucusu olan ve ilk Nobel Barış Ödülü'nü kazanan kişi kimdir?",
+correct:"Henry Dunant",
+extra:["Florence Nightingale","Albert Schweitzer","Woodrow Wilson","Fridtjof Nansen"]
+},
+{
+q:"Gökkuşağında kaç renk bulunduğu kabul edilir?",
+correct:"7",
+extra:["5","6","8","9"]
+},
+{
+q:"Bir yılda kaç hafta vardır?",
+correct:"52",
+extra:["48","50","54","56"]
+},
+{
+q:"Oscar Ödülleri hangi ülkede verilmektedir?",
+correct:"ABD",
+extra:["İngiltere","Fransa","İtalya","Kanada"]
 }
 ]
 },
@@ -1147,7 +1402,7 @@ icon:"🔬",
 questions:[
 {
 q:"İnsan vücudundaki en küçük kemik nerede bulunur?",
-correct:"Kulakta (üzengi kemiği)",
+correct:"Kulakta",
 extra:["Elde","Ayakta","Kafatasında","Omurgada"]
 },
 {
@@ -1157,8 +1412,8 @@ extra:["Helyum","Lityum","Oksijen","Karbon"]
 },
 {
 q:"Işığın boşluktaki hızı saniyede yaklaşık kaç kilometredir?",
-correct:"300.000 km",
-extra:["150.000 km","1.000.000 km","30.000 km","3.000.000 km"]
+correct:"300000",
+extra:["150000","1000000","30000","3000000"]
 },
 {
 q:"DNA'nın çift sarmal yapısını kim(ler) tanımlamıştır?",
@@ -1167,13 +1422,128 @@ extra:["Darwin ve Mendel","Curie ve Einstein","Pasteur ve Koch","Franklin ve Wil
 },
 {
 q:"Ortalama bir yetişkin insan vücudunda kaç litre kan bulunur?",
-correct:"5 litre",
-extra:["3 litre","8 litre","10 litre","2 litre"]
+correct:"5",
+extra:["3","8","10","2"]
 },
 {
 q:"Güneş Sistemi'nde halkalara sahip olduğu bilinen kaç gezegen vardır?",
 correct:"4",
 extra:["1","2","6","8"]
+},
+{
+q:"Periyodik tabloda 'Au' simgesiyle gösterilen element hangisidir?",
+correct:"Altın",
+extra:["Gümüş","Bakır","Alüminyum","Demir"]
+},
+{
+q:"Periyodik tabloda 'Fe' simgesiyle gösterilen element hangisidir?",
+correct:"Demir",
+extra:["Flor","Fosfor","Kurşun","Çinko"]
+},
+{
+q:"İnsan vücudundaki en uzun kemik hangisidir?",
+correct:"Uyluk kemiği",
+extra:["Kaval kemiği","Kol kemiği","Kürek kemiği","Köprücük kemiği"]
+},
+{
+q:"İnsan vücudunun en büyük organı hangisidir?",
+correct:"Deri",
+extra:["Karaciğer","Akciğer","Bağırsak","Beyin"]
+},
+{
+q:"Bitkilerde fotosentezin gerçekleştiği organel hangisidir?",
+correct:"Kloroplast",
+extra:["Mitokondri","Ribozom","Golgi cisimciği","Lizozom"]
+},
+{
+q:"Hücrede enerji üretiminden sorumlu organel hangisidir?",
+correct:"Mitokondri",
+extra:["Kloroplast","Ribozom","Çekirdek","Koful"]
+},
+{
+q:"Elmasın yapısını oluşturan element hangisidir?",
+correct:"Karbon",
+extra:["Silisyum","Kükürt","Kalsiyum","Alüminyum"]
+},
+{
+q:"Atom çekirdeğinde bulunan yüksüz parçacık hangisidir?",
+correct:"Nötron",
+extra:["Proton","Elektron","Foton","Pozitron"]
+},
+{
+q:"Kanda oksijen taşınmasını sağlayan protein hangisidir?",
+correct:"Hemoglobin",
+extra:["İnsülin","Kollajen","Keratin","Albümin"]
+},
+{
+q:"Kanın pıhtılaşmasında görev alan kan hücreleri hangileridir?",
+correct:"Trombosit",
+extra:["Alyuvar","Akyuvar","Lenfosit","Plazma"]
+},
+{
+q:"Kandaki şeker seviyesini düşüren hormon hangisidir?",
+correct:"İnsülin",
+extra:["Adrenalin","Tiroksin","Östrojen","Kortizol"]
+},
+{
+q:"Penisilini keşfeden bilim insanı kimdir?",
+correct:"Alexander Fleming",
+extra:["Louis Pasteur","Robert Koch","Edward Jenner","Joseph Lister"]
+},
+{
+q:"Radyoaktivite alanındaki çalışmalarıyla iki Nobel Ödülü kazanan bilim insanı kimdir?",
+correct:"Marie Curie",
+extra:["Lise Meitner","Rosalind Franklin","Irene Curie","Ada Lovelace"]
+},
+{
+q:"Türk bilim insanı Aziz Sancar 2015 yılında hangi alanda Nobel Ödülü kazanmıştır?",
+correct:"Kimya",
+extra:["Tıp","Fizik","Barış","Edebiyat"]
+},
+{
+q:"Kalıtım yasalarını bezelye bitkisiyle yaptığı deneylerle ortaya koyan bilim insanı kimdir?",
+correct:"Gregor Mendel",
+extra:["Charles Darwin","Louis Pasteur","Carl Linnaeus","Jean-Baptiste Lamarck"]
+},
+{
+q:"Bir maddenin katı halden doğrudan gaz hale geçmesine ne ad verilir?",
+correct:"Süblimleşme",
+extra:["Buharlaşma","Yoğuşma","Erime","Kırağılaşma"]
+},
+{
+q:"Sesin havadaki yayılma hızı yaklaşık saniyede kaç metredir?",
+correct:"340",
+extra:["150","500","1200","3000"]
+},
+{
+q:"Mutlak sıfır noktası yaklaşık kaç santigrat derecedir?",
+correct:"-273",
+extra:["-100","-180","-200","-460"]
+},
+{
+q:"Newton'un ortaya koyduğu hareket yasası kaç tanedir?",
+correct:"3",
+extra:["2","4","5","7"]
+},
+{
+q:"Güneş Sistemi'nin en büyük gezegeni hangisidir?",
+correct:"Jüpiter",
+extra:["Satürn","Neptün","Uranüs","Dünya"]
+},
+{
+q:"Güneş'e en yakın gezegen hangisidir?",
+correct:"Merkür",
+extra:["Venüs","Mars","Dünya","Jüpiter"]
+},
+{
+q:"Sağlıklı bir insanda toplam kaç kromozom bulunur?",
+correct:"46",
+extra:["23","44","48","64"]
+},
+{
+q:"Asitlik ve bazlık derecesini gösteren ölçeğe ne ad verilir?",
+correct:"pH",
+extra:["Kelvin","Richter","Mohs","Celsius"]
 }
 ]
 },
@@ -1211,7 +1581,116 @@ extra:["Vasco da Gama","Ferdinand Magellan","Amerigo Vespucci","Marco Polo"]
 {
 q:"Sanayi Devrimi ilk olarak hangi ülkede başlamıştır?",
 correct:"İngiltere",
-extra:["Almanya","Fransa","Amerika Birleşik Devletleri","Belçika"]
+extra:["Almanya","Fransa","Amerika Birleşik Devletleri","Belçika"]},
+{
+q:"Türkiye Cumhuriyeti hangi yıl ilan edilmiştir?",
+correct:"1923",
+extra:["1920","1921","1922","1925"]
+},
+{
+q:"Türkiye Büyük Millet Meclisi hangi yıl açılmıştır?",
+correct:"1920",
+extra:["1919","1921","1922","1923"]
+},
+{
+q:"Halifelik hangi yıl kaldırılmıştır?",
+correct:"1924",
+extra:["1922","1923","1926","1928"]
+},
+{
+q:"Lozan Barış Antlaşması hangi yıl imzalanmıştır?",
+correct:"1923",
+extra:["1920","1921","1922","1924"]
+},
+{
+q:"Latin harflerine geçişi sağlayan Harf İnkılabı hangi yıl yapılmıştır?",
+correct:"1928",
+extra:["1924","1926","1930","1933"]
+},
+{
+q:"Türk kadınlarına milletvekili seçme ve seçilme hakkı hangi yıl verilmiştir?",
+correct:"1934",
+extra:["1923","1926","1930","1945"]
+},
+{
+q:"Malazgirt Meydan Muharebesi hangi yıl gerçekleşmiştir?",
+correct:"1071",
+extra:["1054","1098","1176","1243"]
+},
+{
+q:"Çanakkale Deniz Zaferi hangi yıl kazanılmıştır?",
+correct:"1915",
+extra:["1914","1916","1917","1918"]
+},
+{
+q:"İstanbul'u fetheden Osmanlı padişahı kimdir?",
+correct:"Fatih Sultan Mehmet",
+extra:["Yavuz Sultan Selim","Kanuni Sultan Süleyman","Orhan Gazi","Yıldırım Bayezid"]
+},
+{
+q:"Avrupalıların 'Muhteşem' lakabını taktığı Osmanlı padişahı kimdir?",
+correct:"Kanuni Sultan Süleyman",
+extra:["Fatih Sultan Mehmet","Yavuz Sultan Selim","II. Abdülhamid","III. Selim"]
+},
+{
+q:"Birinci Dünya Savaşı hangi yıl başlamıştır?",
+correct:"1914",
+extra:["1912","1915","1916","1918"]
+},
+{
+q:"İkinci Dünya Savaşı hangi yıl sona ermiştir?",
+correct:"1945",
+extra:["1939","1942","1944","1946"]
+},
+{
+q:"Amerika Birleşik Devletleri bağımsızlığını hangi yıl ilan etmiştir?",
+correct:"1776",
+extra:["1750","1789","1801","1812"]
+},
+{
+q:"İnsanoğlu Ay'a ilk kez hangi yıl ayak basmıştır?",
+correct:"1969",
+extra:["1961","1965","1971","1975"]
+},
+{
+q:"Sovyetler Birliği hangi yıl dağılmıştır?",
+correct:"1991",
+extra:["1985","1989","1990","1993"]
+},
+{
+q:"Titanic gemisi hangi yıl batmıştır?",
+correct:"1912",
+extra:["1905","1909","1915","1920"]
+},
+{
+q:"Roma İmparatorluğu hangi yıl doğu ve batı olmak üzere ikiye ayrılmıştır?",
+correct:"395",
+extra:["313","330","476","527"]
+},
+{
+q:"Matbaayı geliştirerek Avrupa'da kitap basımını yaygınlaştıran kişi kimdir?",
+correct:"Johannes Gutenberg",
+extra:["Leonardo da Vinci","Galileo Galilei","Martin Luther","William Caxton"]
+},
+{
+q:"Napolyon'un kesin yenilgiye uğradığı son büyük savaş hangisidir?",
+correct:"Waterloo",
+extra:["Austerlitz","Trafalgar","Leipzig","Borodino"]
+},
+{
+q:"Rönesans hareketi ilk olarak hangi ülkede başlamıştır?",
+correct:"İtalya",
+extra:["Fransa","İngiltere","Almanya","İspanya"]
+},
+{
+q:"Pompeii şehrini kül altında bırakan yanardağ hangisidir?",
+correct:"Vezüv",
+extra:["Etna","Stromboli","Krakatoa","Fuji"]
+},
+{
+q:"İngiltere'de kralın yetkilerini sınırlayan ve 1215'te imzalanan belge hangisidir?",
+correct:"Magna Carta",
+extra:["Bill of Rights","Habeas Corpus","Petition of Right","Act of Union"]
 }
 ]
 },
@@ -1223,8 +1702,8 @@ icon:"⚽",
 questions:[
 {
 q:"Olimpik bir yüzme havuzunun standart uzunluğu kaç metredir?",
-correct:"50 metre",
-extra:["25 metre","100 metre","33 metre","75 metre"]
+correct:"50",
+extra:["25","100","33","75"]
 },
 {
 q:"FIFA Dünya Kupası'nı en çok kazanan ülke hangisidir?",
@@ -1233,8 +1712,9 @@ extra:["Almanya","Arjantin","İtalya","Fransa"]
 },
 {
 q:"Resmi bir maratonun mesafesi kaç kilometredir?",
-correct:"42,195 km",
-extra:["40 km","45 km","21 km","50 km"]
+correct:"42,195",
+aliases:["42","42195"],
+extra:["40","45","21","50"]
 },
 {
 q:"Tenisteki dört büyük Grand Slam turnuvasından İngiltere'de düzenlenen hangisidir?",
@@ -1248,8 +1728,82 @@ extra:["1934","1926","1950","1938"]
 },
 {
 q:"NBA standartlarına göre bir basketbol çeyreği kaç dakikadır?",
-correct:"12 dakika",
-extra:["10 dakika","15 dakika","8 dakika","20 dakika"]
+correct:"12",
+extra:["10","15","8","20"]},
+{
+q:"Bir basketbol takımında sahada aynı anda kaç oyuncu bulunur?",
+correct:"5",
+extra:["4","6","7","9"]
+},
+{
+q:"Bir voleybol takımında sahada aynı anda kaç oyuncu bulunur?",
+correct:"6",
+extra:["5","7","8","11"]
+},
+{
+q:"Bir futbol takımında sahada aynı anda kaç oyuncu bulunur?",
+correct:"11",
+extra:["9","10","12","13"]
+},
+{
+q:"Teniste bir yılda düzenlenen Grand Slam turnuvası sayısı kaçtır?",
+correct:"4",
+extra:["2","3","5","6"]
+},
+{
+q:"Tour de France hangi spor dalının en ünlü yarışıdır?",
+correct:"Bisiklet",
+extra:["Atletizm","Motosiklet","Otomobil","Kayak"]
+},
+{
+q:"Olimpiyat tarihinde en çok altın madalya kazanan sporcu kimdir?",
+correct:"Michael Phelps",
+extra:["Usain Bolt","Carl Lewis","Mark Spitz","Larisa Latynina"]
+},
+{
+q:"Michael Phelps olimpiyatlarda toplam kaç altın madalya kazanmıştır?",
+correct:"23",
+extra:["15","18","20","28"]
+},
+{
+q:"Antik Olimpiyat Oyunları hangi ülkede düzenlenmiştir?",
+correct:"Yunanistan",
+extra:["İtalya","Mısır","Türkiye","İspanya"]
+},
+{
+q:"İlk FIFA Dünya Kupası'nı kazanan ülke hangisidir?",
+correct:"Uruguay",
+extra:["Brezilya","Arjantin","İtalya","Almanya"]
+},
+{
+q:"Brezilya FIFA Dünya Kupası'nı kaç kez kazanmıştır?",
+correct:"5",
+extra:["3","4","6","7"]
+},
+{
+q:"NBA liginde toplam kaç takım yer alır?",
+correct:"30",
+extra:["24","28","32","36"]
+},
+{
+q:"Standart bir golf sahasında kaç delik bulunur?",
+correct:"18",
+extra:["9","12","15","24"]
+},
+{
+q:"Bir beyzbol takımında sahada aynı anda kaç oyuncu bulunur?",
+correct:"9",
+extra:["7","8","10","11"]
+},
+{
+q:"Judo sporu hangi ülke kökenlidir?",
+correct:"Japonya",
+extra:["Çin","Güney Kore","Tayland","Moğolistan"]
+},
+{
+q:"Taekwondo sporu hangi ülke kökenlidir?",
+correct:"Güney Kore",
+extra:["Japonya","Çin","Vietnam","Tayland"]
 }
 ]
 },
@@ -1287,7 +1841,86 @@ extra:["1935","1920","1945","1950"]
 {
 q:"Quentin Tarantino'nun yönetmen olarak ilk uzun metrajlı filmi hangisidir?",
 correct:"Reservoir Dogs",
-extra:["Pulp Fiction","Kill Bill","Jackie Brown","True Romance"]
+extra:["Pulp Fiction","Kill Bill","Jackie Brown","True Romance"]},
+{
+q:"Oscar tarihinde bir filmin kazandığı en yüksek ödül sayısı kaçtır?",
+correct:"11",
+extra:["8","9","10","13"]
+},
+{
+q:"'Titanic' filminin yönetmeni kimdir?",
+correct:"James Cameron",
+extra:["Steven Spielberg","Ridley Scott","Martin Scorsese","Peter Jackson"]
+},
+{
+q:"'The Godfather' (Baba) filminin yönetmeni kimdir?",
+correct:"Francis Ford Coppola",
+extra:["Martin Scorsese","Sergio Leone","Brian De Palma","Sidney Lumet"]
+},
+{
+q:"'Inception' ve 'Interstellar' filmlerinin yönetmeni kimdir?",
+correct:"Christopher Nolan",
+extra:["Denis Villeneuve","Ridley Scott","David Fincher","James Cameron"]
+},
+{
+q:"'Jurassic Park' filminin yönetmeni kimdir?",
+correct:"Steven Spielberg",
+extra:["George Lucas","James Cameron","Robert Zemeckis","Ron Howard"]
+},
+{
+q:"'Star Wars' serisinin yaratıcısı kimdir?",
+correct:"George Lucas",
+extra:["Steven Spielberg","Gene Roddenberry","J.J. Abrams","Ridley Scott"]
+},
+{
+q:"'Breaking Bad' dizisinde Walter White karakterini canlandıran oyuncu kimdir?",
+correct:"Bryan Cranston",
+extra:["Aaron Paul","Jon Hamm","Michael C. Hall","Giancarlo Esposito"]
+},
+{
+q:"'Breaking Bad' dizisi ağırlıklı olarak hangi şehirde geçer?",
+correct:"Albuquerque",
+extra:["Phoenix","Denver","Las Vegas","El Paso"]
+},
+{
+q:"'Friends' dizisi toplam kaç sezon sürmüştür?",
+correct:"10",
+extra:["8","9","11","12"]
+},
+{
+q:"'Game of Thrones' dizisi toplam kaç sezon sürmüştür?",
+correct:"8",
+extra:["6","7","9","10"]
+},
+{
+q:"'The Matrix' filminde Neo karakterini canlandıran oyuncu kimdir?",
+correct:"Keanu Reeves",
+extra:["Laurence Fishburne","Hugo Weaving","Brad Pitt","Tom Cruise"]
+},
+{
+q:"Tamamen bilgisayar animasyonuyla yapılan ilk uzun metrajlı film hangisidir?",
+correct:"Toy Story",
+extra:["Shrek","Aslan Kral","Buz Devri","Finding Nemo"]
+},
+{
+q:"'Toy Story' filmini yapan animasyon stüdyosu hangisidir?",
+correct:"Pixar",
+extra:["DreamWorks","Disney","Blue Sky","Illumination"]
+},
+{
+q:"En İyi Film Oscar'ını kazanan ilk İngilizce olmayan film hangisidir?",
+correct:"Parasite",
+extra:["Roma","Amelie","Hayao","Cinema Paradiso"]
+},
+{
+q:"'Parasite' filmi hangi ülkenin yapımıdır?",
+correct:"Güney Kore",
+extra:["Japonya","Çin","Tayvan","Vietnam"]
+},
+{
+q:"Walt Disney'in ilk uzun metrajlı animasyon filmi hangisidir?",
+correct:"Pamuk Prenses",
+extra:["Pinokyo","Bambi","Külkedisi","Fantasia"]
 }
 ]
 },
@@ -1309,12 +1942,12 @@ extra:["ILOVEYOU","Melissa","Stuxnet","Morris Worm"]
 },
 {
 q:"'Bluetooth' teknolojisinin ismi nereden gelir?",
-correct:"Viking kralı Harald Bluetooth'tan",
+correct:"Harald Bluetooth",
 extra:["Mavi ışık dalgalarından","Bir diş hekimi mucitten","Bir uydu adından","Bir şirket kısaltmasından"]
 },
 {
 q:"Python programlama dilinin ismi neyden esinlenilmiştir?",
-correct:"Monty Python (komedi grubu)",
+correct:"Monty Python",
 extra:["Yılan türünden","Yaratıcısının soyadından","Bir Yunan mitolojisi karakterinden","Bir NASA projesinden"]
 },
 {
@@ -1325,7 +1958,86 @@ extra:["UNIVAC","Colossus","Z3","IBM 701"]
 {
 q:"USB açılımı nedir?",
 correct:"Universal Serial Bus",
-extra:["United System Bus","Universal Standard Board","Unified Serial Board","Universal System Bridge"]
+extra:["United System Bus","Universal Standard Board","Unified Serial Board","Universal System Bridge"]},
+{
+q:"World Wide Web'i (WWW) icat eden bilgisayar bilimcisi kimdir?",
+correct:"Tim Berners-Lee",
+extra:["Vint Cerf","Alan Turing","Dennis Ritchie","Bob Kahn"]
+},
+{
+q:"Microsoft şirketinin kurucularından biri olan ünlü isim kimdir?",
+correct:"Bill Gates",
+extra:["Steve Jobs","Larry Page","Michael Dell","Jeff Bezos"]
+},
+{
+q:"Facebook'un kurucusu kimdir?",
+correct:"Mark Zuckerberg",
+extra:["Jack Dorsey","Evan Spiegel","Kevin Systrom","Larry Page"]
+},
+{
+q:"Linux çekirdeğini geliştiren yazılımcı kimdir?",
+correct:"Linus Torvalds",
+extra:["Richard Stallman","Ken Thompson","Dennis Ritchie","Guido van Rossum"]
+},
+{
+q:"İlk iPhone hangi yıl tanıtılmıştır?",
+correct:"2007",
+extra:["2005","2006","2008","2010"]
+},
+{
+q:"Google şirketi hangi yıl kurulmuştur?",
+correct:"1998",
+extra:["1995","1996","2000","2002"]
+},
+{
+q:"Bir byte kaç bitten oluşur?",
+correct:"8",
+extra:["4","12","16","32"]
+},
+{
+q:"Bilgisayarda bir kilobyte kaç byte kabul edilir?",
+correct:"1024",
+extra:["100","512","2048","10000"]
+},
+{
+q:"YouTube'u satın alan şirket hangisidir?",
+correct:"Google",
+extra:["Microsoft","Facebook","Amazon","Yahoo"]
+},
+{
+q:"Instagram'ı satın alan şirket hangisidir?",
+correct:"Facebook",
+extra:["Google","Twitter","Snapchat","Microsoft"]
+},
+{
+q:"ChatGPT'yi geliştiren şirket hangisidir?",
+correct:"OpenAI",
+extra:["Google","Meta","Microsoft","Anthropic"]
+},
+{
+q:"Uzaya gönderilen ilk yapay uydu hangisidir?",
+correct:"Sputnik 1",
+extra:["Explorer 1","Vostok 1","Apollo 1","Luna 1"]
+},
+{
+q:"İlk yapay uydu Sputnik hangi yıl uzaya gönderilmiştir?",
+correct:"1957",
+extra:["1949","1953","1961","1969"]
+},
+{
+q:"QR kod teknolojisi hangi ülkede geliştirilmiştir?",
+correct:"Japonya",
+extra:["ABD","Güney Kore","Almanya","Çin"]
+},
+{
+q:"Türkiye'nin yerli elektrikli otomobil markası hangisidir?",
+correct:"TOGG",
+extra:["Anadol","Devrim","Tofaş","Otokar"]
+},
+{
+q:"Bilgisayar faresini icat eden mucit kimdir?",
+correct:"Douglas Engelbart",
+extra:["Alan Turing","Steve Wozniak","Charles Babbage","Grace Hopper"]
 }
 ]
 },
@@ -1342,13 +2054,13 @@ extra:["1","2","4","5"]
 },
 {
 q:"Bal, uygun koşullarda bozulmadan binlerce yıl saklanabilir. Arkeologlar Mısır'da kaç yıllık yenilebilir bal örnekleri buldu?",
-correct:"3000 yıl",
-extra:["500 yıl","1000 yıl","100 yıl","10000 yıl"]
+correct:"3000",
+extra:["500","1000","100","10000"]
 },
 {
 q:"Tarihteki en kısa savaş olarak bilinen Anglo-Zanzibar Savaşı yaklaşık kaç dakika sürdü?",
-correct:"38 dakika",
-extra:["12 dakika","90 dakika","5 dakika","60 dakika"]
+correct:"38",
+extra:["12","90","5","60"]
 },
 {
 q:"Ahtapotların kanı hangi renktedir?",
@@ -1382,8 +2094,8 @@ extra:["Bir yıl","İkisi eşittir","Bir ay","Bir mevsim"]
 },
 {
 q:"Işık, Güneş'ten Dünya'ya ulaşmak için ortalama kaç dakika sürer?",
-correct:"8 dakika",
-extra:["1 dakika","30 dakika","60 dakika","3 dakika"]
+correct:"8",
+extra:["1","30","60","3"]
 },
 {
 q:"Yetişkin bir tavuğun ağzında ortalama kaç diş bulunur?",
@@ -1402,8 +2114,8 @@ extra:["Küre şeklinde","Silindir şeklinde","Piramit şeklinde","Yıldız şek
 },
 {
 q:"Eyfel Kulesi, sıcak yaz günlerinde ısı genleşmesiyle yaklaşık kaç santimetre uzayabilir?",
-correct:"15 santimetre",
-extra:["1 santimetre","50 santimetre","5 santimetre","100 santimetre"]
+correct:"15",
+extra:["1","50","5","100"]
 },
 {
 q:"Karidesin kalbi vücudunun hangi bölgesinde bulunur?",
@@ -1480,8 +2192,8 @@ extra:["1950","1963","1968","1972"]
 },
 {
 q:"Hakan Şükür'ün Dünya Kupası tarihinin en hızlı golü olarak kayıtlara geçen golü, maçın kaçıncı saniyesinde atılmıştır?",
-correct:"11. saniye",
-extra:["9. saniye","15. saniye","23. saniye","31. saniye"]
+correct:"11",
+extra:["9","15","23","31"]
 },
 {
 q:"Türkiye Milli Futbol Takımı 2002 Dünya Kupası'nı kaçıncı sırada tamamladı?",
@@ -1524,12 +2236,58 @@ extra:["Cem Yılmaz","Kemal Sunal","Şener Şen","Tarık Akan"]
 {
 q:"'Kış Uykusu' filmi, Cannes Film Festivali'nde Altın Palmiye'yi hangi yıl kazandı?",
 correct:"2014",
-extra:["2010","2012","2016","2018"]
+extra:["2010","2012","2016","2018"]},
+{
+q:"Kemal Sunal'ın 'Hababam Sınıfı' filmlerinde canlandırdığı karakterin adı nedir?",
+correct:"İnek Şaban",
+extra:["Güdük Necmi","Damat Ferit","Hafize Ana","Badi Ekrem"]
+},
+{
+q:"'Hababam Sınıfı' filminin yönetmeni kimdir?",
+correct:"Ertem Eğilmez",
+extra:["Atıf Yılmaz","Metin Erksan","Lütfi Akad","Osman Seden"]
+},
+{
+q:"1996 yapımı 'Eşkıya' filminin başrol oyuncusu kimdir?",
+correct:"Şener Şen",
+extra:["Kemal Sunal","Tarık Akan","Cem Yılmaz","Halit Ergenç"]
+},
+{
+q:"Türk sinemasında 'Sultan' lakabıyla anılan ünlü kadın oyuncu kimdir?",
+correct:"Türkan Şoray",
+extra:["Filiz Akın","Hülya Koçyiğit","Fatma Girik","Müjde Ar"]
+},
+{
+q:"'Muhteşem Yüzyıl' dizisi hangi Osmanlı padişahının dönemini anlatır?",
+correct:"Kanuni Sultan Süleyman",
+extra:["Fatih Sultan Mehmet","Yavuz Sultan Selim","II. Abdülhamid","IV. Murat"]
+},
+{
+q:"'Diriliş Ertuğrul' dizisi kimin hayatını konu alır?",
+correct:"Ertuğrul Gazi",
+extra:["Osman Gazi","Orhan Gazi","Alparslan","Süleyman Şah"]
+},
+{
+q:"Nuri Bilge Ceylan'ın 'Uzak' filmi hangi festivalde Büyük Ödül kazanmıştır?",
+correct:"Cannes",
+extra:["Berlin","Venedik","Sundance","Karlovy Vary"]
+},
+{
+q:"'Çalıkuşu' romanının yazarı kimdir?",
+correct:"Reşat Nuri Güntekin",
+extra:["Halide Edib Adıvar","Yakup Kadri","Peyami Safa","Ahmet Hamdi Tanpınar"]
 }
 ]
 }
 
 ];
+
+/* Koddaki soru bankasının DEĞİŞMEZ bir kopyası.
+   CATEGORIES değişkeni, oyun açılırken Firebase'deki
+   "questions_data" ile ezildiği için, koddaki orijinal
+   sorulara sonradan erişmenin tek yolu budur. Yönetici
+   panelindeki "koddan içe aktar" düğmeleri bunu kullanır. */
+const SEED_CATEGORIES=JSON.parse(JSON.stringify(CATEGORIES));
 
 
 /* =========================================================
@@ -1622,6 +2380,25 @@ return m?m[0].replace(",","."):null;
       en fazla 2 harf farkı. Anlamca/telaffuzca yakın ama
       yazılışça uzak kelimeler ASLA kabul edilmez, çünkü bu
       "yazım hatası" değil "farklı cevap" demektir. */
+/* Türkçe özel harfleri (ş,ç,ğ,ü,ö,ı) sade karşılıklarına
+   çevirir (s,c,g,u,o,i). Türkçe klavyede olmayan telefonlarda
+   ya da alışkanlıkla insanlar bu harfleri noktasız/şapkasız
+   yazar (örn. "şükür" yerine "sukur") — bu kesinlikle bir
+   "yazım hatası" değil, aynı kelimenin yaygın bir yazılışıdır,
+   bu yüzden Levenshtein eşiğine tabi tutmadan AYRI ve GÜVENLİ
+   bir şekilde ele alınır. */
+function stripTurkishDiacritics(text){
+
+return (text||"")
+.replace(/ş/g,"s")
+.replace(/ç/g,"c")
+.replace(/ğ/g,"g")
+.replace(/ü/g,"u")
+.replace(/ö/g,"o")
+.replace(/ı/g,"i");
+
+}
+
 function fuzzyTextMatch(a,b){
 
 if(!a) return false;
@@ -1660,6 +2437,14 @@ const bIsFullyNumeric=/^\d+([.,]\d+)?$/.test(b);
 
 if(aIsFullyNumeric||bIsFullyNumeric) return false;
 
+/* Türkçe harfleri sadeleştirilmiş haliyle birebir eşleşiyorsa
+   (örn. "sukur" / "şükür") kesinlikle doğru say — bu bir
+   tolerans değil, aynı kelimenin alternatif yazılışıdır. */
+const aStripped=stripTurkishDiacritics(a);
+const bStripped=stripTurkishDiacritics(b);
+
+if(aStripped===bStripped) return true;
+
 const maxLen=Math.max(a.length,b.length);
 
 if(maxLen===0) return false;
@@ -1668,6 +2453,13 @@ if(maxLen===0) return false;
    tamamen kapalı — yanlış pozitif riski çok yüksek. */
 if(maxLen<=3) return false;
 
+/* ÖNEMLİ: buradaki mesafe SADECE orijinal (sadeleştirilmemiş)
+   metinler üzerinden hesaplanır — sadeleştirilmiş metinler
+   arasındaki mesafeyi de dahil etmek tehlikeli: örneğin
+   "Güney Kore" ile "Kuzey Kore" sadeleştirildiğinde tesadüfen
+   birbirine daha da yakınlaşıp yanlışlıkla eşleşebiliyordu.
+   Sadeleştirme SADECE yukarıdaki birebir eşleşme kontrolü için
+   kullanılır, yazım hatası toleransı için değil. */
 const distance=levenshteinDistance(a,b);
 
 const threshold=
@@ -1750,6 +2542,46 @@ return count>0
 
 function jsAttr(text){
 return JSON.stringify(text).replace(/'/g,"&#39;");
+}
+
+/* =========================================================
+   SORU GÖRSELİ (isteğe bağlı)
+========================================================= */
+
+/* HTML niteliği içine güvenle konabilmesi için metni kaçırır.
+   escapeAttr aşağıda (yönetici bölümünde) de tanımlı ama bu
+   fonksiyonlar dosyanın erken bir yerinde çağrıldığından
+   burada kendi güvenli sürümümüzü kullanıyoruz. */
+function imgAttr(s){
+return (s||"").toString()
+.replace(/&/g,"&amp;")
+.replace(/"/g,"&quot;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;");
+}
+
+/* Sorunun görseli varsa <img> bloğunu döndürür, yoksa boş
+   string. Görsel yüklenemezse (yanlış/kırık bağlantı) onerror
+   ile tüm blok gizlenir — soru yine de normal şekilde
+   oynanabilir, hiçbir şey bozulmaz. */
+function questionImageHTML(question,variant){
+
+const src=(question&&question.image||"").trim();
+
+if(!src) return "";
+
+const wrapClass=variant==="recap"?"recap-image-wrap":"question-image-wrap";
+const imgClass=variant==="recap"?"recap-image":"question-image";
+
+return`
+<div class="${wrapClass}">
+<img class="${imgClass}"
+src="${imgAttr(src)}"
+alt=""
+loading="lazy"
+onerror="this.parentNode.style.display='none'">
+</div>`;
+
 }
 
 function shuffle(array){
@@ -2063,6 +2895,12 @@ let onlineSetupJoinName="";
 
 let onlineSetupJoinCode="";
 
+/* Elden Ele kurulum ekranındaki "oyuncu adı" alanı — aynı
+   sebeple burada tutulur: emoji/renk seçildiğinde ekran
+   yeniden çizildiği için, DOM'da bırakılsaydı kullanıcının
+   yazmakta olduğu isim silinirdi. */
+let localSetupPlayerName="";
+
 /* Kullanıcı bir oda linki/QR kodundan mı geldi? Öyleyse zaten
    katılmak istediği belli olduğundan "Oda Oluştur" kartı
    gizlenir, sadece avatar + isim + katıl akışı gösterilir. */
@@ -2227,6 +3065,8 @@ mode="local";
 
 players=[];
 scores={};
+playerAvatars={};
+localSetupPlayerName="";
 
 renderLocalSetup();
 }
@@ -2256,6 +3096,7 @@ Oyuncu isimlerini ekle
 
 <p class="sub">
 Oyuncuların isimlerini tek tek yaz.
+(${players.length}/${MAX_PLAYERS} oyuncu)
 </p>
 
 <div class="avatar-picker">
@@ -2298,13 +3139,17 @@ onclick="pickPendingAvatarColor('${c}');renderLocalSetup()">
 <input
 type="text"
 id="playerName"
-placeholder="Oyuncu adı..."
+placeholder="${players.length>=MAX_PLAYERS?"Oyuncu listesi dolu":"Oyuncu adı..."}"
+value="${escapeAttr(localSetupPlayerName)}"
+oninput="localSetupPlayerName=this.value"
+${players.length>=MAX_PLAYERS?"disabled":""}
 onkeydown="if(event.key==='Enter')addPlayer()"
 >
 
 <button
 class="btn btn-primary"
 style="margin-top:0;width:90px"
+${players.length>=MAX_PLAYERS?"disabled":""}
 onclick="addPlayer()">
 Ekle
 </button>
@@ -2387,6 +3232,11 @@ const name=(input.value||"").trim();
 
 if(!name) return;
 
+if(players.length>=MAX_PLAYERS){
+alert("En fazla "+MAX_PLAYERS+" oyuncu ekleyebilirsin.");
+return;
+}
+
 if(players.includes(name)){
 alert("Bu isim zaten kullanılıyor.");
 return;
@@ -2412,6 +3262,9 @@ const colorIdx=
 pendingAvatarEmoji=AVATAR_EMOJIS[emojiIdx];
 
 pendingAvatarColor=AVATAR_COLORS[colorIdx];
+
+/* İsim eklendi — giriş alanını bir sonraki oyuncu için boşalt. */
+localSetupPlayerName="";
 
 renderLocalSetup();
 }
@@ -2677,8 +3530,10 @@ ${currentCategory.name}
 </div>
 
 <div class="question-text">
-${currentQuestion.q}${answerWordHint(currentQuestion)}
+${currentQuestion.q}
 </div>
+
+${questionImageHTML(currentQuestion)}
 
 <div class="timer-wrap">
 
@@ -2900,6 +3755,8 @@ ${player} · Doğruyu Bul
 <div class="recap-question">
 ${currentQuestion.q}
 </div>
+
+${questionImageHTML(currentQuestion,"recap")}
 
 <p class="sub">
 Doğru cevabı seç. Kendi yazdığın cevap burada görünmüyor.
@@ -3626,7 +4483,11 @@ q:qMap[qid].q,
 
 correct:qMap[qid].correct,
 
-extra:qMap[qid].extra||[]
+extra:qMap[qid].extra||[],
+
+/* İsteğe bağlı görsel bağlantısı — eski sorularda yok,
+   o yüzden varsayılan boş string. */
+image:qMap[qid].image||""
 
 }));
 
@@ -3662,7 +4523,11 @@ q:q.q,
 
 correct:q.correct,
 
-extra:q.extra||[]
+extra:q.extra||[],
+
+/* Firebase boş/undefined alanları sessizce atar; tutarlı
+   olması için her zaman string yazıyoruz. */
+image:q.image||""
 
 };
 
@@ -3691,6 +4556,168 @@ shaped[c.id]=categoryToFbShape(c);
 });
 
 return await storageSet("questions_data",shaped);
+
+}
+
+/* =========================================================
+   KODDAN İÇE AKTARMA (iki ayrı, bilinçli mod)
+
+   Sorular gerçekte Firebase'de ("questions_data") tutulur;
+   koddaki liste yalnızca ilk kurulum tohumudur. Bu yüzden
+   koda eklenen yeni sorular, aşağıdaki düğmelerden biriyle
+   açıkça aktarılmadıkça yayındaki oyunda GÖRÜNMEZ.
+========================================================= */
+
+/* GÜVENLİ MOD — Birleştir:
+   Koddaki sorulardan Firebase'de OLMAYANLARI ekler.
+   Firebase'de zaten var olan hiçbir kategoriye/soruya
+   dokunmaz, hiçbir şeyi silmez. Yönetici panelinden elle
+   eklenen içerik korunur. */
+async function adminMergeFromCode(){
+
+if(!firebaseReady){
+alert("Firebase ayarlı değil.");
+return;
+}
+
+const current=await storageGet("questions_data");
+
+const currentArr=fbDataToCategories(current)||[];
+
+/* Hızlı arama için: kategori id -> normalize edilmiş soru
+   metinleri kümesi */
+const existingByCat={};
+
+currentArr.forEach(c=>{
+existingByCat[c.id]=new Set(
+(c.questions||[]).map(q=>normalize(q.q))
+);
+});
+
+let addedQuestions=0;
+let addedCategories=0;
+
+/* Firebase'e yazılacak nihai yapıyı, mevcut veriyi
+   koruyarak kur. */
+const shaped={};
+
+currentArr.forEach(c=>{
+shaped[c.id]=categoryToFbShape(c);
+});
+
+SEED_CATEGORIES.forEach(seedCat=>{
+
+const existingSet=existingByCat[seedCat.id];
+
+if(!existingSet){
+
+/* Kategori Firebase'de hiç yok — olduğu gibi ekle. */
+shaped[seedCat.id]=categoryToFbShape(seedCat);
+
+addedCategories++;
+
+addedQuestions+=seedCat.questions.length;
+
+return;
+
+}
+
+/* Kategori var — sadece eksik soruları ekle. */
+const merged=currentArr.find(c=>c.id===seedCat.id);
+
+const toAdd=seedCat.questions.filter(q=>
+!existingSet.has(normalize(q.q))
+);
+
+if(!toAdd.length) return;
+
+const combined={
+id:merged.id,
+name:merged.name,
+icon:merged.icon,
+questions:[...merged.questions,...toAdd]
+};
+
+shaped[seedCat.id]=categoryToFbShape(combined);
+
+addedQuestions+=toAdd.length;
+
+});
+
+if(!addedQuestions && !addedCategories){
+
+alert("Eklenecek yeni bir şey yok — koddaki tüm sorular zaten mevcut.");
+
+return;
+
+}
+
+const ok=await storageSet("questions_data",shaped);
+
+if(ok){
+
+alert(
+"Birleştirme tamamlandı.\n\n"+
+"Yeni kategori: "+addedCategories+"\n"+
+"Yeni soru: "+addedQuestions+"\n\n"+
+"Mevcut hiçbir soru silinmedi."
+);
+
+}else{
+
+alert("Kaydedilemedi: "+(lastStorageError||"bilinmiyor"));
+
+}
+
+}
+
+/* YIKICI MOD — Tamamen değiştir:
+   Firebase'deki soru bankasını siler ve yerine koddaki
+   listeyi yazar. Yönetici panelinden elle eklenmiş her şey
+   KAYBOLUR. Bu yüzden çift onay ister. */
+async function adminReplaceFromCode(){
+
+if(!firebaseReady){
+alert("Firebase ayarlı değil.");
+return;
+}
+
+const current=await storageGet("questions_data");
+
+const currentArr=fbDataToCategories(current)||[];
+
+const currentCount=currentArr.reduce((s,c)=>s+(c.questions||[]).length,0);
+
+const seedCount=SEED_CATEGORIES.reduce((s,c)=>s+c.questions.length,0);
+
+if(!confirm(
+"DİKKAT — Bu işlem geri alınamaz!\n\n"+
+"Şu anki soru bankası ("+currentArr.length+" kategori, "+currentCount+" soru) "+
+"TAMAMEN SİLİNECEK.\n\n"+
+"Yerine koddaki liste ("+SEED_CATEGORIES.length+" kategori, "+seedCount+" soru) yazılacak.\n\n"+
+"Yönetici panelinden elle eklediğin her şey kaybolacak.\n\n"+
+"Devam etmek istiyor musun?"
+)) return;
+
+if(!confirm("Son kez soruyorum: soru bankasının tamamı silinip koddaki listeyle değiştirilsin mi?")) return;
+
+const shaped={};
+
+SEED_CATEGORIES.forEach(c=>{
+shaped[c.id]=categoryToFbShape(c);
+});
+
+const ok=await storageSet("questions_data",shaped);
+
+if(ok){
+
+alert("Soru bankası koddaki listeyle değiştirildi ("+seedCount+" soru).");
+
+}else{
+
+alert("Kaydedilemedi: "+(lastStorageError||"bilinmiyor"));
+
+}
 
 }
 
@@ -3887,6 +4914,45 @@ CATEGORIES.map(c=>`
 
 </div>
 
+<div class="card">
+
+<div class="stage-label">Koddan İçe Aktar</div>
+
+<h2 class="headline" style="font-size:19px">Kod Senkronizasyonu</h2>
+
+<p class="sub">
+Sorular Firebase'de saklanır; koddaki liste yalnızca ilk
+kurulum içindir. Koda yeni sorular eklendiyse, yayındaki
+oyunda görünmesi için buradan aktarman gerekir.
+</p>
+
+<div class="card" style="background:var(--bg-deep);margin-top:12px">
+<p class="sub" style="font-size:13.5px">
+<strong>Birleştir</strong> — Koddaki eksik soruları ekler.
+Hiçbir şey silinmez, panelden eklediklerin korunur.
+<em>(Güvenli)</em>
+</p>
+</div>
+
+<button class="btn btn-primary" onclick="adminMergeFromCode()">
+Koddaki Yeni Soruları Birleştir
+</button>
+
+<div class="card" style="background:var(--bg-deep);margin-top:18px;border-color:var(--danger)">
+<p class="sub" style="font-size:13.5px">
+<strong style="color:var(--danger)">Tamamen Değiştir</strong> —
+Soru bankasını siler, yerine koddaki listeyi yazar.
+Panelden eklediğin her şey kaybolur.
+<em>(Geri alınamaz)</em>
+</p>
+</div>
+
+<button class="btn btn-ghost" style="color:var(--danger);border-color:var(--danger)" onclick="adminReplaceFromCode()">
+Soru Bankasını Koddakiyle Değiştir
+</button>
+
+</div>
+
 <button class="btn btn-ghost" onclick="adminUnlocked=false;mode=null;render()">← Ana Menü</button>
 
 </main>
@@ -3964,6 +5030,9 @@ document.getElementById("app").innerHTML=`
 <label class="field-label">Doğru cevap</label>
 <input type="text" id="newQ_correct" placeholder="Örn. Ankara">
 
+<label class="field-label">Görsel bağlantısı (isteğe bağlı)</label>
+<input type="text" id="newQ_image" placeholder="Örn. images/bayrak.png">
+
 <label class="field-label">Yanlış seçenekler (yeterli oyuncu cevabı olmazsa kullanılır)</label>
 <input type="text" id="newQ_extra1" placeholder="Yanlış seçenek 1">
 <input type="text" id="newQ_extra2" placeholder="Yanlış seçenek 2">
@@ -3988,6 +5057,9 @@ cat.questions.map((q,i)=>`
 
 <label class="field-label">Doğru cevap</label>
 <input type="text" id="editQ_${i}_correct" value="${escapeAttr(q.correct)}">
+
+<label class="field-label">Görsel bağlantısı (isteğe bağlı)</label>
+<input type="text" id="editQ_${i}_image" value="${escapeAttr(q.image||"")}" placeholder="Örn. images/bayrak.png">
 
 <label class="field-label">Yanlış seçenekler</label>
 <input type="text" id="editQ_${i}_extra1" value="${escapeAttr((q.extra||[])[0]||"")}">
@@ -4020,6 +5092,11 @@ const q=(document.getElementById(prefix+"_q").value||"").trim();
 
 const correct=(document.getElementById(prefix+"_correct").value||"").trim();
 
+/* Görsel alanı isteğe bağlıdır — boş bırakılabilir. */
+const imageField=document.getElementById(prefix+"_image");
+
+const image=imageField?(imageField.value||"").trim():"";
+
 const extra=[1,2,3,4]
 
 .map(i=>(document.getElementById(prefix+"_extra"+i).value||"").trim())
@@ -4034,7 +5111,7 @@ return null;
 
 }
 
-return{ q, correct, extra };
+return{ q, correct, extra, image };
 
 }
 
@@ -4469,6 +5546,17 @@ return;
 
 if(!isReturningPlayer){
 
+/* Oda dolduysa yeni oyuncu alınmaz. Geri dönen (bağlantısı
+   kopmuş) bir oyuncu bu kontrolün dışındadır — o zaten
+   listede olduğu için odayı büyütmez. */
+if(room.players.length>=MAX_PLAYERS){
+
+showOnlineSetupError("Bu oda dolu (en fazla "+MAX_PLAYERS+" oyuncu).");
+
+return;
+
+}
+
 room.players.push(name);
 
 room.scores[name]=0;
@@ -4592,7 +5680,7 @@ Telefonlarıyla tarayıp oyuna katılabilirler.
 <div class="card">
 
 <h3>
-Oyuncular
+Oyuncular (${(roomState?.players||[]).length}/${MAX_PLAYERS})
 </h3>
 
 <div class="lobby-list">
@@ -5060,7 +6148,9 @@ ${onlineScoreBar()}
 
 <div class="question-cat">${q.categoryName} · Sen: ${onlineName}</div>
 
-<div class="question-text">${q.q}${answerWordHint(q)}</div>
+<div class="question-text">${q.q}</div>
+
+${questionImageHTML(q)}
 
 <div class="timer-wrap">
 <div class="timer-ring" id="timerRing" style="--pct:100">
@@ -5218,6 +6308,8 @@ ${onlineScoreBar()}
 <div class="stage-label">Doğruyu Bul</div>
 
 <div class="recap-question">${roomState.question.q}</div>
+
+${questionImageHTML(roomState.question,"recap")}
 
 <p class="sub">Doğru cevabı seç. Kendi yazdığın cevap burada görünmüyor.</p>
 
