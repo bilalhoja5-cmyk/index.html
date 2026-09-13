@@ -644,6 +644,47 @@ input[type=text]::placeholder{
 
 .cat-btn:disabled{opacity:.3}
 
+.cat-btn-locked{
+  opacity:.55;
+  border-style:dashed;
+  border-color:var(--gold);
+}
+
+.premium-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  background:linear-gradient(135deg,var(--gold-hi),var(--gold));
+  color:#2a1d00;
+  font-weight:800;
+  font-size:11.5px;
+  padding:4px 10px;
+  border-radius:var(--radius-pill);
+}
+
+.premium-card{
+  background:
+    radial-gradient(circle at 50% 0%,#ffc85733 0%,transparent 60%),
+    var(--panel);
+  border-color:#ffc85766;
+}
+
+.premium-list{
+  list-style:none;
+  padding:0;
+  margin:14px 0 0;
+}
+
+.premium-list li{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  font-size:14.5px;
+  line-height:1.5;
+  color:var(--ink);
+  margin-bottom:10px;
+}
+
 .cat-btn-selected{
   border-color:var(--coral);
   background:#3d7bff1a;
@@ -1087,12 +1128,75 @@ const MIN_OPTIONS = 5;
 /* Oyun toplamda kaç soru sonra biter (kategorilerdeki
    toplam soru sayısına bakılmaksızın). Değiştirmek kolay:
    sadece bu sayıyı güncelle. */
+/* Ücretsiz kullanımda sabit tur sayısı. Premium'da oyuncu
+   ROUND_OPTIONS içinden seçebilir. */
 const TOTAL_ROUNDS = 10;
 
-/* Bir oyunda yer alabilecek en fazla oyuncu sayısı (her iki
-   mod için de geçerli). Online modda oda kurucusu (host) da
-   bu sayıya dahildir: yani 1 host + 7 katılımcı = 8 oyuncu. */
-const MAX_PLAYERS = 8;
+const ROUND_OPTIONS = [5,10,15,20];
+
+/* =========================================================
+   PREMIUM (ABONELİK)
+
+   ÖNEMLİ NOT: Henüz gerçek bir ödeme/oturum sistemi yok.
+   Bu yüzden premium durumu SADECE kullanıcının kendi
+   tarayıcısında saklanıyor ve teknik bilgisi olan biri
+   tarafından kolayca aşılabilir. Bu bilinçli bir geçici
+   çözümdür: amaç, ödeme altyapısı eklendiğinde tüm arayüz
+   ve kilit mantığının hazır olmasıdır. Gerçek koruma için
+   ileride Firebase Authentication + sunucu tarafı doğrulama
+   gerekir.
+========================================================= */
+
+const PREMIUM_CODE = "yalanci-vip-2026";
+
+const MAX_PLAYERS_FREE = 5;      /* host + 4 */
+const MAX_PLAYERS_PREMIUM = 12;  /* host + 11 */
+
+let isPremium = false;
+
+try{
+isPremium = localStorage.getItem("yalanci_premium") === "1";
+}catch(e){}
+
+function setPremium(on){
+isPremium = !!on;
+try{
+if(on) localStorage.setItem("yalanci_premium","1");
+else localStorage.removeItem("yalanci_premium");
+}catch(e){}
+}
+
+/* Elden Ele modunda geçerli oyuncu sınırı. Online modda
+   sınırı odanın kurucusunun (host) aboneliği belirler —
+   bkz. roomMaxPlayers(). */
+function maxPlayersLocal(){
+return isPremium?MAX_PLAYERS_PREMIUM:MAX_PLAYERS_FREE;
+}
+
+/* Odadaki sınır host'un aboneliğine göre belirlenir:
+   host premium ise odadaki HERKES premium ayrıcalıklarından
+   yararlanır. */
+function roomMaxPlayers(room){
+return (room&&room.hostPremium)?MAX_PLAYERS_PREMIUM:MAX_PLAYERS_FREE;
+}
+
+/* Bir kategori kilitli mi? Kilitli kategoriler yalnızca
+   premium kullanıcılar tarafından oynanabilir. Hangi
+   kategorilerin kilitli olduğu yönetici panelinden
+   belirlenir ve Firebase'de saklanır. */
+function isCategoryLocked(cat,premiumOverride){
+if(!cat||!cat.locked) return false;
+const prem=(premiumOverride===undefined)?isPremium:premiumOverride;
+return !prem;
+}
+
+/* Oyunda seçilebilir kategoriler (kilitliler premium değilse
+   listeden çıkarılır). */
+function playableCategories(premiumOverride){
+return CATEGORIES.filter(c=>!isCategoryLocked(c,premiumOverride));
+}
+
+
 
 /* =========================================================
    AVATAR SİSTEMİ (emoji + renk — genişletilebilir)
@@ -5568,6 +5672,1730 @@ image:"https://flagcdn.com/w640/pg.png",
 extra:["Nijerya","Liechtenstein","Brunei","Litvanya"]
 }
 ]
+},
+
+{
+id:"islamiyat",
+name:"İslamiyat",
+icon:"🕌",
+questions:[
+{
+q:"Kuran-ı Kerim'de toplam kaç sure vardır?",
+correct:"114",
+extra:["100","110","120","130"]
+},
+{
+q:"Kuran-ı Kerim kaç cüzden oluşur?",
+correct:"30",
+extra:["10","20","40","60"]
+},
+{
+q:"Kuran-ı Kerim'in en uzun suresi hangisidir?",
+correct:"Bakara",
+extra:["Al-i İmran","Nisa","Maide","Yasin"]
+},
+{
+q:"Kuran-ı Kerim'in en kısa suresi hangisidir?",
+correct:"Kevser",
+extra:["İhlas","Nas","Felak","Asr"]
+},
+{
+q:"Kuran-ı Kerim'in ilk suresi hangisidir?",
+correct:"Fatiha",
+extra:["Bakara","Alak","Nas","İhlas"]
+},
+{
+q:"Mushafta yer alan son sure hangisidir?",
+correct:"Nas",
+extra:["Felak","İhlas","Kevser","Tebbet"]
+},
+{
+q:"İlk vahyin geldiği sure hangisidir?",
+correct:"Alak",
+extra:["Fatiha","Bakara","Müddessir","Kalem"]
+},
+{
+q:"Fatiha suresi kaç ayetten oluşur?",
+correct:"7",
+extra:["3","5","10","11"]
+},
+{
+q:"İhlas suresi kaç ayetten oluşur?",
+correct:"4",
+extra:["3","5","6","7"]
+},
+{
+q:"Ayetel Kürsi hangi surede yer alır?",
+correct:"Bakara",
+extra:["Al-i İmran","Yasin","Nisa","Fatiha"]
+},
+{
+q:"Besmele ile başlamayan tek sure hangisidir?",
+correct:"Tevbe",
+extra:["Bakara","Nas","Fatiha","Enfal"]
+},
+{
+q:"Kuran-ı Kerim hangi dilde indirilmiştir?",
+correct:"Arapça",
+extra:["İbranice","Süryanice","Farsça","Aramice"]
+},
+{
+q:"Kuran-ı Kerim'de ismi geçen tek kadın kimdir?",
+correct:"Hz. Meryem",
+extra:["Hz. Hatice","Hz. Ayşe","Hz. Fatıma","Hz. Asiye"]
+},
+{
+q:"Kuran'da 'Kalbi' olarak anılan sure hangisidir?",
+correct:"Yasin",
+extra:["Bakara","Rahman","Mülk","Kehf"]
+},
+{
+q:"Kuran-ı Kerim kaç yılda tamamlanmıştır?",
+correct:"23",
+extra:["10","13","20","30"]
+},
+{
+q:"İlk peygamber kimdir?",
+correct:"Hz. Adem",
+extra:["Hz. Nuh","Hz. İbrahim","Hz. İdris","Hz. Şit"]
+},
+{
+q:"Son peygamber kimdir?",
+correct:"Hz. Muhammed",
+extra:["Hz. İsa","Hz. Musa","Hz. İbrahim","Hz. Yahya"]
+},
+{
+q:"Büyük bir gemi yaparak kavmini tufandan kurtaran peygamber kimdir?",
+correct:"Hz. Nuh",
+extra:["Hz. Musa","Hz. Hud","Hz. Salih","Hz. Lut"]
+},
+{
+q:"Ateşe atıldığında ateşin serin olduğu peygamber kimdir?",
+correct:"Hz. İbrahim",
+extra:["Hz. Musa","Hz. Nuh","Hz. Yunus","Hz. Eyüp"]
+},
+{
+q:"Balığın karnında bir süre kalan peygamber kimdir?",
+correct:"Hz. Yunus",
+extra:["Hz. Nuh","Hz. Musa","Hz. Salih","Hz. Zekeriya"]
+},
+{
+q:"Mısır'da hazineler bakanı olan peygamber kimdir?",
+correct:"Hz. Yusuf",
+extra:["Hz. Musa","Hz. Harun","Hz. Yakup","Hz. Şuayb"]
+},
+{
+q:"Asası yılana dönüşen peygamber kimdir?",
+correct:"Hz. Musa",
+extra:["Hz. İsa","Hz. Harun","Hz. Davud","Hz. Süleyman"]
+},
+{
+q:"Rüzgara ve cinlere hükmettiği bildirilen peygamber kimdir?",
+correct:"Hz. Süleyman",
+extra:["Hz. Davud","Hz. Musa","Hz. Yusuf","Hz. Zülkifl"]
+},
+{
+q:"Sabrıyla örnek gösterilen peygamber kimdir?",
+correct:"Hz. Eyüp",
+extra:["Hz. Yunus","Hz. Nuh","Hz. Yakup","Hz. Salih"]
+},
+{
+q:"Demiri işlediği bildirilen ve güzel sesiyle bilinen peygamber kimdir?",
+correct:"Hz. Davud",
+extra:["Hz. Süleyman","Hz. Musa","Hz. Harun","Hz. İlyas"]
+},
+{
+q:"Zebur hangi peygambere indirilmiştir?",
+correct:"Hz. Davud",
+extra:["Hz. Musa","Hz. İsa","Hz. Süleyman","Hz. İbrahim"]
+},
+{
+q:"Tevrat hangi peygambere indirilmiştir?",
+correct:"Hz. Musa",
+extra:["Hz. İsa","Hz. Davud","Hz. Harun","Hz. İbrahim"]
+},
+{
+q:"İncil hangi peygambere indirilmiştir?",
+correct:"Hz. İsa",
+extra:["Hz. Musa","Hz. Davud","Hz. Yahya","Hz. Zekeriya"]
+},
+{
+q:"Kabe'yi oğluyla birlikte inşa eden peygamber kimdir?",
+correct:"Hz. İbrahim",
+extra:["Hz. Nuh","Hz. Adem","Hz. Musa","Hz. Süleyman"]
+},
+{
+q:"Hz. İbrahim ile birlikte Kabe'yi inşa eden oğlu kimdir?",
+correct:"Hz. İsmail",
+extra:["Hz. İshak","Hz. Yakup","Hz. Yusuf","Hz. Lut"]
+},
+{
+q:"Kaç büyük melek vardır?",
+correct:"4",
+extra:["2","3","6","7"]
+},
+{
+q:"Peygamberlere vahiy getirmekle görevli melek hangisidir?",
+correct:"Cebrail",
+extra:["Mikail","İsrafil","Azrail","Münker"]
+},
+{
+q:"Sura üflemekle görevli melek hangisidir?",
+correct:"İsrafil",
+extra:["Cebrail","Mikail","Azrail","Rıdvan"]
+},
+{
+q:"Canları almakla görevli melek hangisidir?",
+correct:"Azrail",
+extra:["Cebrail","Mikail","İsrafil","Malik"]
+},
+{
+q:"Hz. Muhammed hangi şehirde doğmuştur?",
+correct:"Mekke",
+extra:["Medine","Taif","Kudüs","Şam"]
+},
+{
+q:"Hz. Muhammed'in babasının adı nedir?",
+correct:"Abdullah",
+extra:["Abdülmuttalib","Ebu Talib","Hamza","Abbas"]
+},
+{
+q:"Hz. Muhammed'in annesinin adı nedir?",
+correct:"Amine",
+extra:["Halime","Hatice","Fatıma","Ayşe"]
+},
+{
+q:"Hz. Muhammed'i himaye eden amcasının adı nedir?",
+correct:"Ebu Talib",
+extra:["Hamza","Abbas","Ebu Leheb","Abdullah"]
+},
+{
+q:"Hz. Muhammed'in ilk eşi kimdir?",
+correct:"Hz. Hatice",
+extra:["Hz. Ayşe","Hz. Sevde","Hz. Hafsa","Hz. Zeynep"]
+},
+{
+q:"Hz. Muhammed'e ilk vahiy kaç yaşındayken gelmiştir?",
+correct:"40",
+extra:["25","30","35","45"]
+},
+{
+q:"İlk vahyin geldiği mağaranın adı nedir?",
+correct:"Hira",
+extra:["Sevr","Uhud","Kuba","Arafat"]
+},
+{
+q:"Hicret sırasında saklanılan mağaranın adı nedir?",
+correct:"Sevr",
+extra:["Hira","Uhud","Bedir","Kuba"]
+},
+{
+q:"Hicret hangi yılda gerçekleşmiştir?",
+correct:"622",
+extra:["610","613","624","630"]
+},
+{
+q:"Hicret hangi şehre yapılmıştır?",
+correct:"Medine",
+extra:["Taif","Habeşistan","Kudüs","Şam"]
+},
+{
+q:"Müslümanların ilk savaşı hangisidir?",
+correct:"Bedir",
+extra:["Uhud","Hendek","Hayber","Mute"]
+},
+{
+q:"Bedir Savaşı hangi yılda olmuştur?",
+correct:"624",
+extra:["622","625","627","630"]
+},
+{
+q:"Medine çevresine hendek kazılarak yapılan savunma savaşı hangisidir?",
+correct:"Hendek",
+extra:["Bedir","Uhud","Hayber","Tebük"]
+},
+{
+q:"Mekke'nin fethi hangi yılda gerçekleşmiştir?",
+correct:"630",
+extra:["622","624","628","632"]
+},
+{
+q:"Hz. Muhammed hangi şehirde vefat etmiştir?",
+correct:"Medine",
+extra:["Mekke","Taif","Kudüs","Şam"]
+},
+{
+q:"Hz. Muhammed'in süt annesinin adı nedir?",
+correct:"Halime",
+extra:["Amine","Hatice","Fatıma","Sümeyye"]
+},
+{
+q:"Hz. Muhammed'in son haccına verilen ad nedir?",
+correct:"Veda Haccı",
+extra:["Umre","İlk Hac","Hudeybiye","Miraç"]
+},
+{
+q:"İslam'ın ilk halifesi kimdir?",
+correct:"Hz. Ebubekir",
+extra:["Hz. Ömer","Hz. Osman","Hz. Ali","Hz. Hamza"]
+},
+{
+q:"İkinci halife kimdir?",
+correct:"Hz. Ömer",
+extra:["Hz. Ebubekir","Hz. Osman","Hz. Ali","Hz. Muaviye"]
+},
+{
+q:"Üçüncü halife kimdir?",
+correct:"Hz. Osman",
+extra:["Hz. Ebubekir","Hz. Ömer","Hz. Ali","Hz. Talha"]
+},
+{
+q:"Dördüncü halife kimdir?",
+correct:"Hz. Ali",
+extra:["Hz. Ebubekir","Hz. Ömer","Hz. Osman","Hz. Zübeyr"]
+},
+{
+q:"'Sıddık' lakabıyla anılan sahabe kimdir?",
+correct:"Hz. Ebubekir",
+extra:["Hz. Ömer","Hz. Osman","Hz. Ali","Hz. Bilal"]
+},
+{
+q:"'Faruk' lakabıyla anılan halife kimdir?",
+correct:"Hz. Ömer",
+extra:["Hz. Ebubekir","Hz. Osman","Hz. Ali","Hz. Hamza"]
+},
+{
+q:"İslam'ın ilk müezzini kimdir?",
+correct:"Bilal-i Habeşi",
+extra:["Selman-ı Farisi","Ammar bin Yasir","Zeyd bin Harise","Ebu Zer"]
+},
+{
+q:"Hicri takvimi başlatan halife kimdir?",
+correct:"Hz. Ömer",
+extra:["Hz. Ebubekir","Hz. Osman","Hz. Ali","Hz. Muaviye"]
+},
+{
+q:"Kuran'ı tek mushafta toplatan halife kimdir?",
+correct:"Hz. Ebubekir",
+extra:["Hz. Ömer","Hz. Osman","Hz. Ali","Hz. Zeyd"]
+},
+{
+q:"İslam'ın şartı kaç tanedir?",
+correct:"5",
+extra:["3","4","6","7"]
+},
+{
+q:"İmanın şartı kaç tanedir?",
+correct:"6",
+extra:["3","4","5","7"]
+},
+{
+q:"Günde kaç vakit namaz farzdır?",
+correct:"5",
+extra:["3","4","6","7"]
+},
+{
+q:"Sabah namazının farzı kaç rekattır?",
+correct:"2",
+extra:["3","4","6","8"]
+},
+{
+q:"Öğle namazının farzı kaç rekattır?",
+correct:"4",
+extra:["2","3","6","8"]
+},
+{
+q:"Akşam namazının farzı kaç rekattır?",
+correct:"3",
+extra:["2","4","5","6"]
+},
+{
+q:"Oruç hangi ayda farz kılınmıştır?",
+correct:"Ramazan",
+extra:["Şaban","Muharrem","Recep","Zilhicce"]
+},
+{
+q:"Hac ibadeti hangi şehirde yapılır?",
+correct:"Mekke",
+extra:["Medine","Kudüs","Taif","Şam"]
+},
+{
+q:"Kabe'nin etrafında dönme ibadetine ne ad verilir?",
+correct:"Tavaf",
+extra:["Sa'y","Vakfe","İhram","Telbiye"]
+},
+{
+q:"Safa ile Merve arasında gidip gelmeye ne ad verilir?",
+correct:"Sa'y",
+extra:["Tavaf","Vakfe","İhram","Rem-i cemerat"]
+},
+{
+q:"Müslümanların kıblesi neresidir?",
+correct:"Kabe",
+extra:["Mescid-i Aksa","Mescid-i Nebevi","Arafat","Hira"]
+},
+{
+q:"Müslümanların ilk kıblesi neresiydi?",
+correct:"Mescid-i Aksa",
+extra:["Kabe","Mescid-i Nebevi","Mescid-i Kuba","Arafat"]
+},
+{
+q:"Ramazan Bayramı kaç gündür?",
+correct:"3",
+extra:["1","2","4","5"]
+},
+{
+q:"Kurban Bayramı kaç gündür?",
+correct:"4",
+extra:["1","2","3","5"]
+},
+{
+q:"Sadece Ramazan ayında kılınan namaz hangisidir?",
+correct:"Teravih",
+extra:["Bayram","Cuma","Cenaze","Vitir"]
+},
+{
+q:"İslam tarihinde inşa edilen ilk mescit hangisidir?",
+correct:"Kuba",
+extra:["Mescid-i Nebevi","Mescid-i Haram","Mescid-i Aksa","Ulu Cami"]
+},
+{
+q:"Mescid-i Nebevi hangi şehirdedir?",
+correct:"Medine",
+extra:["Mekke","Kudüs","Şam","Bağdat"]
+},
+{
+q:"Mescid-i Aksa hangi şehirdedir?",
+correct:"Kudüs",
+extra:["Mekke","Medine","Şam","Kahire"]
+},
+{
+q:"Hicri takvim neye göre hesaplanır?",
+correct:"Ay",
+extra:["Güneş","Yıldızlar","Mevsimler","Gezegenler"]
+},
+{
+q:"Kadir Gecesi hangi ayda aranır?",
+correct:"Ramazan",
+extra:["Şaban","Muharrem","Recep","Zilhicce"]
+},
+{
+q:"Emevi Devleti'nin başkenti neresiydi?",
+correct:"Şam",
+extra:["Bağdat","Mekke","Medine","Kahire"]
+},
+{
+q:"Abbasi Devleti'nin başkenti neresiydi?",
+correct:"Bağdat",
+extra:["Şam","Kahire","Kufe","Basra"]
+},
+{
+q:"Kutsal kitap sayısı kaçtır?",
+correct:"4",
+extra:["2","3","5","6"]
+},
+{
+q:"Kelime-i şehadet getiren kişi ne olmuş sayılır?",
+correct:"Müslüman",
+extra:["Hacı","Hafız","Alim","İmam"]
+},
+{
+q:"Kuran'ı baştan sona ezberleyen kişiye ne ad verilir?",
+correct:"Hafız",
+extra:["İmam","Müezzin","Alim","Kari"]
+},
+{
+q:"Kuran-ı Kerim'de ismi açıkça geçen tek sahabe kimdir?",
+correct:"Zeyd bin Harise",
+extra:["Ebubekir","Ömer","Osman","Ali"]
+},
+{
+q:"Kuran'da adı geçen peygamber sayısı kaçtır?",
+correct:"25",
+extra:["10","18","30","40"]
+},
+{
+q:"'Ulü'l-azm' olarak anılan peygamber sayısı kaçtır?",
+correct:"5",
+extra:["3","4","6","7"]
+},
+{
+q:"Felak ve Nas surelerine birlikte verilen ad nedir?",
+correct:"Muavvizeteyn",
+extra:["Zehraveyn","Mufassal","Tuval","Mesani"]
+},
+{
+q:"Bakara ve Al-i İmran surelerine birlikte verilen ad nedir?",
+correct:"Zehraveyn",
+extra:["Muavvizeteyn","Mesani","Tuval","Hamd"]
+},
+{
+q:"Tebbet suresi kimin hakkında inmiştir?",
+correct:"Ebu Leheb",
+extra:["Ebu Cehil","Ebu Süfyan","Velid bin Muğire","Ümeyye"]
+},
+{
+q:"Fil suresi hangi olayı anlatır?",
+correct:"Fil Vakası",
+extra:["Hicret","Bedir","Miraç","Hudeybiye"]
+},
+{
+q:"Mağarada uzun süre uyuyan gençlerin anlatıldığı sure hangisidir?",
+correct:"Kehf",
+extra:["Meryem","Kasas","Enbiya","Rum"]
+},
+{
+q:"Kuran'da besmelenin ayet olarak geçtiği sure hangisidir?",
+correct:"Neml",
+extra:["Fatiha","Tevbe","Bakara","Nas"]
+},
+{
+q:"Fatiha suresinin diğer adlarından biri nedir?",
+correct:"Ümmü'l-Kitab",
+extra:["Ümmü'l-Müminin","Seb'ul-Mesani dışı","Zehra","Fetih"]
+},
+{
+q:"Bakara suresi Mekki mi Medeni midir?",
+correct:"Medeni",
+extra:["Mekki","İkisi de","Belirsiz","Yarısı Mekki"]
+},
+{
+q:"Kuran'ı güzel sesle usulüne uygun okumaya ne ad verilir?",
+correct:"Tecvid",
+extra:["Tefsir","Tevil","Tertil dışı","Kıraat dışı"]
+},
+{
+q:"Kuran ayetlerinin açıklanmasını konu alan ilme ne ad verilir?",
+correct:"Tefsir",
+extra:["Fıkıh","Hadis","Kelam","Siyer"]
+},
+{
+q:"Hz. İbrahim'in lakabı nedir?",
+correct:"Halilullah",
+extra:["Kelimullah","Ruhullah","Safiyyullah","Neciyyullah"]
+},
+{
+q:"Hz. Musa'nın lakabı nedir?",
+correct:"Kelimullah",
+extra:["Halilullah","Ruhullah","Habibullah","Neciyyullah"]
+},
+{
+q:"Hz. İsa'nın lakabı nedir?",
+correct:"Ruhullah",
+extra:["Halilullah","Kelimullah","Habibullah","Safiyyullah"]
+},
+{
+q:"Hz. Muhammed'in lakabı nedir?",
+correct:"Habibullah",
+extra:["Kelimullah","Ruhullah","Neciyyullah","Safiyyullah"]
+},
+{
+q:"Hz. Yakup'un diğer adı nedir?",
+correct:"İsrail",
+extra:["Yahuda","Yusuf","İshak","Bünyamin"]
+},
+{
+q:"Hz. İsmail'in annesi kimdir?",
+correct:"Hz. Hacer",
+extra:["Sare","Meryem","Asiye","Havva"]
+},
+{
+q:"Hz. İshak'ın annesi kimdir?",
+correct:"Sare",
+extra:["Hacer","Meryem","Asiye","Havva"]
+},
+{
+q:"Hz. Zekeriya'nın oğlu olan peygamber kimdir?",
+correct:"Hz. Yahya",
+extra:["Hz. İsa","Hz. İlyas","Hz. Elyesa","Hz. Şuayb"]
+},
+{
+q:"Hz. Meryem'i himayesine alan peygamber kimdir?",
+correct:"Hz. Zekeriya",
+extra:["Hz. Yahya","Hz. İsa","Hz. Yusuf","Hz. Harun"]
+},
+{
+q:"Hz. Süleyman'a Sebe Melikesi'nin haberini getiren kuş hangisidir?",
+correct:"Hüdhüd",
+extra:["Karga","Güvercin","Kartal","Bülbül"]
+},
+{
+q:"Hz. İbrahim'e karşı çıkan hükümdar kimdir?",
+correct:"Nemrut",
+extra:["Firavun","Karun","Ebrehe","Calut"]
+},
+{
+q:"Hz. Musa döneminde yaşayan ve serveti yüzünden helak olan kişi kimdir?",
+correct:"Karun",
+extra:["Nemrut","Ebrehe","Haman","Samiri"]
+},
+{
+q:"Calut'u öldüren peygamber kimdir?",
+correct:"Hz. Davud",
+extra:["Hz. Süleyman","Hz. Musa","Hz. Harun","Hz. Yuşa"]
+},
+{
+q:"Ashab-ı Kehf'in yanındaki köpeğin adı nedir?",
+correct:"Kıtmir",
+extra:["Buhayra","Kasva","Duldul","Adba"]
+},
+{
+q:"İlk Müslüman olan yetişkin erkek kimdir?",
+correct:"Hz. Ebubekir",
+extra:["Hz. Ömer","Hz. Ali","Hz. Osman","Hz. Hamza"]
+},
+{
+q:"İlk Müslüman olan çocuk kimdir?",
+correct:"Hz. Ali",
+extra:["Hz. Zeyd","Hz. Hasan","Hz. Hüseyin","Hz. Abdullah"]
+},
+{
+q:"İslam'ın ilk şehidi kimdir?",
+correct:"Sümeyye",
+extra:["Hz. Hatice","Hz. Fatıma","Hz. Hamza","Bilal"]
+},
+{
+q:"Müslümanların ilk hicret ettiği ülke neresidir?",
+correct:"Habeşistan",
+extra:["Medine","Şam","Yemen","Mısır"]
+},
+{
+q:"Habeşistan'a hicret edenleri koruyan hükümdar kimdir?",
+correct:"Necaşi",
+extra:["Nemrut","Herakleios","Kisra","Mukavkıs"]
+},
+{
+q:"Hz. Muhammed'e peygamberlikten önce verilen lakap nedir?",
+correct:"Emin",
+extra:["Sıddık","Faruk","Habib","Mustafa"]
+},
+{
+q:"Müslümanların ilk gizli toplantı yeri neresidir?",
+correct:"Darü'l-Erkam",
+extra:["Mescid-i Kuba","Sevr Mağarası","Hira","Safa Tepesi"]
+},
+{
+q:"Uhud Savaşı'nda şehit olan ve 'Seyyidü'ş-şüheda' denilen sahabe kimdir?",
+correct:"Hz. Hamza",
+extra:["Hz. Ali","Hz. Ömer","Musab bin Umeyr","Zeyd bin Harise"]
+},
+{
+q:"Hendek kazma fikrini öneren sahabe kimdir?",
+correct:"Selman-ı Farisi",
+extra:["Bilal-i Habeşi","Ammar bin Yasir","Ebu Zer","Suheyb"]
+},
+{
+q:"Hudeybiye Antlaşması hangi yılda imzalanmıştır?",
+correct:"628",
+extra:["622","624","626","630"]
+},
+{
+q:"Mute Savaşı hangi yılda olmuştur?",
+correct:"629",
+extra:["624","625","627","632"]
+},
+{
+q:"Hz. Muhammed'in kızı ve Hz. Ali'nin eşi kimdir?",
+correct:"Hz. Fatıma",
+extra:["Hz. Zeynep","Hz. Rukiye","Hz. Ümmü Gülsüm","Hz. Ayşe"]
+},
+{
+q:"Hz. Muhammed'in devesinin adı nedir?",
+correct:"Kasva",
+extra:["Duldul","Burak","Adba dışı","Kıtmir"]
+},
+{
+q:"Miraç olayında Hz. Muhammed'in bindiği bineğin adı nedir?",
+correct:"Burak",
+extra:["Kasva","Duldul","Kıtmir","Berke"]
+},
+{
+q:"İsra olayında yolculuk hangi iki mescit arasında gerçekleşmiştir?",
+correct:"Mekke ve Kudüs",
+extra:["Mekke ve Medine","Medine ve Kudüs","Kudüs ve Şam","Mekke ve Taif"]
+},
+{
+q:"'Zinnureyn' lakabıyla anılan halife kimdir?",
+correct:"Hz. Osman",
+extra:["Hz. Ebubekir","Hz. Ömer","Hz. Ali","Hz. Hamza"]
+},
+{
+q:"'Seyfullah' (Allah'ın kılıcı) lakabıyla anılan komutan kimdir?",
+correct:"Halid bin Velid",
+extra:["Sad bin Ebi Vakkas","Amr bin As","Ebu Ubeyde","Üsame"]
+},
+{
+q:"Cennetle müjdelenen sahabelere verilen ad nedir?",
+correct:"Aşere-i Mübeşşere",
+extra:["Ehl-i Beyt","Ashab-ı Suffe","Muhacirler","Ensar"]
+},
+{
+q:"Aşere-i Mübeşşere kaç kişiden oluşur?",
+correct:"10",
+extra:["4","7","12","40"]
+},
+{
+q:"En çok hadis rivayet eden sahabe kimdir?",
+correct:"Ebu Hureyre",
+extra:["Hz. Ayşe","Abdullah bin Ömer","Enes bin Malik","Cabir"]
+},
+{
+q:"Kuran'ı mushaf haline getirme işini yürüten vahiy katibi kimdir?",
+correct:"Zeyd bin Sabit",
+extra:["Übey bin Kab","Abdullah bin Mesud","Muaz bin Cebel","Ebu Derda"]
+},
+{
+q:"Kuran'ı çoğaltarak şehirlere gönderen halife kimdir?",
+correct:"Hz. Osman",
+extra:["Hz. Ebubekir","Hz. Ömer","Hz. Ali","Hz. Muaviye"]
+},
+{
+q:"İlk İslam donanmasını kuran halife kimdir?",
+correct:"Hz. Osman",
+extra:["Hz. Ebubekir","Hz. Ömer","Hz. Ali","Hz. Muaviye"]
+},
+{
+q:"Mekke'den Medine'ye göç eden Müslümanlara ne ad verilir?",
+correct:"Muhacir",
+extra:["Ensar","Sahabe","Tabiin","Ashab-ı Suffe"]
+},
+{
+q:"Medine'de muhacirlere yardım eden yerli Müslümanlara ne ad verilir?",
+correct:"Ensar",
+extra:["Muhacir","Tabiin","Sahabe","Kureyş"]
+},
+{
+q:"'İmam-ı Azam' olarak anılan mezhep imamı kimdir?",
+correct:"Ebu Hanife",
+extra:["İmam Şafii","İmam Malik","Ahmed bin Hanbel","İmam Gazali"]
+},
+{
+q:"Türkiye'de en yaygın olan fıkhi mezhep hangisidir?",
+correct:"Hanefi",
+extra:["Şafii","Maliki","Hanbeli","Zahiri"]
+},
+{
+q:"Sünni fıkıhta kabul edilen mezhep sayısı kaçtır?",
+correct:"4",
+extra:["2","3","5","6"]
+},
+{
+q:"Hadis alanında en muteber kabul edilen altı kitaba ne ad verilir?",
+correct:"Kütüb-i Sitte",
+extra:["Sahihayn","Muvatta","Müsned","Sünen"]
+},
+{
+q:"Buhari ve Müslim'in hadis kitaplarına birlikte ne ad verilir?",
+correct:"Sahihayn",
+extra:["Kütüb-i Sitte","Muvatta","Müsned","Sünen"]
+},
+{
+q:"İslam hukukunu inceleyen ilim dalına ne ad verilir?",
+correct:"Fıkıh",
+extra:["Tefsir","Hadis","Kelam","Siyer"]
+},
+{
+q:"İnanç esaslarını inceleyen ilim dalına ne ad verilir?",
+correct:"Kelam",
+extra:["Fıkıh","Tefsir","Hadis","Tasavvuf"]
+},
+{
+q:"Hz. Muhammed'in hayatını konu alan ilim dalına ne ad verilir?",
+correct:"Siyer",
+extra:["Fıkıh","Kelam","Tefsir","Hadis"]
+},
+{
+q:"Endülüs Emevi Devleti'nin başkenti neresiydi?",
+correct:"Kurtuba",
+extra:["Gırnata","İşbiliye","Tuleytula","Malaga"]
+},
+{
+q:"Kudüs'ü Haçlılardan geri alan komutan kimdir?",
+correct:"Selahaddin Eyyubi",
+extra:["Nureddin Zengi","Baybars","Alparslan","Kılıç Arslan"]
+},
+{
+q:"Talas Savaşı hangi yılda gerçekleşmiştir?",
+correct:"751",
+extra:["632","680","711","1071"]
+},
+{
+q:"Kerbela olayı hangi yılda gerçekleşmiştir?",
+correct:"680",
+extra:["632","661","711","750"]
+},
+{
+q:"Emevi Devleti'ni kuran kişi kimdir?",
+correct:"Muaviye",
+extra:["Yezid","Abdülmelik","Mervan","Velid"]
+},
+{
+q:"Müslümanların İspanya'ya geçişini sağlayan komutan kimdir?",
+correct:"Tarık bin Ziyad",
+extra:["Musa bin Nusayr","Ukbe bin Nafi","Halid bin Velid","Amr bin As"]
+},
+{
+q:"Mısır'ı fetheden İslam komutanı kimdir?",
+correct:"Amr bin As",
+extra:["Halid bin Velid","Sad bin Ebi Vakkas","Ebu Ubeyde","Tarık bin Ziyad"]
+}
+]
+},
+
+{
+id:"futbolcular",
+name:"Bu Futbolcu Kim?",
+icon:"⚽",
+locked:true,
+questions:[
+{
+q:"Bu futbolcu kimdir?",
+correct:"Maradona",
+image:"images/oyuncular/maradona.png",
+extra:["Xavi","Beckham","Iniesta","Lampard"],
+aliases:["Diego Maradona","Diego Armando Maradona"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Pelé",
+image:"images/oyuncular/pele.png",
+extra:["Kaká","Lev Yashin","Eusébio","Lampard"],
+aliases:["Pele","Edson Arantes"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Cruyff",
+image:"images/oyuncular/cruyff.png",
+extra:["Puyol","Nedvěd","Shevchenko","Eusébio"],
+aliases:["Johan Cruyff","Cruijff"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Beckenbauer",
+image:"images/oyuncular/beckenbauer.png",
+extra:["Ronaldinho","Xavi","Cafu","Van Basten"],
+aliases:["Franz Beckenbauer"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Platini",
+image:"images/oyuncular/platini.png",
+extra:["Ronaldo Nazário","Giggs","Trezeguet","Nedvěd"],
+aliases:["Michel Platini"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Zidane",
+image:"images/oyuncular/zidane.png",
+extra:["Cruyff","Eto'o","Bergkamp","Xavi"],
+aliases:["Zinedine Zidane","Zizou"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Ronaldo Nazário",
+image:"images/oyuncular/ronaldo-nazario.png",
+extra:["Figo","Shevchenko","Gullit","Maradona"],
+aliases:["Ronaldo Nazario","R9","Ronaldo Fenomeno","Fenomen Ronaldo"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Ronaldinho",
+image:"images/oyuncular/ronaldinho.png",
+extra:["Scholes","Platini","Beckenbauer","Cruyff"],
+aliases:["Ronaldinho Gaucho"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Roberto Baggio",
+image:"images/oyuncular/baggio.png",
+extra:["Lev Yashin","Puskás","Eto'o","Pelé"],
+aliases:["Baggio"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Maldini",
+image:"images/oyuncular/maldini.png",
+extra:["Iniesta","Roberto Carlos","Xavi","Kaká"],
+aliases:["Paolo Maldini"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Van Basten",
+image:"images/oyuncular/van-basten.png",
+extra:["Lev Yashin","Scholes","Di Stéfano","Nedvěd"],
+aliases:["Marco van Basten","Vanbasten"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Gullit",
+image:"images/oyuncular/gullit.png",
+extra:["Rivaldo","Gerrard","Maradona","Zico"],
+aliases:["Ruud Gullit"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Eusébio",
+image:"images/oyuncular/eusebio.png",
+extra:["Zidane","Iniesta","Figo","Romário"],
+aliases:["Eusebio"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Lev Yashin",
+image:"images/oyuncular/yashin.png",
+extra:["Raúl","Beckham","Zidane","Garrincha"],
+aliases:["Yashin","Yaşin","Lev Yasin"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Gerd Müller",
+image:"images/oyuncular/gerd-muller.png",
+extra:["Roberto Carlos","Di Stéfano","Lampard","Rivaldo"],
+aliases:["Gerd Muller","Muller"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Di Stéfano",
+image:"images/oyuncular/di-stefano.png",
+extra:["Pelé","Platini","Oliver Kahn","Ronaldo Nazário"],
+aliases:["Di Stefano","Alfredo Di Stefano"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Puskás",
+image:"images/oyuncular/puskas.png",
+extra:["Bergkamp","Ronaldo Nazário","Rivaldo","Thierry Henry"],
+aliases:["Puskas","Ferenc Puskas"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Garrincha",
+image:"images/oyuncular/garrincha.png",
+extra:["Platini","Pelé","Van Nistelrooy","Maradona"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Romário",
+image:"images/oyuncular/romario.png",
+extra:["Lev Yashin","Beckenbauer","Puyol","Thierry Henry"],
+aliases:["Romario"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Rivaldo",
+image:"images/oyuncular/rivaldo.png",
+extra:["Bergkamp","Raúl","Platini","Oliver Kahn"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Cafu",
+image:"images/oyuncular/cafu.png",
+extra:["Nedvěd","Eusébio","Van Nistelrooy","Garrincha"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Roberto Carlos",
+image:"images/oyuncular/roberto-carlos.png",
+extra:["Pirlo","Zidane","Rivaldo","Maradona"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Pirlo",
+image:"images/oyuncular/pirlo.png",
+extra:["Raúl","Ronaldinho","Roberto Baggio","Di Stéfano"],
+aliases:["Andrea Pirlo"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Totti",
+image:"images/oyuncular/totti.png",
+extra:["Ronaldo Nazário","Maradona","Beckenbauer","Iniesta"],
+aliases:["Francesco Totti"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Del Piero",
+image:"images/oyuncular/del-piero.png",
+extra:["Gerrard","Gullit","Van Nistelrooy","Beckham"],
+aliases:["Alessandro Del Piero"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Thierry Henry",
+image:"images/oyuncular/henry.png",
+extra:["Eusébio","Xavi","Lampard","Roberto Baggio"],
+aliases:["Henry"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Bergkamp",
+image:"images/oyuncular/bergkamp.png",
+extra:["Raúl","Figo","Del Piero","Ronaldinho"],
+aliases:["Dennis Bergkamp"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Raúl",
+image:"images/oyuncular/raul.png",
+extra:["Thierry Henry","Bergkamp","Lev Yashin","Maradona"],
+aliases:["Raul"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Casillas",
+image:"images/oyuncular/casillas.png",
+extra:["Garrincha","Kaká","Rivaldo","Pelé"],
+aliases:["Iker Casillas"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Xavi",
+image:"images/oyuncular/xavi.png",
+extra:["Lev Yashin","Gullit","Thierry Henry","Eto'o"],
+aliases:["Xavi Hernandez"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Iniesta",
+image:"images/oyuncular/iniesta.png",
+extra:["Figo","Oliver Kahn","Ronaldo Nazário","Cruyff"],
+aliases:["Andres Iniesta"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Puyol",
+image:"images/oyuncular/puyol.png",
+extra:["Maldini","Lev Yashin","Casillas","Puskás"],
+aliases:["Carles Puyol"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Gerrard",
+image:"images/oyuncular/gerrard.png",
+extra:["Maradona","Shevchenko","Roberto Carlos","Romário"],
+aliases:["Steven Gerrard"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Lampard",
+image:"images/oyuncular/lampard.png",
+extra:["Del Piero","Platini","Zidane","Lev Yashin"],
+aliases:["Frank Lampard"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Scholes",
+image:"images/oyuncular/scholes.png",
+extra:["Kaká","Nedvěd","Di Stéfano","Maradona"],
+aliases:["Paul Scholes"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Giggs",
+image:"images/oyuncular/giggs.png",
+extra:["Eto'o","Totti","Shevchenko","Xavi"],
+aliases:["Ryan Giggs"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Beckham",
+image:"images/oyuncular/beckham.png",
+extra:["Roberto Baggio","Kaká","Iniesta","Oliver Kahn"],
+aliases:["David Beckham"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Oliver Kahn",
+image:"images/oyuncular/kahn.png",
+extra:["Roberto Baggio","Del Piero","Gullit","Nedvěd"],
+aliases:["Kahn"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Kaká",
+image:"images/oyuncular/kaka.png",
+extra:["Maldini","Rivaldo","Gerd Müller","Shevchenko"],
+aliases:["Kaka"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Eto'o",
+image:"images/oyuncular/etoo.png",
+extra:["Di Stéfano","Eusébio","Van Basten","Nedvěd"],
+aliases:["Samuel Eto'o","Etoo","Eto o"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Shevchenko",
+image:"images/oyuncular/shevchenko.png",
+extra:["Giggs","Eusébio","Van Nistelrooy","Del Piero"],
+aliases:["Andriy Shevchenko","Şevçenko"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Nedvěd",
+image:"images/oyuncular/nedved.png",
+extra:["Iniesta","Kaká","Zidane","Bergkamp"],
+aliases:["Nedved","Pavel Nedved"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Figo",
+image:"images/oyuncular/figo.png",
+extra:["Beckenbauer","Ronaldo Nazário","Cruyff","Gerrard"],
+aliases:["Luis Figo"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Zico",
+image:"images/oyuncular/zico.png",
+extra:["Puskás","Di Stéfano","Thierry Henry","Bergkamp"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Van Nistelrooy",
+image:"images/oyuncular/van-nistelrooy.png",
+extra:["Kaká","Puyol","Romário","Lampard"],
+aliases:["Nistelrooy"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Trezeguet",
+image:"images/oyuncular/trezeguet.png",
+extra:["Gullit","Platini","Roberto Baggio","Gerd Müller"],
+aliases:["David Trezeguet"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Messi",
+image:"images/oyuncular/messi.png",
+extra:["Griezmann","Son Heung-min","Rodri","Kanté"],
+aliases:["Lionel Messi","Leo Messi"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Cristiano Ronaldo",
+image:"images/oyuncular/cristiano-ronaldo.png",
+extra:["Bellingham","Mbappé","Mané","Lewandowski"],
+aliases:["Ronaldo","CR7","Cristiano"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Neymar",
+image:"images/oyuncular/neymar.png",
+extra:["Lewandowski","Hakimi","Messi","Mbappé"],
+aliases:["Neymar Jr"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Mbappé",
+image:"images/oyuncular/mbappe.png",
+extra:["Mané","Neuer","Courtois","Salah"],
+aliases:["Mbappe","Kylian Mbappe"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Haaland",
+image:"images/oyuncular/haaland.png",
+extra:["Cristiano Ronaldo","Modrić","Benzema","Sergio Ramos"],
+aliases:["Erling Haaland"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"De Bruyne",
+image:"images/oyuncular/de-bruyne.png",
+extra:["Harry Kane","Vinícius","Haaland","Neymar"],
+aliases:["Kevin De Bruyne","Debruyne"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Modrić",
+image:"images/oyuncular/modric.png",
+extra:["Sergio Ramos","Haaland","Ter Stegen","Courtois"],
+aliases:["Modric","Luka Modric"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Lewandowski",
+image:"images/oyuncular/lewandowski.png",
+extra:["Kroos","Bruno Fernandes","Hakimi","Alisson"],
+aliases:["Robert Lewandowski"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Salah",
+image:"images/oyuncular/salah.png",
+extra:["Harry Kane","Vinícius","Haaland","Cristiano Ronaldo"],
+aliases:["Mohamed Salah","Mo Salah","Muhammed Salah"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Mané",
+image:"images/oyuncular/mane.png",
+extra:["Messi","Griezmann","Sergio Ramos","Alisson"],
+aliases:["Mane","Sadio Mane"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Benzema",
+image:"images/oyuncular/benzema.png",
+extra:["Mané","Cristiano Ronaldo","Messi","Bellingham"],
+aliases:["Karim Benzema"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Kroos",
+image:"images/oyuncular/kroos.png",
+extra:["Rodri","Neymar","Griezmann","Hakimi"],
+aliases:["Toni Kroos"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Sergio Ramos",
+image:"images/oyuncular/ramos.png",
+extra:["Mané","Benzema","Haaland","Neymar"],
+aliases:["Ramos"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Van Dijk",
+image:"images/oyuncular/van-dijk.png",
+extra:["Neymar","Courtois","Son Heung-min","Kroos"],
+aliases:["Virgil van Dijk","Vandijk"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Neuer",
+image:"images/oyuncular/neuer.png",
+extra:["Hakimi","Cristiano Ronaldo","Ter Stegen","Alisson"],
+aliases:["Manuel Neuer"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Courtois",
+image:"images/oyuncular/courtois.png",
+extra:["Haaland","Ibrahimović","Benzema","Kroos"],
+aliases:["Thibaut Courtois"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Griezmann",
+image:"images/oyuncular/griezmann.png",
+extra:["Neymar","Bruno Fernandes","Courtois","Ter Stegen"],
+aliases:["Antoine Griezmann"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Harry Kane",
+image:"images/oyuncular/kane.png",
+extra:["Neymar","Van Dijk","Ibrahimović","Beckenbauer"],
+aliases:["Kane"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Son Heung-min",
+image:"images/oyuncular/son.png",
+extra:["Kanté","Courtois","Vinícius","Messi"],
+aliases:["Son","Heung min Son","Son Heung min"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Vinícius",
+image:"images/oyuncular/vinicius.png",
+extra:["Bellingham","Bruno Fernandes","Sergio Ramos","Son Heung-min"],
+aliases:["Vinicius","Vinicius Junior","Vini Jr"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Bellingham",
+image:"images/oyuncular/bellingham.png",
+extra:["Messi","Vinícius","Neymar","Rodri"],
+aliases:["Jude Bellingham"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Rodri",
+image:"images/oyuncular/rodri.png",
+extra:["Mbappé","Salah","Ter Stegen","Van Dijk"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Bruno Fernandes",
+image:"images/oyuncular/bruno-fernandes.png",
+extra:["Hakimi","Benzema","Sergio Ramos","Alisson"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Alisson",
+image:"images/oyuncular/alisson.png",
+extra:["Son Heung-min","Neuer","Suárez","Harry Kane"],
+aliases:["Alisson Becker"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Hakimi",
+image:"images/oyuncular/hakimi.png",
+extra:["Neymar","Griezmann","Mahrez","Messi"],
+aliases:["Achraf Hakimi","Aşraf Hakimi"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Mahrez",
+image:"images/oyuncular/mahrez.png",
+extra:["Mané","Vinícius","Neymar","Courtois"],
+aliases:["Riyad Mahrez"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Ibrahimović",
+image:"images/oyuncular/ibrahimovic.png",
+extra:["Messi","Lewandowski","Bruno Fernandes","Mbappé"],
+aliases:["Ibrahimovic","Zlatan","Zlatan Ibrahimovic","Ibrahimoviç"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Suárez",
+image:"images/oyuncular/suarez.png",
+extra:["Courtois","Hakimi","Vinícius","Rodri"],
+aliases:["Suarez","Luis Suarez"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Kanté",
+image:"images/oyuncular/kante.png",
+extra:["Courtois","Salah","Ter Stegen","Messi"],
+aliases:["Kante","N'Golo Kante","Ngolo Kante"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Ter Stegen",
+image:"images/oyuncular/ter-stegen.png",
+extra:["Kroos","Mané","Haaland","Rodri"],
+aliases:["Terstegen","Marc-Andre ter Stegen"]
+}
+]
+},
+
+{
+id:"emoji",
+name:"Emoji Bulmaca",
+icon:"🧩",
+questions:[
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🦁👑",
+correct:"Aslan Kral",
+extra:["E.T.","Kaptan Amerika","Karlar Ülkesi","Açlık Oyunları"],
+aliases:["The Lion King","Lion King"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🐠🔍",
+correct:"Kayıp Balık Nemo",
+extra:["Ninja Kaplumbağalar","Kung Fu Panda","Baba","Karlar Ülkesi"],
+aliases:["Nemo","Finding Nemo"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🧊🐘🐿️",
+correct:"Buz Devri",
+extra:["Yıldız Savaşları","Denizin Dişleri","Aslan Kral","Baba"],
+aliases:["Ice Age"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🕷️🧑",
+correct:"Örümcek Adam",
+extra:["Wall-E","Oyuncak Hikayesi","Jurassic Park","Yıldız Savaşları"],
+aliases:["Spiderman","Spider-Man"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🦇🌃",
+correct:"Kara Şövalye",
+extra:["Kayıp Balık Nemo","Joker","Harry Potter","Örümcek Adam"],
+aliases:["Batman","The Dark Knight"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  💍🌋🧝",
+correct:"Yüzüklerin Efendisi",
+extra:["Açlık Oyunları","Yukarı Bak","Forrest Gump","Jurassic Park"],
+aliases:["Lord of the Rings","LOTR"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  ⚡🧙👓",
+correct:"Harry Potter",
+extra:["Şrek","Matrix","Örümcek Adam","Geleceğe Dönüş"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🚢🧊💔",
+correct:"Titanik",
+extra:["Jurassic Park","Aslan Kral","Karlar Ülkesi","Harry Potter"],
+aliases:["Titanic"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🦖🏝️",
+correct:"Jurassic Park",
+extra:["Ratatuy","Kaptan Amerika","Yüzüklerin Efendisi","Forrest Gump"],
+aliases:["Jurasik Park"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🛡️🇺🇸💪",
+correct:"Kaptan Amerika",
+extra:["Oyuncak Hikayesi","Şrek","Yüzüklerin Efendisi","Ninja Kaplumbağalar"],
+aliases:["Captain America"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🤖❤️🔴",
+correct:"Demir Adam",
+extra:["Buz Devri","Kara Şövalye","E.T.","Wall-E"],
+aliases:["Iron Man","Ironman"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🏴‍☠️⚓🗺️",
+correct:"Karayip Korsanları",
+extra:["Kara Şövalye","Aslan Kral","Forrest Gump","Harry Potter"],
+aliases:["Pirates of the Caribbean"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🏹🔥🎯",
+correct:"Açlık Oyunları",
+extra:["Oyuncak Hikayesi","Harry Potter","Yüzüklerin Efendisi","Forrest Gump"],
+aliases:["Hunger Games"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🧅💚👹",
+correct:"Şrek",
+extra:["Yüzüklerin Efendisi","Kaptan Amerika","Demir Adam","Harry Potter"],
+aliases:["Shrek"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  👨‍🍳🐀🍲",
+correct:"Ratatuy",
+extra:["Matrix","Joker","King Kong","Yıldız Savaşları"],
+aliases:["Ratatouille"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🤖🌱🚀",
+correct:"Wall-E",
+extra:["Harry Potter","Yüzüklerin Efendisi","Kung Fu Panda","Joker"],
+aliases:["Wall E","Walle"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🎈🏠👴",
+correct:"Yukarı Bak",
+extra:["Açlık Oyunları","Kaptan Amerika","Aslan Kral","Karayip Korsanları"],
+aliases:["Up"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🐟👴🎣",
+correct:"Denizin Dişleri",
+extra:["Şrek","Yüzüklerin Efendisi","Kara Şövalye","Jurassic Park"],
+aliases:["Jaws"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  💊🔵🔴🕶️",
+correct:"Matrix",
+extra:["Buz Devri","Demir Adam","Kaptan Amerika","Baba"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🚗⏰⚡",
+correct:"Geleceğe Dönüş",
+extra:["E.T.","Matrix","Aslan Kral","King Kong"],
+aliases:["Back to the Future"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  👽🚲🌕",
+correct:"E.T.",
+extra:["Kung Fu Panda","Demir Adam","Buz Devri","Kaptan Amerika"],
+aliases:["ET"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  ⭐⚔️🌌",
+correct:"Yıldız Savaşları",
+extra:["Karayip Korsanları","Baba","Kaptan Amerika","Wall-E"],
+aliases:["Star Wars"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🦍🏙️✈️",
+correct:"King Kong",
+extra:["Kung Fu Panda","Demir Adam","Yüzüklerin Efendisi","Wall-E"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🐼🥋🍜",
+correct:"Kung Fu Panda",
+extra:["Wall-E","King Kong","Yüzüklerin Efendisi","Kayıp Balık Nemo"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  ❄️👸⛄",
+correct:"Karlar Ülkesi",
+extra:["Jurassic Park","Aslan Kral","Kung Fu Panda","Karayip Korsanları"],
+aliases:["Frozen"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🧸🤠🚀",
+correct:"Oyuncak Hikayesi",
+extra:["Forrest Gump","Açlık Oyunları","Aslan Kral","Denizin Dişleri"],
+aliases:["Toy Story"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🐢🍕🥋",
+correct:"Ninja Kaplumbağalar",
+extra:["Oyuncak Hikayesi","Şrek","Karayip Korsanları","Açlık Oyunları"],
+aliases:["TMNT"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🔫🐀🍝",
+correct:"Baba",
+extra:["Matrix","Ninja Kaplumbağalar","Aslan Kral","Ratatuy"],
+aliases:["The Godfather"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🏃‍♂️🍫🪶",
+correct:"Forrest Gump",
+extra:["Kayıp Balık Nemo","King Kong","Yüzüklerin Efendisi","Geleceğe Dönüş"]
+},
+{
+q:"Bu emojiler hangi filmi anlatıyor?  🃏🤡🎭",
+correct:"Joker",
+extra:["Harry Potter","Örümcek Adam","Karlar Ülkesi","Titanik"]
+},
+{
+q:"Bu emojiler hangi diziyi anlatıyor?  👑🐉❄️",
+correct:"Taht Oyunları",
+extra:["The Crown","Stranger Things","Friends","The Office"],
+aliases:["Game of Thrones","GOT"]
+},
+{
+q:"Bu emojiler hangi diziyi anlatıyor?  🧪💊🎩",
+correct:"Breaking Bad",
+extra:["The Office","Friends","Stranger Things","Taht Oyunları"]
+},
+{
+q:"Bu emojiler hangi diziyi anlatıyor?  🦑🔴🟢💀",
+correct:"Squid Game",
+extra:["The Office","The Walking Dead","Friends","The Crown"],
+aliases:["Kalamar Oyunu"]
+},
+{
+q:"Bu emojiler hangi diziyi anlatıyor?  ☕🛋️6️⃣",
+correct:"Friends",
+extra:["Taht Oyunları","Stranger Things","The Crown","Breaking Bad"],
+aliases:["Arkadaşlar"]
+},
+{
+q:"Bu emojiler hangi diziyi anlatıyor?  🧇👾🚲",
+correct:"Stranger Things",
+extra:["Squid Game","The Office","The Walking Dead","The Crown"]
+},
+{
+q:"Bu emojiler hangi diziyi anlatıyor?  🏢📎😄",
+correct:"The Office",
+extra:["Breaking Bad","Squid Game","The Walking Dead","Taht Oyunları"]
+},
+{
+q:"Bu emojiler hangi diziyi anlatıyor?  🧟‍♂️🏚️🔫",
+correct:"The Walking Dead",
+extra:["Squid Game","The Office","The Crown","Stranger Things"]
+},
+{
+q:"Bu emojiler hangi diziyi anlatıyor?  👑💂📜",
+correct:"The Crown",
+extra:["Breaking Bad","Taht Oyunları","The Walking Dead","Squid Game"]
+},
+{
+q:"Bu emojiler hangi ülkeyi anlatıyor?  🗼🥖🧀",
+correct:"Fransa",
+extra:["Hollanda","Avustralya","İtalya","Japonya"],
+aliases:["France"]
+},
+{
+q:"Bu emojiler hangi ülkeyi anlatıyor?  🍕🍝🏛️",
+correct:"İtalya",
+extra:["Paskalya Adası","Brezilya","İsviçre","Fransa"],
+aliases:["Italya","Italy"]
+},
+{
+q:"Bu emojiler hangi ülkeyi anlatıyor?  🍣🗾🌸",
+correct:"Japonya",
+extra:["Çin","Paskalya Adası","İspanya","Mısır"],
+aliases:["Japan"]
+},
+{
+q:"Bu emojiler hangi ülkeyi anlatıyor?  🐨🦘🏄",
+correct:"Avustralya",
+extra:["Hollanda","İsviçre","Japonya","Fransa"],
+aliases:["Australia"]
+},
+{
+q:"Bu emojiler hangi ülkeyi anlatıyor?  🐼🥟🏯",
+correct:"Çin",
+extra:["Türkiye","Fransa","Hollanda","İspanya"],
+aliases:["China"]
+},
+{
+q:"Bu emojiler hangi ülkeyi anlatıyor?  🏜️🐪🕌",
+correct:"Mısır",
+extra:["Avustralya","Japonya","Paskalya Adası","İsviçre"],
+aliases:["Egypt"]
+},
+{
+q:"Bu emojiler hangi ülkeyi anlatıyor?  💃🐂🥘",
+correct:"İspanya",
+extra:["İtalya","Japonya","İsviçre","Mısır"],
+aliases:["Ispanya","Spain"]
+},
+{
+q:"Bu emojiler hangi ülkeyi anlatıyor?  🍫⛰️⌚",
+correct:"İsviçre",
+extra:["Japonya","Fransa","İspanya","Çin"],
+aliases:["Isvicre","Switzerland"]
+},
+{
+q:"Bu emojiler hangi ülkeyi anlatıyor?  🌷🚲🧀",
+correct:"Hollanda",
+extra:["Japonya","İsviçre","Türkiye","Paskalya Adası"],
+aliases:["Netherlands"]
+},
+{
+q:"Bu emojiler hangi ülkeyi anlatıyor?  ☕🌴⚽",
+correct:"Brezilya",
+extra:["İsviçre","Mısır","Türkiye","Çin"],
+aliases:["Brazil"]
+},
+{
+q:"Bu emojiler hangi ülkeyi anlatıyor?  🗿🌊🏝️",
+correct:"Paskalya Adası",
+extra:["Çin","İsviçre","İspanya","Japonya"],
+aliases:["Easter Island"]
+},
+{
+q:"Bu emojiler hangi ülkeyi anlatıyor?  🕌🫖🥙",
+correct:"Türkiye",
+extra:["İtalya","İspanya","Hollanda","Japonya"],
+aliases:["Turkey"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  🐝🍯",
+correct:"Bal",
+extra:["Kayak","Düğün","Doğum günü","Okul"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  🌧️☀️🌈",
+correct:"Gökkuşağı",
+extra:["Gece","Düğün","Seyahat","İtfaiye"],
+aliases:["Gokkusagi","Rainbow"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  🌙⭐🌌",
+correct:"Gece",
+extra:["Mahkeme","İtfaiye","Astronot","Doğum günü"],
+aliases:["Night"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  📚🎓👨‍🏫",
+correct:"Okul",
+extra:["Gökkuşağı","Mahkeme","Doğum günü","Plaj"],
+aliases:["School"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  💉🩺🏥",
+correct:"Hastane",
+extra:["Kayak","Bal","Seyahat","Doğum günü"],
+aliases:["Hospital"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  ✈️🧳🌍",
+correct:"Seyahat",
+extra:["İtfaiye","Sinema","Kayak","Hastane"],
+aliases:["Tatil","Travel"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  🎂🎉🎁",
+correct:"Doğum günü",
+extra:["Astronot","Düğün","Hastane","Sinema"],
+aliases:["Dogum gunu","Birthday"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  ⚰️🕯️😢",
+correct:"Cenaze",
+extra:["Seyahat","Kayak","Gece","Plaj"],
+aliases:["Funeral"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  👰🤵💒",
+correct:"Düğün",
+extra:["Astronot","Bal","Cenaze","İtfaiye"],
+aliases:["Dugun","Wedding"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  🔥🚒👨‍🚒",
+correct:"İtfaiye",
+extra:["Mahkeme","Hastane","Seyahat","Kayak"],
+aliases:["Itfaiye","Yangın"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  🌊🏄‍♂️🏖️",
+correct:"Plaj",
+extra:["Hastane","Cenaze","Astronot","Düğün"],
+aliases:["Beach","Sahil"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  ❄️⛷️🏔️",
+correct:"Kayak",
+extra:["Plaj","Astronot","Seyahat","Sinema"],
+aliases:["Ski"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  🎬🍿🎟️",
+correct:"Sinema",
+extra:["Hastane","Plaj","Seyahat","Doğum günü"],
+aliases:["Cinema"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  ⚖️👨‍⚖️🏛️",
+correct:"Mahkeme",
+extra:["Seyahat","Gece","Kayak","Cenaze"],
+aliases:["Adalet","Court"]
+},
+{
+q:"Bu emojiler hangi kavramı anlatıyor?  🧑‍🚀🚀🌕",
+correct:"Astronot",
+extra:["Seyahat","Mahkeme","Düğün","Gece"],
+aliases:["Uzay","Astronaut"]
+},
+{
+q:"Bu emojiler hangi atasözünü/deyimi anlatıyor?  💧💧🏞️",
+correct:"Damlaya damlaya göl olur",
+extra:["Sütten ağzı yanan yoğurdu üfleyerek yer","Bir taşla iki kuş vurmak","Ateş olmayan yerden duman çıkmaz","Balık baştan kokar"],
+aliases:["Damlaya damlaya gol olur"]
+},
+{
+q:"Bu emojiler hangi atasözünü/deyimi anlatıyor?  🔥🚫💨",
+correct:"Ateş olmayan yerden duman çıkmaz",
+extra:["Balık baştan kokar","Armut dibine düşer","Sütten ağzı yanan yoğurdu üfleyerek yer","Damlaya damlaya göl olur"],
+aliases:["Ates olmayan yerden duman cikmaz"]
+},
+{
+q:"Bu emojiler hangi atasözünü/deyimi anlatıyor?  🪨1️⃣🐦🐦",
+correct:"Bir taşla iki kuş vurmak",
+extra:["Balık baştan kokar","Ateş olmayan yerden duman çıkmaz","Armut dibine düşer","Sütten ağzı yanan yoğurdu üfleyerek yer"],
+aliases:["Bir tasla iki kus vurmak"]
+},
+{
+q:"Bu emojiler hangi atasözünü/deyimi anlatıyor?  🍐🌳⬇️",
+correct:"Armut dibine düşer",
+extra:["Bir taşla iki kuş vurmak","Sütten ağzı yanan yoğurdu üfleyerek yer","Balık baştan kokar","Damlaya damlaya göl olur"],
+aliases:["Armut dibine duser"]
+},
+{
+q:"Bu emojiler hangi atasözünü/deyimi anlatıyor?  🐟🤢👃",
+correct:"Balık baştan kokar",
+extra:["Ateş olmayan yerden duman çıkmaz","Sütten ağzı yanan yoğurdu üfleyerek yer","Bir taşla iki kuş vurmak","Armut dibine düşer"],
+aliases:["Balik bastan kokar"]
+},
+{
+q:"Bu emojiler hangi atasözünü/deyimi anlatıyor?  🥛🔥🥣",
+correct:"Sütten ağzı yanan yoğurdu üfleyerek yer",
+extra:["Balık baştan kokar","Ateş olmayan yerden duman çıkmaz","Damlaya damlaya göl olur","Bir taşla iki kuş vurmak"],
+aliases:["Sutten agzi yanan yogurdu ufleyerek yer"]
+}
+]
 }
 
 ];
@@ -5679,13 +7507,43 @@ return m?m[0].replace(",","."):null;
    bir şekilde ele alınır. */
 function stripTurkishDiacritics(text){
 
-return (text||"")
+let s=(text||"");
+
+/* Türkçe'ye özgü harfler */
+s=s
 .replace(/ş/g,"s")
 .replace(/ç/g,"c")
 .replace(/ğ/g,"g")
 .replace(/ü/g,"u")
 .replace(/ö/g,"o")
 .replace(/ı/g,"i");
+
+/* Diğer Latin aksanları. Oyunda yabancı özel adlar da geçiyor
+   (Mbappé, Modrić, Nazário, Ibrahimović, Häkkinen...). Türk
+   klavyesinde bu işaretler bulunmadığından oyuncular bunları
+   neredeyse her zaman sade yazar; bu bir yazım hatası değil,
+   aynı ismin olağan yazılışıdır. */
+s=s
+.replace(/[àáâãäåāă]/g,"a")
+.replace(/[èéêëēĕėę]/g,"e")
+.replace(/[ìíîïĩīĭ]/g,"i")
+.replace(/[òóôõøōŏ]/g,"o")
+.replace(/[ùúûũūŭ]/g,"u")
+.replace(/[ýÿ]/g,"y")
+.replace(/[ćĉċč]/g,"c")
+.replace(/[śŝšș]/g,"s")
+.replace(/[ĝğġ]/g,"g")
+.replace(/[ñń]/g,"n")
+.replace(/[žźż]/g,"z")
+.replace(/[ĺľł]/g,"l")
+.replace(/[ŕř]/g,"r")
+.replace(/[ţťț]/g,"t")
+.replace(/[ďđ]/g,"d")
+.replace(/æ/g,"ae")
+.replace(/œ/g,"oe")
+.replace(/ß/g,"ss");
+
+return s;
 
 }
 
@@ -5979,6 +7837,10 @@ room.selectedCategoryIds=
 
 room.questionTime=room.questionTime||45;
 
+room.hostPremium=!!room.hostPremium;
+
+room.totalRounds=room.totalRounds||TOTAL_ROUNDS;
+
 return room;
 
 }
@@ -6198,6 +8060,11 @@ let cameFromShareLink=false;
 
 let currentRound=0;
 
+/* Elden Ele modunda seçilen toplam tur sayısı. Ücretsiz
+   kullanımda TOTAL_ROUNDS'a sabitlenir, premium'da
+   ROUND_OPTIONS içinden seçilebilir. */
+let localTotalRounds=TOTAL_ROUNDS;
+
 let currentQuestion=null;
 
 let currentCategory=null;
@@ -6240,6 +8107,11 @@ function render(){
 
 if(mode===null){
 renderHome();
+return;
+}
+
+if(mode==="premium"){
+renderPremium();
 return;
 }
 
@@ -6336,6 +8208,16 @@ ve kendi cevabınla onları kandır.
 
 </div>
 
+<button class="mode-tile mode-tile-gold" onclick="showPremiumInfo()">
+<div class="mode-tile-top">
+<span class="mode-tile-icon">${isPremium?"👑":"⭐"}</span>
+<div>
+<div class="mode-tile-title">${isPremium?"Premium Aktif":"Premium"}</div>
+<div class="mode-tile-desc">${isPremium?"Tüm kategoriler ve ayarlar açık":"Tüm kategorileri aç, "+MAX_PLAYERS_PREMIUM+" kişiye kadar oyna"}</div>
+</div>
+</div>
+</button>
+
 <button class="leave-link" style="margin-top:2px;align-self:center" onclick="openAdmin()">
 ⚙️ Yönetici Paneli
 </button>
@@ -6349,6 +8231,135 @@ ve kendi cevabınla onları kandır.
    LOCAL SETUP
 ========================================================= */
 
+/* =========================================================
+   PREMIUM EKRANI
+========================================================= */
+
+function showPremiumInfo(){
+mode="premium";
+renderPremium();
+}
+
+function renderPremium(){
+
+document.getElementById("app").innerHTML=`
+
+<div class="topbar">
+<div class="brand"><span class="dot"></span>YALANCI</div>
+<button class="leave-link" onclick="mode=null;render()">← Geri</button>
+</div>
+
+<main>
+
+<div class="card premium-card">
+
+<div class="stage-label" style="color:var(--gold)">Premium</div>
+
+<h1 class="headline">
+${isPremium?"Premium aktif 👑":"Premium'a geç"}
+</h1>
+
+<p class="sub">
+${isPremium
+?"Tüm özellikler açık. İyi oyunlar!"
+:"Tüm kategorileri aç, daha kalabalık oyna, tur sayısını sen belirle."}
+</p>
+
+<ul class="premium-list">
+<li><span>🔓</span><span><b>Tüm kategoriler açılır</b> — kilitli kategorilerin tamamı oynanabilir hale gelir.</span></li>
+<li><span>👥</span><span><b>${MAX_PLAYERS_PREMIUM} oyuncuya kadar</b> — ücretsiz sürümde sınır ${MAX_PLAYERS_FREE} oyuncudur.</span></li>
+<li><span>🔁</span><span><b>Tur sayısını seç</b> — ${ROUND_OPTIONS.join(", ")} soru arasından seçebilirsin.</span></li>
+<li><span>⚙️</span><span><b>Tüm ayarlar açık</b> — kategori ve süre ayarlarının tamamı kullanılabilir.</span></li>
+<li><span>🌐</span><span><b>Online'da oda kurucusu premium ise</b> odadaki herkes bu ayrıcalıklardan yararlanır.</span></li>
+</ul>
+
+</div>
+
+${
+isPremium
+?
+`<button class="btn btn-ghost" onclick="cancelPremium()">Premium'u kaldır</button>`
+:
+`
+<div class="card">
+
+<h3>Aktivasyon Kodu</h3>
+
+<p class="sub">
+Ödeme sistemi yakında eklenecek. Şimdilik aktivasyon
+kodunla premium'u açabilirsin.
+</p>
+
+<input type="text" id="premiumCode" placeholder="Kodu gir..." autocomplete="off"
+onkeydown="if(event.key==='Enter')activatePremium()">
+
+<button class="btn btn-gold" onclick="activatePremium()">Premium'u Aç</button>
+
+<p id="premiumMsg" class="error-text" style="display:none"></p>
+
+</div>
+`
+}
+
+<button class="btn btn-ghost" onclick="mode=null;render()">← Ana Menü</button>
+
+</main>
+`;
+}
+
+function activatePremium(){
+
+const el=document.getElementById("premiumCode");
+
+const val=(el?el.value:"").trim();
+
+if(val===PREMIUM_CODE){
+
+setPremium(true);
+
+/* Premium açılınca kategori seçimlerini tazele ki yeni
+   açılan kategoriler host panelinde seçili gelsin. */
+hostSelectedCategoryIds=null;
+
+alert("Premium açıldı! 👑 Tüm özellikler kullanılabilir.");
+
+renderPremium();
+
+}else{
+
+const m=document.getElementById("premiumMsg");
+
+if(m){
+m.textContent="Kod geçersiz. Lütfen kontrol et.";
+m.style.display="block";
+}
+
+}
+
+}
+
+function cancelPremium(){
+
+if(!confirm("Premium kaldırılsın mı? Kilitli kategoriler ve ek ayarlar tekrar kapanacak.")) return;
+
+setPremium(false);
+
+hostSelectedCategoryIds=null;
+
+renderPremium();
+
+}
+
+function setLocalTotalRounds(r){
+
+if(!isPremium){ showPremiumInfo(); return; }
+
+localTotalRounds=r;
+
+renderLocalSetup();
+
+}
+
 function openLocalSetup(){
 
 mode="local";
@@ -6357,6 +8368,8 @@ players=[];
 scores={};
 playerAvatars={};
 localSetupPlayerName="";
+
+if(!isPremium) localTotalRounds=TOTAL_ROUNDS;
 
 renderLocalSetup();
 }
@@ -6386,7 +8399,7 @@ Oyuncu isimlerini ekle
 
 <p class="sub">
 Oyuncuların isimlerini tek tek yaz.
-(${players.length}/${MAX_PLAYERS} oyuncu)
+(${players.length}/${maxPlayersLocal()} oyuncu)
 </p>
 
 <div class="avatar-picker">
@@ -6424,22 +8437,47 @@ onclick="pickPendingAvatarColor('${c}');renderLocalSetup()">
 
 </div>
 
+<div class="card" style="background:var(--bg-deep);margin-top:16px">
+
+<h3>Tur Sayısı ${isPremium?"":"🔒"}</h3>
+
+<p class="sub" style="font-size:13.5px">
+${isPremium
+?"Oyun kaç soru sürsün?"
+:"Ücretsiz sürümde "+TOTAL_ROUNDS+" soru. Premium ile değiştirilebilir."}
+</p>
+
+<div class="time-choice-row">
+${
+ROUND_OPTIONS.map(r=>`
+<button
+class="btn ${(isPremium?localTotalRounds:TOTAL_ROUNDS)===r?"btn-primary":"btn-ghost"}"
+style="flex:1;margin-top:0"
+onclick="${isPremium?"setLocalTotalRounds("+r+")":"showPremiumInfo()"}">
+${r}
+</button>
+`).join("")
+}
+</div>
+
+</div>
+
 <div class="player-input-row">
 
 <input
 type="text"
 id="playerName"
-placeholder="${players.length>=MAX_PLAYERS?"Oyuncu listesi dolu":"Oyuncu adı..."}"
+placeholder="${players.length>=maxPlayersLocal()?"Oyuncu listesi dolu":"Oyuncu adı..."}"
 value="${escapeAttr(localSetupPlayerName)}"
 oninput="localSetupPlayerName=this.value"
-${players.length>=MAX_PLAYERS?"disabled":""}
+${players.length>=maxPlayersLocal()?"disabled":""}
 onkeydown="if(event.key==='Enter')addPlayer()"
 >
 
 <button
 class="btn btn-primary"
 style="margin-top:0;width:90px"
-${players.length>=MAX_PLAYERS?"disabled":""}
+${players.length>=maxPlayersLocal()?"disabled":""}
 onclick="addPlayer()">
 Ekle
 </button>
@@ -6522,8 +8560,8 @@ const name=(input.value||"").trim();
 
 if(!name) return;
 
-if(players.length>=MAX_PLAYERS){
-alert("En fazla "+MAX_PLAYERS+" oyuncu ekleyebilirsin.");
+if(players.length>=maxPlayersLocal()){
+alert("En fazla "+maxPlayersLocal()+" oyuncu ekleyebilirsin."+(isPremium?"":"\n\nPremium ile bu sınır "+MAX_PLAYERS_PREMIUM+" oyuncuya çıkar."));
 return;
 }
 
@@ -6651,19 +8689,21 @@ const remaining=
 c.questions.length-
 usedQuestions[c.id].length;
 
+const kilitli=isCategoryLocked(c);
+
 return`
 
 <button
-class="cat-btn"
-${remaining<=0?"disabled":""}
-onclick="selectCategory('${c.id}')">
+class="cat-btn${kilitli?" cat-btn-locked":""}"
+${(remaining<=0||kilitli)?"disabled":""}
+onclick="${kilitli?"showPremiumInfo()":"selectCategory('"+c.id+"')"}">
 
-<span class="cat-icon">${c.icon}</span>
+<span class="cat-icon">${kilitli?"🔒":c.icon}</span>
 
 ${c.name}
 
 <span class="cat-left">
-${remaining} soru
+${kilitli?"Premium":remaining+" soru"}
 </span>
 
 </button>
@@ -6689,6 +8729,7 @@ startTimer(CATEGORY_PICK_TIME,autoPickCategory);
 function autoPickCategory(){
 
 const available=CATEGORIES.filter(c=>
+!isCategoryLocked(c) &&
 c.questions.length-usedQuestions[c.id].length>0
 );
 
@@ -7303,7 +9344,7 @@ const remaining=CATEGORIES.some(
 c=>usedQuestions[c.id].length<c.questions.length
 );
 
-if(!remaining || currentRound>=TOTAL_ROUNDS){
+if(!remaining || currentRound>=localTotalRounds){
 
 showGameOver();
 
@@ -7545,6 +9586,9 @@ let onlinePlayers=[];
    önce lobide düzenlenir, "Oyunu Başlat" ile odaya yazılır. */
 let hostSelectedCategoryIds=null;
 let hostQuestionTime=45;
+
+/* Host'un seçtiği tur sayısı (yalnızca premium'da değiştirilebilir). */
+let hostTotalRounds=TOTAL_ROUNDS;
 
 let onlineScores={};
 
@@ -7789,6 +9833,10 @@ name:c.name||catId,
 
 icon:c.icon||"❓",
 
+/* Kilitli kategoriler yalnızca premium kullanıcılara açıktır.
+   Bu bayrak yönetici panelinden değiştirilir. */
+locked:!!c.locked,
+
 questions:questions
 
 };
@@ -7823,7 +9871,7 @@ image:q.image||""
 
 });
 
-return{ name:cat.name, icon:cat.icon, questions:questions };
+return{ name:cat.name, icon:cat.icon, locked:!!cat.locked, questions:questions };
 
 }
 
@@ -8198,13 +10246,15 @@ CATEGORIES.map(c=>`
 
 <div class="lobby-row" style="justify-content:space-between;margin-top:10px">
 
-<div>${c.icon} <strong>${c.name}</strong> <span class="cat-left">(${c.questions.length} soru)</span></div>
+<div>${c.icon} <strong>${c.name}</strong> <span class="cat-left">(${c.questions.length} soru)${c.locked?" · 🔒 Premium":" · 🔓 Ücretsiz"}</span></div>
 
-<div style="display:flex;gap:8px">
+<div style="display:flex;gap:8px;flex-wrap:wrap">
 
-<button class="btn btn-ghost" style="margin:0;padding:8px 14px;width:auto" onclick="renderAdminCategory('${c.id}')">Düzenle</button>
+<button class="btn btn-ghost" style="margin:0;padding:8px 12px;width:auto;${c.locked?"color:var(--gold);border-color:var(--gold)":""}" onclick="adminToggleLock('${c.id}')">${c.locked?"🔒 Kilitli":"🔓 Açık"}</button>
 
-<button class="btn btn-ghost" style="margin:0;padding:8px 14px;width:auto;color:var(--coral)" onclick="adminDeleteCategory('${c.id}')">Sil</button>
+<button class="btn btn-ghost" style="margin:0;padding:8px 12px;width:auto" onclick="renderAdminCategory('${c.id}')">Düzenle</button>
+
+<button class="btn btn-ghost" style="margin:0;padding:8px 12px;width:auto;color:var(--coral)" onclick="adminDeleteCategory('${c.id}')">Sil</button>
 
 </div>
 
@@ -8294,6 +10344,28 @@ CATEGORIES=CATEGORIES.filter(c=>c.id!==id);
 await saveCategoriesToFirebase();
 
 renderAdminHome();
+
+}
+
+/* Bir kategoriyi premium'a kilitler ya da herkese açar.
+   Değişiklik Firebase'e kaydedilir, böylece tüm cihazlarda
+   anında geçerli olur. */
+async function adminToggleLock(catId){
+
+const cat=CATEGORIES.find(x=>x.id===catId);
+
+if(!cat) return;
+
+cat.locked=!cat.locked;
+
+const ok=await saveCategoriesToFirebase();
+
+if(!ok){
+cat.locked=!cat.locked;   /* geri al */
+alert("Kaydedilemedi: "+(lastStorageError||"bilinmiyor"));
+}
+
+renderAdminGame();
 
 }
 
@@ -8667,7 +10739,7 @@ else alert(msg);
 
 function toggleHostCategory(id){
 
-if(!hostSelectedCategoryIds) hostSelectedCategoryIds=CATEGORIES.map(c=>c.id);
+if(!hostSelectedCategoryIds) hostSelectedCategoryIds=playableCategories().map(c=>c.id);
 
 if(hostSelectedCategoryIds.includes(id)){
 
@@ -8689,6 +10761,16 @@ renderOnlineLobby();
 function setHostQuestionTime(t){
 
 hostQuestionTime=t;
+
+renderOnlineLobby();
+
+}
+
+function setHostTotalRounds(r){
+
+if(!isPremium){ showPremiumInfo(); return; }
+
+hostTotalRounds=r;
 
 renderOnlineLobby();
 
@@ -8727,7 +10809,7 @@ roomCode=generateRoomCode();
 
 isHost=true;
 
-hostSelectedCategoryIds=CATEGORIES.map(c=>c.id);
+hostSelectedCategoryIds=playableCategories().map(c=>c.id);
 
 hostQuestionTime=45;
 
@@ -8738,6 +10820,11 @@ CATEGORIES.forEach(c=>{ usedQ[c.id]=[]; });
 const room={
 phase:"lobby",
 host:name,
+/* Host premium ise odadaki herkes premium ayrıcalıklarını
+   kullanır (daha fazla oyuncu, kilitli kategoriler, tur
+   sayısı seçimi). */
+hostPremium:isPremium,
+totalRounds:TOTAL_ROUNDS,
 players:[name],
 scores:{[name]:0},
 avatars:{[name]:{emoji:pendingAvatarEmoji,color:pendingAvatarColor}},
@@ -8850,9 +10937,9 @@ if(!isReturningPlayer){
 /* Oda dolduysa yeni oyuncu alınmaz. Geri dönen (bağlantısı
    kopmuş) bir oyuncu bu kontrolün dışındadır — o zaten
    listede olduğu için odayı büyütmez. */
-if(room.players.length>=MAX_PLAYERS){
+if(room.players.length>=roomMaxPlayers(room)){
 
-showOnlineSetupError("Bu oda dolu (en fazla "+MAX_PLAYERS+" oyuncu).");
+showOnlineSetupError("Bu oda dolu (en fazla "+roomMaxPlayers(room)+" oyuncu).");
 
 return;
 
@@ -8916,7 +11003,7 @@ if(!roomCode) return;
 /* Oda tazeyken (henüz Firebase'e hiç ayar yazılmadıysa)
    host'un yerel seçimlerini başlat. */
 if(isHost && !hostSelectedCategoryIds){
-hostSelectedCategoryIds=CATEGORIES.map(c=>c.id);
+hostSelectedCategoryIds=playableCategories().map(c=>c.id);
 }
 
 const url=
@@ -8981,7 +11068,7 @@ Telefonlarıyla tarayıp oyuna katılabilirler.
 <div class="card">
 
 <h3>
-Oyuncular (${(roomState?.players||[]).length}/${MAX_PLAYERS})
+Oyuncular (${(roomState?.players||[]).length}/${roomMaxPlayers(roomState)})
 </h3>
 
 <div class="lobby-list">
@@ -9041,16 +11128,17 @@ isHost
 ${
 CATEGORIES.map(c=>{
 
-const checked=hostSelectedCategoryIds.includes(c.id);
+const kilitli=isCategoryLocked(c);
+const checked=!kilitli && hostSelectedCategoryIds.includes(c.id);
 
 return`
 
 <button
-class="cat-btn ${checked?"cat-btn-selected":""}"
-onclick="toggleHostCategory('${c.id}')">
-<span class="cat-icon">${c.icon}</span>
+class="cat-btn ${checked?"cat-btn-selected":""}${kilitli?" cat-btn-locked":""}"
+onclick="${kilitli?"showPremiumInfo()":"toggleHostCategory('"+c.id+"')"}">
+<span class="cat-icon">${kilitli?"🔒":c.icon}</span>
 ${c.name}
-<span class="cat-left">${checked?"✓ Seçili":"Seçilmedi"}</span>
+<span class="cat-left">${kilitli?"Premium":(checked?"✓ Seçili":"Seçilmedi")}</span>
 </button>
 
 `;
@@ -9081,6 +11169,35 @@ class="btn ${hostQuestionTime===t?"btn-primary":"btn-ghost"}"
 style="flex:1"
 onclick="setHostQuestionTime(${t})">
 ${t} sn
+</button>
+
+`).join("")
+}
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>Tur Sayısı ${isPremium?"":"🔒"}</h3>
+
+<p class="sub">
+${isPremium
+?"Oyunun kaç soru süreceğini seç."
+:"Ücretsiz sürümde oyun "+TOTAL_ROUNDS+" sorudur. Premium ile tur sayısını değiştirebilirsin."}
+</p>
+
+<div class="time-choice-row">
+
+${
+ROUND_OPTIONS.map(r=>`
+
+<button
+class="btn ${(isPremium?hostTotalRounds:TOTAL_ROUNDS)===r?"btn-primary":"btn-ghost"}"
+style="flex:1"
+onclick="${isPremium?"setHostTotalRounds("+r+")":"showPremiumInfo()"}">
+${r}
 </button>
 
 `).join("")
@@ -9244,6 +11361,10 @@ hostSelectedCategoryIds&&hostSelectedCategoryIds.length
 :CATEGORIES.map(c=>c.id);
 
 room.questionTime=hostQuestionTime||45;
+
+room.hostPremium=isPremium;
+
+room.totalRounds=isPremium?(hostTotalRounds||TOTAL_ROUNDS):TOTAL_ROUNDS;
 
 room.phase="category_pick";
 
@@ -9780,7 +11901,7 @@ const remaining=CATEGORIES
 c=>(room.usedQuestions[c.id]||[]).length<c.questions.length
 );
 
-if(!remaining || room.round>=TOTAL_ROUNDS){
+if(!remaining || room.round>=(room.totalRounds||TOTAL_ROUNDS)){
 
 room.phase="game_over";
 
