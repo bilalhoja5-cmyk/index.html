@@ -2,7 +2,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>YALANCI — Bilgi ve Blöf Oyunu</title><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-app-compat.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-database-compat.min.js"></script><link rel="preconnect" href="https://fonts.googleapis.com">
+<title>YALANCI — Bilgi ve Blöf Oyunu</title><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-app-compat.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-database-compat.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-auth-compat.min.js"></script><link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
 :root{
@@ -9675,6 +9675,8 @@ measurementId: "G-MMC31DY4SH"
 
 let db=null;
 
+let auth=null;
+
 let firebaseReady=false;
 
 let firebaseInitError=null;
@@ -9692,6 +9694,8 @@ if(firebaseConfig.apiKey && firebaseConfig.apiKey!=="BURAYA_YAPISTIR"){
 firebase.initializeApp(firebaseConfig);
 
 db=firebase.database();
+
+auth=firebase.auth();
 
 firebaseReady=true;
 
@@ -10119,35 +10123,100 @@ console.error("Soru bankası yüklenemedi:",e);
    YÖNETİCİ PANELİ
 ========================================================= */
 
-const ADMIN_PASSWORD="yalanci2026"; // Bunu kendi şifrenle değiştir
+// Yönetici hesabının e-postası. Şifre artık kodda değil,
+// Firebase Authentication içinde saklanıyor (Console > Authentication > Users).
+const ADMIN_EMAIL="bilalhoja5@gmail.com";
 
 let adminUnlocked=false;
 
+let adminAuthBusy=false;
+
 let adminScreen="home"; // "home" | category id
+
+// Sayfa her açıldığında Firebase'in mevcut oturumunu kontrol et.
+// Kullanıcı zaten giriş yapmışsa (aynı tarayıcıda daha önce doğrulandıysa)
+// tekrar şifre sormadan admin olarak işaretle.
+if(auth){
+
+auth.onAuthStateChanged(function(user){
+
+adminUnlocked=!!(user && user.email===ADMIN_EMAIL);
+
+if(mode==="admin") renderAdminGame();
+
+});
+
+}
 
 function openAdmin(){
 
-if(!adminUnlocked){
+if(!auth){
 
-const pw=prompt("Yönetici şifresi:");
-
-if(pw!==ADMIN_PASSWORD){
-
-alert("Yanlış şifre.");
+alert("Firebase Authentication yüklenemedi. İnternet bağlantısını kontrol et.");
 
 return;
 
 }
 
-adminUnlocked=true;
-
-}
+if(adminUnlocked){
 
 mode="admin";
 
 adminScreen="home";
 
 renderAdminGame();
+
+return;
+
+}
+
+const email=ADMIN_EMAIL;
+
+const pw=prompt("Yönetici şifresi:");
+
+if(!pw){
+
+return;
+
+}
+
+if(adminAuthBusy) return;
+
+adminAuthBusy=true;
+
+auth.signInWithEmailAndPassword(email,pw).then(function(){
+
+adminAuthBusy=false;
+
+adminUnlocked=true;
+
+mode="admin";
+
+adminScreen="home";
+
+renderAdminGame();
+
+}).catch(function(err){
+
+adminAuthBusy=false;
+
+console.error("Admin girişi başarısız:",err);
+
+alert("Yanlış şifre ya da giriş hatası.");
+
+});
+
+}
+
+function adminLogout(){
+
+if(auth) auth.signOut();
+
+adminUnlocked=false;
+
+mode=null;
+
+render();
 
 }
 
@@ -10304,7 +10373,7 @@ Soru Bankasını Koddakiyle Değiştir
 
 </div>
 
-<button class="btn btn-ghost" onclick="adminUnlocked=false;mode=null;render()">← Ana Menü</button>
+<button class="btn btn-ghost" onclick="adminLogout()">← Ana Menü</button>
 
 </main>
 `;
