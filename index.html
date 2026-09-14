@@ -9677,6 +9677,8 @@ let db=null;
 
 let auth=null;
 
+let authReadyPromise=null;
+
 let firebaseReady=false;
 
 let firebaseInitError=null;
@@ -9698,6 +9700,16 @@ db=firebase.database();
 auth=firebase.auth();
 
 firebaseReady=true;
+
+// Sıradan oyuncular şifre girmez, bunun yerine otomatik ve
+// görünmez bir "anonim" oturum açar. Database Rules artık
+// "auth != null" şartı koyacağı için bu adım zorunlu —
+// yoksa hiçbir cihaz odaya yazamaz/okuyamaz.
+authReadyPromise=auth.signInAnonymously().catch(function(e){
+
+console.error("Anonim giriş başarısız:",e);
+
+});
 
 }
 
@@ -9724,6 +9736,8 @@ async function storageGet(key){
 
 if(!firebaseReady) return null;
 
+if(authReadyPromise) await authReadyPromise;
+
 try{
 
 const snap=await db.ref(key).once("value");
@@ -9747,6 +9761,8 @@ return null;
 async function storageSet(key,value){
 
 if(!firebaseReady) return false;
+
+if(authReadyPromise) await authReadyPromise;
 
 try{
 
@@ -10210,7 +10226,19 @@ alert("Yanlış şifre ya da giriş hatası.");
 
 function adminLogout(){
 
-if(auth) auth.signOut();
+if(auth){
+
+auth.signOut().then(function(){
+
+authReadyPromise=auth.signInAnonymously().catch(function(e){
+
+console.error("Anonim giriş başarısız:",e);
+
+});
+
+});
+
+}
 
 adminUnlocked=false;
 
