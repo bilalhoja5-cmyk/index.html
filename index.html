@@ -722,6 +722,15 @@ input[type=text]::placeholder{
   margin:14px 0 0;
 }
 
+.admin-search-highlight{
+  animation:adminSearchFlash 1.6s ease;
+}
+
+@keyframes adminSearchFlash{
+  0%,100%{box-shadow:none}
+  15%,55%{box-shadow:0 0 0 3px var(--coral)}
+}
+
 .premium-list li{
   display:flex;
   gap:10px;
@@ -1735,37 +1744,527 @@ questions:[
 {
 q:"Bu futbolcu kimdir?",
 correct:"Maradona",
-image:"images/oyuncular/maradona.png",
+image:"https://i.postimg.cc/ZqdmDF8p/115642056-maradonagetty.jpg",
 extra:["Xavi","Beckham","Iniesta","Lampard"],
 aliases:["Diego Maradona","Diego Armando Maradona"]
 },
 {
 q:"Bu futbolcu kimdir?",
 correct:"Pelé",
-image:"images/oyuncular/pele.png",
+image:"https://i.postimg.cc/tJmmj8y4/Pele-Brazil.png",
 extra:["Kaká","Lev Yashin","Eusébio","Lampard"],
 aliases:["Pele","Edson Arantes"]
 },
 {
 q:"Bu futbolcu kimdir?",
 correct:"Cruyff",
-image:"images/oyuncular/cruyff.png",
+image:"https://i.postimg.cc/RCRB80HK/190045.png",
 extra:["Puyol","Nedvěd","Shevchenko","Eusébio"],
 aliases:["Johan Cruyff","Cruijff"]
 },
 {
 q:"Bu futbolcu kimdir?",
 correct:"Beckenbauer",
-image:"images/oyuncular/beckenbauer.png",
+image:"https://i.postimg.cc/26NYpbG4/5722-franz-beckenbauer-20260330113119.png",
 extra:["Ronaldinho","Xavi","Cafu","Van Basten"],
 aliases:["Franz Beckenbauer"]
 },
 {
 q:"Bu futbolcu kimdir?",
 correct:"Platini",
-image:"images/oyuncular/platini.png",
+image:"https://i.postimg.cc/zBDFdpWz/749277-med-20210206212201-michel-platini.png",
 extra:["Ronaldo Nazário","Giggs","Trezeguet","Nedvěd"],
 aliases:["Michel Platini"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Zidane",
+image:"https://i.postimg.cc/j2ZYJ8b9/3111-1478769687.jpg",
+extra:["Cruyff","Eto'o","Bergkamp","Xavi"],
+aliases:["Zinedine Zidane","Zizou"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Ronaldo Nazário",
+image:"https://i.postimg.cc/7YdQQvmM/03d370fb8449683ad48466e2c7408a7e.jpg",
+extra:["Figo","Shevchenko","Gullit","Maradona"],
+aliases:["Ronaldo Nazario","R9","Ronaldo Fenomeno","Fenomen Ronaldo"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Ronaldinho",
+image:"https://i.postimg.cc/Pf4jcqw1/ronaldinho-5.png",
+extra:["Scholes","Platini","Beckenbauer","Cruyff"],
+aliases:["Ronaldinho Gaucho"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Roberto Baggio",
+image:"https://i.postimg.cc/PxbjdXFj/roberto-baggio-1.png",
+extra:["Lev Yashin","Puskás","Eto'o","Pelé"],
+aliases:["Baggio"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Maldini",
+image:"https://i.postimg.cc/63VXBWbg/Paolo-Maldini-585x775.jpg",
+extra:["Iniesta","Roberto Carlos","Xavi","Kaká"],
+aliases:["Paolo Maldini"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Van Basten",
+image:"https://i.postimg.cc/3rLqm0Gj/marco-van-basten-5.png",
+extra:["Lev Yashin","Scholes","Di Stéfano","Nedvěd"],
+aliases:["Marco van Basten","Vanbasten"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Gullit",
+image:"https://i.postimg.cc/R0dcnfYc/Ruud-Gullit-working-as-a-pundit.jpg",
+extra:["Rivaldo","Gerrard","Maradona","Zico"],
+aliases:["Ruud Gullit"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Eusébio",
+image:"https://i.postimg.cc/xCG29fp4/242519.png",
+extra:["Zidane","Iniesta","Figo","Romário"],
+aliases:["Eusebio"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Lev Yashin",
+image:"https://i.postimg.cc/kGnd40kt/237500-lev-yashin-20250810055756.jpg",
+extra:["Raúl","Beckham","Zidane","Garrincha"],
+aliases:["Yashin","Yaşin","Lev Yasin"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Gerd Müller",
+image:"https://i.postimg.cc/GtqnsMRC/190048.png",
+extra:["Roberto Carlos","Di Stéfano","Lampard","Rivaldo"],
+aliases:["Gerd Muller","Muller"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Di Stéfano",
+image:"https://i.postimg.cc/DZ3hVJ6p/PJ-BV752-SP-HOF-DV-20140707205842.jpg",
+extra:["Pelé","Platini","Oliver Kahn","Ronaldo Nazário"],
+aliases:["Di Stefano","Alfredo Di Stefano"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Puskás",
+image:"https://i.postimg.cc/T296SPD9/254642.png",
+extra:["Bergkamp","Ronaldo Nazário","Rivaldo","Thierry Henry"],
+aliases:["Puskas","Ferenc Puskas"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Garrincha",
+image:"https://i.postimg.cc/gjYPJCfL/554265ff70b3b3b071dc867d1587da06.jpg",
+extra:["Platini","Pelé","Van Nistelrooy","Maradona"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Romário",
+image:"https://i.postimg.cc/505Vf4k1/Romario.png",
+extra:["Lev Yashin","Beckenbauer","Puyol","Thierry Henry"],
+aliases:["Romario"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Rivaldo",
+image:"https://i.postimg.cc/h4CYTQmM/b82af3c4a7ada442fc0a2466ad8db215.jpg",
+extra:["Bergkamp","Raúl","Platini","Oliver Kahn"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Cafu",
+image:"https://i.postimg.cc/FRb4hrnr/5003.png",
+extra:["Nedvěd","Eusébio","Van Nistelrooy","Garrincha"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Roberto Carlos",
+image:"https://i.postimg.cc/wM6dvCSw/739895-med-20210109014414-roberto-carlos.png",
+extra:["Pirlo","Zidane","Rivaldo","Maradona"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Pirlo",
+image:"https://i.postimg.cc/VsR8TNC5/f22cb15f804d5c55fe548b608d969039.jpg",
+extra:["Raúl","Ronaldinho","Roberto Baggio","Di Stéfano"],
+aliases:["Andrea Pirlo"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Totti",
+image:"https://i.postimg.cc/ZRPSJbDh/nintchdbpict0003094118161-e1493815903535.jpg",
+extra:["Ronaldo Nazário","Maradona","Beckenbauer","Iniesta"],
+aliases:["Francesco Totti"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Del Piero",
+image:"https://i.postimg.cc/gjBBW1dc/Alessandro-Del-Piero-1511488.jpg",
+extra:["Gerrard","Gullit","Van Nistelrooy","Beckham"],
+aliases:["Alessandro Del Piero"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Thierry Henry",
+image:"https://i.postimg.cc/9f72NtdP/3207-1683199668.jpg",
+extra:["Eusébio","Xavi","Lampard","Roberto Baggio"],
+aliases:["Henry"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Bergkamp",
+image:"https://i.postimg.cc/zvJ1Bs9T/1b0f968a6f5b28dcd6e3dc979ccb64b175881b6f.jpg",
+extra:["Raúl","Figo","Del Piero","Ronaldinho"],
+aliases:["Dennis Bergkamp"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Raúl",
+image:"https://i.postimg.cc/dQBYX0yd/67154525.png",
+extra:["Thierry Henry","Bergkamp","Lev Yashin","Maradona"],
+aliases:["Raul"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Casillas",
+image:"https://i.postimg.cc/brzjJ7Kx/madrid-spain-iker-casillas-of-real-madrid-poses-during-a-portrait-session-at-valdebebas.jpg",
+extra:["Garrincha","Kaká","Rivaldo","Pelé"],
+aliases:["Iker Casillas"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Xavi",
+image:"https://i.postimg.cc/RhXxnPBk/xavi-90913.png",
+extra:["Lev Yashin","Gullit","Thierry Henry","Eto'o"],
+aliases:["Xavi Hernandez"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Iniesta",
+image:"https://i.postimg.cc/pTQHPW1p/Andres-Iniesta-Copa-Del-Rey.png",
+extra:["Figo","Oliver Kahn","Ronaldo Nazário","Cruyff"],
+aliases:["Andres Iniesta"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Puyol",
+image:"https://i.postimg.cc/gjBBW1dn/carles-puyol-1.png",
+extra:["Maldini","Lev Yashin","Casillas","Puskás"],
+aliases:["Carles Puyol"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Gerrard",
+image:"https://i.postimg.cc/mD3sTLpp/rj9xy2-large.png",
+extra:["Maradona","Shevchenko","Roberto Carlos","Romário"],
+aliases:["Steven Gerrard"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Lampard",
+image:"https://i.postimg.cc/D0B3bCTj/60805-1674474858.jpg",
+extra:["Del Piero","Platini","Zidane","Lev Yashin"],
+aliases:["Frank Lampard"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Scholes",
+image:"https://i.postimg.cc/MKNrrkdB/741420-ori-20210113225011-paul-scholes.png",
+extra:["Kaká","Nedvěd","Di Stéfano","Maradona"],
+aliases:["Paul Scholes"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Giggs",
+image:"https://i.postimg.cc/VvDPb78K/35394-ryan-giggs-20240524004646.png",
+extra:["Eto'o","Totti","Shevchenko","Xavi"],
+aliases:["Ryan Giggs"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Beckham",
+image:"https://i.postimg.cc/SRDbzZ4k/408-4080820-render-david-beckham-david-beckham-paris-saint-germain.png",
+extra:["Roberto Baggio","Kaká","Iniesta","Oliver Kahn"],
+aliases:["David Beckham"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Oliver Kahn",
+image:"https://i.postimg.cc/rs8LmBvn/ca08d5d64e7bc0166138ce0c6f2c02ff.jpg",
+extra:["Roberto Baggio","Del Piero","Gullit","Nedvěd"],
+aliases:["Kahn"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Kaká",
+image:"https://i.postimg.cc/76r4vG92/bab59f47-111616-kaka-orlando-city-pi.jpg",
+extra:["Maldini","Rivaldo","Gerd Müller","Shevchenko"],
+aliases:["Kaka"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Eto'o",
+image:"https://i.postimg.cc/jqZFrndc/9676.png",
+extra:["Di Stéfano","Eusébio","Van Basten","Nedvěd"],
+aliases:["Samuel Eto'o","Etoo","Eto o"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Shevchenko",
+image:"https://i.postimg.cc/pTMvNhCq/Andriy-Shevchenko-2015.jpg",
+extra:["Giggs","Eusébio","Van Nistelrooy","Del Piero"],
+aliases:["Andriy Shevchenko","Şevçenko"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Nedvěd",
+image:"https://i.postimg.cc/nr0fQdxt/739482-ori-20210107230230-pavel-nedved.png",
+extra:["Iniesta","Kaká","Zidane","Bergkamp"],
+aliases:["Nedved","Pavel Nedved"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Figo",
+image:"https://i.postimg.cc/Fz9QRM27/Figo-FC-Barcelona-Imagen-PNG-Render-Futbol-Sport-Renders.png",
+extra:["Beckenbauer","Ronaldo Nazário","Cruyff","Gerrard"],
+aliases:["Luis Figo"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Zico",
+image:"https://i.postimg.cc/mk8WFdsK/166691.png",
+extra:["Puskás","Di Stéfano","Thierry Henry","Bergkamp"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Van Nistelrooy",
+image:"https://i.postimg.cc/9MH23RbP/2303d3c42bf5395d467faababff6cb63.jpg",
+extra:["Kaká","Puyol","Romário","Lampard"],
+aliases:["Nistelrooy"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Trezeguet",
+image:"https://i.postimg.cc/bJfPXDgK/739881-ori-20210109011539-david-trezeguet.png",
+extra:["Gullit","Platini","Roberto Baggio","Gerd Müller"],
+aliases:["David Trezeguet"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Messi",
+image:"https://i.postimg.cc/Twj6TdN7/523cc597c02121ff971e4ad3ab1b2dd4.jpg",
+extra:["Griezmann","Son Heung-min","Rodri","Kanté"],
+aliases:["Lionel Messi","Leo Messi"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Cristiano Ronaldo",
+image:"https://i.postimg.cc/gcDW50Zx/hd-cristiano-ronaldo-al-nassr-with-golden-shoe-png-701751712070442muv4hgrbfi.png",
+extra:["Bellingham","Mbappé","Mané","Lewandowski"],
+aliases:["Ronaldo","CR7","Cristiano"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Neymar",
+image:"https://i.postimg.cc/nLDxwY4Y/moscow-russia-june-brazilian-superstar-neymar-fifa-world-cup-match-serbia-vs-brazil-brazilian-supers.jpg",
+extra:["Lewandowski","Hakimi","Messi","Mbappé"],
+aliases:["Neymar Jr"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Mbappé",
+image:"https://i.postimg.cc/L5NFZySm/Mbappe-PNG-Pic.png",
+extra:["Mané","Neuer","Courtois","Salah"],
+aliases:["Mbappe","Kylian Mbappe"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Haaland",
+image:"https://i.postimg.cc/LXkpm90s/14836423-erling-haaland-20260620022833.png",
+extra:["Cristiano Ronaldo","Modrić","Benzema","Sergio Ramos"],
+aliases:["Erling Haaland"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"De Bruyne",
+image:"https://i.postimg.cc/D02KZ9tq/Kevin-De-Bruyne-PNG-Image.png",
+extra:["Harry Kane","Vinícius","Haaland","Neymar"],
+aliases:["Kevin De Bruyne","Debruyne"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Modrić",
+image:"https://i.postimg.cc/wxVpPBmQ/preview-luka-modric-real-madrid-la-liga-croatia-croatian-footballers-render.jpg",
+extra:["Sergio Ramos","Haaland","Ter Stegen","Courtois"],
+aliases:["Modric","Luka Modric"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Lewandowski",
+image:"https://i.postimg.cc/kMcmZ5bZ/robert-lewandowski.png",
+extra:["Kroos","Bruno Fernandes","Hakimi","Alisson"],
+aliases:["Robert Lewandowski"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Salah",
+image:"https://i.postimg.cc/mDW4xzjF/3700.jpg",
+extra:["Harry Kane","Vinícius","Haaland","Cristiano Ronaldo"],
+aliases:["Mohamed Salah","Mo Salah","Muhammed Salah"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Mané",
+image:"https://i.postimg.cc/C5FV13Wk/Sadio-Mane-PNG-Download-Image.png",
+extra:["Messi","Griezmann","Sergio Ramos","Alisson"],
+aliases:["Mane","Sadio Mane"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Benzema",
+image:"https://i.postimg.cc/4yBRh8g8/Karim-Benzema-from-Real-Madrid-transparent-PNG-image-jpg.jpg",
+extra:["Mané","Cristiano Ronaldo","Messi","Bellingham"],
+aliases:["Karim Benzema"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Kroos",
+image:"https://i.postimg.cc/G3QCNpyq/Toni-Kroos-Germany.png",
+extra:["Rodri","Neymar","Griezmann","Hakimi"],
+aliases:["Toni Kroos"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Sergio Ramos",
+image:"images/oyuncular/ramos.png",
+extra:["Mané","Benzema","Haaland","Neymar"],
+aliases:["Ramos"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Van Dijk",
+image:"https://i.postimg.cc/C1Cgwhr9/f93e34b355f1259027e0437c8f46d96f.jpg",
+extra:["Neymar","Courtois","Son Heung-min","Kroos"],
+aliases:["Virgil van Dijk","Vandijk"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Neuer",
+image:"https://i.postimg.cc/C1p0yB7c/dfl-obj-0000i4-dfl-clu-00000g-dfl-sea-0001ka.png",
+extra:["Hakimi","Cristiano Ronaldo","Ter Stegen","Alisson"],
+aliases:["Manuel Neuer"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Courtois",
+image:"https://i.postimg.cc/6q11XFw3/thibaut-courtois-thibaut-courtois-11562923640f6fmmguqa3.png",
+extra:["Haaland","Ibrahimović","Benzema","Kroos"],
+aliases:["Thibaut Courtois"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Griezmann",
+image:"https://i.postimg.cc/h4CYTQm0/0019-RECORTES-WEB-0006-GRIEZMANN.png",
+extra:["Neymar","Bruno Fernandes","Courtois","Ter Stegen"],
+aliases:["Antoine Griezmann"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Harry Kane",
+image:"https://i.postimg.cc/vB7sGYSb/harry-kane.png",
+extra:["Neymar","Van Dijk","Ibrahimović","Beckenbauer"],
+aliases:["Kane"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Son Heung-min",
+image:"https://i.postimg.cc/XN8bhvCp/4Fw-Xyy-H-0M4G4Zpj-h0HBc-CIjho-HIMU57o-Qiz03rao-Zenpknpium-P7UIyy-ZWhb-VCtd-Sq-MO7Ys7f7h-WWDT5EQA.jpg",
+extra:["Kanté","Courtois","Vinícius","Messi"],
+aliases:["Son","Heung min Son","Son Heung min"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Vinícius",
+image:"https://i.postimg.cc/c4255qXr/274-vinicius-junior-2627-11ce72b648f7.jpg",
+extra:["Bellingham","Bruno Fernandes","Sergio Ramos","Son Heung-min"],
+aliases:["Vinicius","Vinicius Junior","Vini Jr"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Bellingham",
+image:"https://i.postimg.cc/3JVbbMn4/jude-bellingham-57.png",
+extra:["Messi","Vinícius","Neymar","Rodri"],
+aliases:["Jude Bellingham"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Rodri",
+image:"https://i.postimg.cc/XqV0JRTx/6ggnc31769182523.png",
+extra:["Mbappé","Salah","Ter Stegen","Van Dijk"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Bruno Fernandes",
+image:"https://i.postimg.cc/DfgTDzXG/Bruno-Fernandes-PNG-Image-Transparent.png",
+extra:["Hakimi","Benzema","Sergio Ramos","Alisson"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Alisson",
+image:"https://i.postimg.cc/Yqhs32fN/1a39cdd2f2f030a20967d61eb0935ce3.jpg",
+extra:["Son Heung-min","Neuer","Suárez","Harry Kane"],
+aliases:["Alisson Becker"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Hakimi",
+image:"https://i.postimg.cc/J0PCBTLv/1c07bbe7cab1c87b6e950815d1f3be4e.jpg",
+extra:["Neymar","Griezmann","Mahrez","Messi"],
+aliases:["Achraf Hakimi","Aşraf Hakimi"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Mahrez",
+image:"https://i.postimg.cc/wxVpPBmf/w-Man-MAt-S33OWy-ZYTCSf-3XOj-OTKv-mi-QEh8tr-L8O1CGPB-3q-MZmn-YT4v-Ey-Zbbb-EVz-Om-Y1OFRE8v38zc7bh-XAo.jpg",
+extra:["Mané","Vinícius","Neymar","Courtois"],
+aliases:["Riyad Mahrez"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Ibrahimović",
+image:"https://i.postimg.cc/yYtrrqv0/zlatan-ibrahimovic-celebrity-mask.jpg",
+extra:["Messi","Lewandowski","Bruno Fernandes","Mbappé"],
+aliases:["Ibrahimovic","Zlatan","Zlatan Ibrahimovic","Ibrahimoviç"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Suárez",
+image:"https://i.postimg.cc/QC0ZW6Ds/luis-suarez.png",
+extra:["Courtois","Hakimi","Vinícius","Rodri"],
+aliases:["Suarez","Luis Suarez"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Kanté",
+image:"https://i.postimg.cc/G2nR08KD/ngolo-kante-17.png",
+extra:["Courtois","Salah","Ter Stegen","Messi"],
+aliases:["Kante","N'Golo Kante","Ngolo Kante"]
+},
+{
+q:"Bu futbolcu kimdir?",
+correct:"Ter Stegen",
+image:"https://i.postimg.cc/L6w00dNk/preview-marc-andre-ter-stegen-fc-barcelona-la-liga-germany-german-footballers-render.jpg",
+extra:["Kroos","Mané","Haaland","Rodri"],
+aliases:["Terstegen","Marc-Andre ter Stegen"]
 }
 ]
 },
@@ -1804,6 +2303,821 @@ q:"Bu emojiler hangi filmi anlatıyor?  🦇🌃",
 correct:"Kara Şövalye",
 extra:["Kayıp Balık Nemo","Joker","Harry Potter","Örümcek Adam"],
 aliases:["Batman","The Dark Knight"]
+}
+]
+},
+
+{
+id:"turkoyuncular",
+name:"Türk Oyuncuları",
+icon:"🎬",
+locked:true,
+questions:[
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Kıvanç Tatlıtuğ",
+image:"https://i.postimg.cc/Dwc3ZtRF/Kivanc-Tatlitug-2009.jpg",
+extra:["Hakan Boyav","Ozan Güven","Engin Altan Düzyatan","Mehmet Özgür"],
+aliases:["Kıvanç","Tatlıtuğ"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Burak Özçivit",
+image:"https://i.postimg.cc/VLn8ySR9/Burak-Ozcivit-2023.jpg",
+extra:["Serkan Keskin","Şükrü Özyıldız","Ekin Koç","Şahan Gökbakar"],
+aliases:["Özçivit"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Çağatay Ulusoy",
+image:"https://i.postimg.cc/KvB2XKNv/Cagatay-Ulusoy-as-Esref-Tek.jpg",
+extra:["Mehmet Özgür","Tolgahan Sayışman","Necati Şaşmaz","Barış Bağcı"],
+aliases:["Ulusoy","Çağatay"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Kenan İmirzalıoğlu",
+image:"https://i.postimg.cc/y8TCdwtp/Kenan-Imirzalioglu.jpg",
+extra:["Yiğit Özşener","Engin Akyürek","Kemal Sunal","İbrahim Büyükak"],
+aliases:["İmirzalıoğlu"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Engin Altan Düzyatan",
+image:"https://i.postimg.cc/8zbg5qxc/Engin-Altan-Duzyatan-in-2023.jpg",
+extra:["Halit Ergenç","Kenan İmirzalıoğlu","Engin Akyürek","Kaan Urgancıoğlu"],
+aliases:["Düzyatan","Engin Altan","Engin Düzyatan"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Halit Ergenç",
+image:"https://i.postimg.cc/L5X9VypV/image-w856.jpg",
+extra:["Birkan Sokullu","Erkan Petekkaya","Cüneyt Arkın","Kenan İmirzalıoğlu"],
+aliases:["Ergenç","Halit"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Can Yaman",
+image:"https://i.postimg.cc/8c01Xhks/Can-Yaman-Margherita-di-Savoia-2023-04-27-(2)-(cropped).jpg",
+extra:["Tamer Levent","Tolga Sarıtaş","Cahit Kayaoğlu","Hakan Yılmaz"],
+aliases:["Can","Yaman"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Kerem Bürsin",
+image:"https://i.postimg.cc/Z5km9YWh/Festival-de-Malaga-2024-Kerem-Bursin-(cropped).jpg",
+extra:["Mehmet Akif Alakurt","Yiğit Özşener","Murat Ünalmış","Ekin Koç"],
+aliases:["Bürsin","Kerem"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Barış Arduç",
+image:"https://i.postimg.cc/4xCGK4mj/baris-arduc-bir-gecede-sohret-oldum.jpg",
+extra:["Enis Arıkan","Kemal Sunal","Serkan Keskin","İsmail Ege Şaşmaz"],
+aliases:["Arduç"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Aras Bulut İynemli",
+image:"https://i.postimg.cc/zGmNLDV9/Aras-Bulut-Iynemli.jpg",
+extra:["Cemal Hünal","Kıvanç Tatlıtuğ","Saygın Soysal","İsmail Ege Şaşmaz"],
+aliases:["Aras","Aras Bulut","Aras İynemli","İynemli"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Murat Yıldırım",
+image:"https://i.postimg.cc/1tqWgF47/murat-yildirim-serhat-tecer-hombre-exito-marcado-traicion-gran-secreto-104.webp",
+extra:["Mert Ramazan Demir","Mehmet Akif Alakurt","İbrahim Büyükak","Kadir Doğulu"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"İbrahim Çelikkol",
+image:"https://i.postimg.cc/13xSgR8Q/Aayr-Z3fcv-Ap-Ur-S2TY5E7Ac1Xs-TB.jpg",
+extra:["Serkan Keskin","Ata Demirer","Kaan Urgancıoğlu","Saygın Soysal"],
+aliases:["Çelikkol"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Engin Akyürek",
+image:"https://i.postimg.cc/2SpYqjVs/engin-akyurek-410x410.jpg",
+extra:["Kadir Doğulu","Tolgahan Sayışman","İbrahim Çelikkol","Ahmet Kural"],
+aliases:["Akyürek"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Mehmet Günsür",
+image:"https://i.postimg.cc/jSVTWqDT/152427-v9-ba.jpg",
+extra:["Engin Akyürek","İsmail Demirci","Barış Kılıç","Hakan Kurtaş"],
+aliases:["Günsür"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Tolgahan Sayışman",
+image:"https://i.postimg.cc/2SpYqj1C/4e823c67011d0a5890c50af5483e59ea.jpg",
+extra:["Cüneyt Arkın","Rıza Kocaoğlu","İsmail Ege Şaşmaz","Halit Ergenç"],
+aliases:["Sayışman","Tolgahan"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Ozan Güven",
+image:"https://i.postimg.cc/T38xy2KR/magnificent-century-actor-ozan-guven-to-serve-prison-time-after-assault-conviction-3208862.jpg",
+extra:["Serdar Deniz","Bartu Küçükçağlayan","Hüseyin Avni Danyal","Nejat İşler"],
+aliases:["Güven","Ozan"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Nejat İşler",
+image:"https://i.postimg.cc/cLqWK1vZ/374601.jpg",
+extra:["Ahmet Kural","Murat Yıldırım","Mehmet Kurtuluş","Onur Saylak"],
+aliases:["Nejat","İşler"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Cem Yılmaz",
+image:"https://i.postimg.cc/L8dSq4J9/785200636-1593095671820844-3151346709312991317-n.jpg",
+extra:["Çağlar Ertuğrul","Mustafa Avkıran","Gürkan Uygun","Batuhan Karacakaya"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Şahan Gökbakar",
+image:"https://i.postimg.cc/vZRy1848/g-CNAAe0ir-Ku-Zpb-I1yf-Ebb-WMJte-E.jpg",
+extra:["Mehmet Ali Nuroğlu","Furkan Palalı","Selçuk Yöntem","Onur Tuna"],
+aliases:["Gökbakar","Şahan"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Yılmaz Erdoğan",
+image:"https://i.postimg.cc/GmkCv0DR/MV5BMj-Ey-Mj-E5Nj-Q2OV5BMl5Ban-Bn-Xk-Ft-ZTgw-OTgw-ODYz-NTE-V1.jpg",
+extra:["Kenan Çoban","Barış Arduç","Halit Ergenç","Burak Sevinç"],
+aliases:["Erdoğan","Yılmaz"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Ata Demirer",
+image:"https://i.postimg.cc/cLQSfq3S/fd-Xv7m-Ap2x0P03fp-YSf-DUs-L2Nh3.jpg",
+extra:["Birkan Sokullu","İbrahim Kendirci","Onur Saylak","Murat Yıldırım"],
+aliases:["Ata","Demirer"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Mert Ramazan Demir",
+image:"https://i.postimg.cc/L8zpjdPM/kapak-092550.webp",
+extra:["Ali Sunal","Birkan Sokullu","Mehmet Ali Nuroğlu","Engin Akyürek"],
+aliases:["Demir","Mert Demir","Mert Ramazan"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Alp Navruz",
+image:"https://i.postimg.cc/8zhSL8vT/ll6vy3b-ZPMp-OYqu-Mg4bx6Ki-W55j.jpg",
+extra:["Ahmet Kural","Serkan Keskin","Bartu Küçükçağlayan","Hakan Boyav"],
+aliases:["Alp","Navruz"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Burak Deniz",
+image:"https://i.postimg.cc/g2vW39hY/908486-v9-ba.jpg",
+extra:["Çağlar Ertuğrul","Furkan Palalı","Ata Demirer","Kubilay Aka"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Furkan Andıç",
+image:"https://i.postimg.cc/52wV8cz4/5c8ddd3d45d2a05010dbf7fa.jpg",
+extra:["İsmail Demirci","İlker Kaleli","Sadi Celil Cengiz","Mert Fırat"],
+aliases:["Andıç"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Onur Tuna",
+image:"https://i.postimg.cc/L8zpjdP6/6RTAWDJY-400x400.jpg",
+extra:["Mehmet Akif Alakurt","Oktay Kaynarca","Celil Nalçakan","Aras Bulut İynemli"],
+aliases:["Tuna"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Tolga Sarıtaş",
+image:"https://i.postimg.cc/SxWhc09K/tolga-saritas.jpg",
+extra:["Cüneyt Arkın","Hakan Boyav","Mert Ramazan Demir","Hüseyin Avni Danyal"],
+aliases:["Sarıtaş","Tolga"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"İlker Kaleli",
+image:"https://i.postimg.cc/ht9BVFmh/image-w856-(1).jpg",
+extra:["Serdar Deniz","Şükrü Özyıldız","Ata Demirer","Sarp Apak"],
+aliases:["Kaleli"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Kaan Urgancıoğlu",
+image:"https://i.postimg.cc/FHj40tSz/big-KAAN2.jpg",
+extra:["Ahmet Kural","Mert Fırat","Hakan Boyav","Erdal Beşikçioğlu"],
+aliases:["Urgancıoğlu"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Ekin Koç",
+image:"https://i.postimg.cc/K8n2tXTz/kapak-154354.webp",
+extra:["Tamer Levent","Kaan Urgancıoğlu","Oktay Kaynarca","Feyyaz Duman"],
+aliases:["Ekin"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Birkan Sokullu",
+image:"https://i.postimg.cc/DwqT1VGW/MV5BNGJm-Nj-U5Mjgt-Zj-E1Yi00NDFi-LTg1Yz-At-OTQ0OGI3YTE0Mz-Vi-Xk-Ey-Xk-Fqc-Gc-V1-FMjpg-UX1000.jpg",
+extra:["Mert Yazıcıoğlu","İbrahim Kendirci","Burak Çelik","Kerem Bürsin"],
+aliases:["Birkan","Sokullu"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Engin Öztürk",
+image:"https://i.postimg.cc/6pdXCsZZ/5abc9d2c67b0a919145a1963.jpg",
+extra:["Ekin Koç","Haluk Bilginer","Engin Altan Düzyatan","İsmail Ege Şaşmaz"],
+aliases:["Öztürk"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Şükrü Özyıldız",
+image:"https://i.postimg.cc/0yps7gSw/sukru-ozyildiz-hadisenin-basrol-oldugu-esas-oglan-dizisine-katildi-850x560-1.webp",
+extra:["Taner Ölmez","İlhan Şen","Mert Fırat","Barış Arduç"],
+aliases:["Özyıldız","Şükrü"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Barış Falay",
+image:"https://i.postimg.cc/pLDHKNjz/MV5BOTkz-MDA0ODc5N15BMl5Ban-Bn-Xk-Ft-ZTgw-MDk4ODUy-MDI-V1.jpg",
+extra:["İlker Kaleli","Uğur Yücel","Turgut Tunçalp","Cahit Kayaoğlu"],
+aliases:["Falay"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Rıza Kocaoğlu",
+image:"https://i.postimg.cc/YC1HQcFN/riza-kocaoglu1.jpg",
+extra:["Taner Ölmez","İlker Kaleli","Hakan Yılmaz","Güven Kıraç"],
+aliases:["Kocaoğlu","Rıza"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Mert Fırat",
+image:"https://i.postimg.cc/hGcqrC8z/mert-firat-500x500.png",
+extra:["Serkan Çayoğlu","Batuhan Karacakaya","Celil Nalçakan","Bartu Küçükçağlayan"],
+aliases:["Fırat"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Serkan Keskin",
+image:"https://i.postimg.cc/Nj1cRhXx/image-w856-(2).jpg",
+extra:["Şahan Gökbakar","Barış Falay","Cem Yılmaz","Engin Öztürk"],
+aliases:["Keskin"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Fırat Tanış",
+image:"https://i.postimg.cc/bvpjT601/tepkilerin-ardindan-firat-tanis-diziden-cikarildi-586ba3949a-amp.jpg",
+extra:["Çağrı Şensoy","Tamer Levent","Hüseyin Avni Danyal","Barış Falay"],
+aliases:["Fırat","Tanış"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Onur Saylak",
+image:"https://i.postimg.cc/ydr47sMt/Onur-Saylak.jpg",
+extra:["Çağrı Şensoy","Şener Şen","İbrahim Büyükak","Barış Bağcı"],
+aliases:["Saylak"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Uğur Güneş",
+image:"https://i.postimg.cc/TwPv8p4h/ugur-gunes-adana-ayazi-dizisiyle-ekranlara-donuyor-1784899847.jpg",
+extra:["Şener Şen","İlhan Şen","Furkan Palalı","Kaan Urgancıoğlu"],
+aliases:["Güneş"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Caner Cindoruk",
+image:"https://i.postimg.cc/RFb5v4kP/caner-cindoruk-500x500.png",
+extra:["Cem Yılmaz","Mustafa Üstündağ","Güven Kıraç","İbrahim Çelikkol"],
+aliases:["Caner","Cindoruk"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Taner Ölmez",
+image:"https://i.postimg.cc/mDrWxt5t/MV5BNm-Vj-OTQ0OWEt-NThk-Zi00Nm-Mw-LTg5OTgt-YTgw-Yz-A1ZTZm-Zm-Vi-Xk-Ey-Xk-Fqc-Gc-V1-FMjpg-UX1000.jpg",
+extra:["Ayberk Pekcan","Can Yaman","Mehmet Ali Nuroğlu","Tolgahan Sayışman"],
+aliases:["Taner","Ölmez"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Feyyaz Duman",
+image:"https://i.postimg.cc/HxPDTdq6/594778.jpg",
+extra:["Yılmaz Erdoğan","Mustafa Avkıran","Ata Demirer","Erkan Can"],
+aliases:["Duman","Feyyaz"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"İsmail Hacıoğlu",
+image:"https://i.postimg.cc/d1SPJwb4/ismail-hacioglu.webp",
+extra:["Oktay Kaynarca","İbrahim Büyükak","Tarık Akan","Barış Arduç"],
+aliases:["Hacıoğlu"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Kadir Doğulu",
+image:"https://i.postimg.cc/cH5yd0pz/kadir-dogulu-turkish-actor-01-jpg.webp",
+extra:["Erkan Kolçak Köstendil","Ahmet Kural","Tarık Akan","Sarp Apak"],
+aliases:["Doğulu","Kadir"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Hakan Kurtaş",
+image:"https://i.postimg.cc/hj3WKckw/MV5BMj-Ay-ZTM3Mj-Yt-OTAz-NC00ODZk-LTky-ZDQt-OTYz-Mj-U2OGFl-MDQz-Xk-Ey-Xk-Fqc-Gc-V1-FMjpg-UX1000.jpg",
+extra:["Reha Özcan","Şükrü Özyıldız","Mehmet Kurtuluş","Mehmet Ali Nuroğlu"],
+aliases:["Kurtaş"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"İsmail Demirci",
+image:"https://i.postimg.cc/k4h37q0L/ismail-demirci-500x500.png",
+extra:["Burak Özçivit","Oktay Kaynarca","İsmail Filiz","Tolgahan Sayışman"],
+aliases:["Demirci"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Furkan Palalı",
+image:"https://i.postimg.cc/3Rb53YsP/furkan-palali-actor-09-jpg.webp",
+extra:["Oktay Kaynarca","Batuhan Karacakaya","Hüseyin Avni Danyal","Ayberk Pekcan"],
+aliases:["Palalı"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Kubilay Aka",
+image:"https://i.postimg.cc/V6HQzzyP/kubilay-aka-500x500.png",
+extra:["Rıza Kocaoğlu","İbrahim Kendirci","Celil Nalçakan","İsmail Hacıoğlu"],
+aliases:["Aka","Kubilay"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Ahmet Kural",
+image:"https://i.postimg.cc/TwHMTT88/ahmet-kural-gassal-dizisindeki-roluyle-en-iyi-erkek-oyuncu-odulunu-kazandi-H1574541-11.webp",
+extra:["Tolgahan Sayışman","Fırat Tanış","Oğuzhan Koç","Ata Demirer"],
+aliases:["Ahmet","Kural"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Erkan Kolçak Köstendil",
+image:"https://i.postimg.cc/76Q8qqvk/erkan-kolcak-kostendil-500x500-(1).png",
+extra:["Bartu Küçükçağlayan","Kıvanç Tatlıtuğ","İsmail Filiz","Turgut Tunçalp"],
+aliases:["Erkan Kolçak","Erkan Köstendil","Köstendil"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Serkan Çayoğlu",
+image:"",
+extra:["İsmail Filiz","Barış Falay","Erkan Petekkaya","Saygın Soysal"],
+aliases:["Çayoğlu"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"İlhan Şen",
+image:"https://i.postimg.cc/HncGxFmF/ULG08241-1-1-scaled.jpg",
+extra:["Alp Navruz","Erkan Petekkaya","Mehmet Günsür","Cemal Hünal"],
+aliases:["İlhan"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Kaan Yıldırım",
+image:"https://i.postimg.cc/zBPZqqm5/kaan-yildirim-depo-4-3-1581501600.jpg",
+extra:["Mustafa Avkıran","Onur Saylak","Mert Yazıcıoğlu","Hakan Boyav"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Murat Ünalmış",
+image:"https://i.postimg.cc/7hGv6jDr/3909526-1920x1080.jpg",
+extra:["Erkan Petekkaya","Cüneyt Arkın","Onur Tuna","Yılmaz Erdoğan"],
+aliases:["Ünalmış"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"İbrahim Büyükak",
+image:"https://i.postimg.cc/Y0Gc9TkK/Ibrahim-Buyukak-2020.jpg",
+extra:["Furkan Palalı","Saygın Soysal","Ata Demirer","Yiğit Özşener"],
+aliases:["Büyükak"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Oğuzhan Koç",
+image:"https://i.postimg.cc/BbLW6Rs4/fa-organizasyon-oguzhan-koc-menajeri.jpg",
+extra:["Burak Çelik","Reha Özcan","Kıvanç Tatlıtuğ","Tarık Akan"],
+aliases:["Oğuzhan"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Giray Altınok",
+image:"https://i.postimg.cc/1XnxtbPS/kapak-164522.webp",
+extra:["Taner Ölmez","Emre Kınay","Çağatay Ulusoy","Tolgahan Sayışman"],
+aliases:["Altınok","Giray"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Enis Arıkan",
+image:"https://i.postimg.cc/Y0Gc9TkC/0524dfa5e956493bad9853c07bfffff1.jpg",
+extra:["İsmail Demirci","Turgut Tunçalp","Çağlar Ertuğrul","İsmail Ege Şaşmaz"],
+aliases:["Arıkan","Enis"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Bartu Küçükçağlayan",
+image:"https://i.postimg.cc/C5By19YM/bartu-16-9-1552196953-4-3-1589201713.jpg",
+extra:["Uğur Güneş","Birkan Sokullu","Kerem Bürsin","Turgut Tunçalp"],
+aliases:["Bartu","Küçükçağlayan"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Sarp Apak",
+image:"https://i.postimg.cc/d3kM1gvr/MV5BMTkz-Nzg0Mz-A1N15BMl5Ban-Bn-Xk-Ft-ZTcw-Nj-Az-NDEy-Mw-V1.jpg",
+extra:["Uğur Yücel","Murat Yıldırım","Serdar Deniz","Emre Kınay"],
+aliases:["Apak","Sarp"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Ali Atay",
+image:"https://i.postimg.cc/7hGv6jD7/5PX3x6on-CJp-O1i-Jd-ZXhbh-UV7i-ON.jpg",
+extra:["Serhat Tutumluer","Barış Arduç","Saygın Soysal","Hüseyin Avni Danyal"],
+aliases:["Atay"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Cem Gelinoğlu",
+image:"https://i.postimg.cc/C5W3fJLZ/Cem-Gelinoglu.jpg",
+extra:["İbrahim Kendirci","Nejat İşler","Burak Sevinç","Sarp Apak"],
+aliases:["Gelinoğlu"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Emre Kınay",
+image:"https://i.postimg.cc/hvHk7MPG/b83220c8fab742a2820bdb592c2bc85c.jpg",
+extra:["Mehmet Kurtuluş","Mert Ramazan Demir","Barış Falay","Reha Özcan"],
+aliases:["Emre","Kınay"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Güven Kıraç",
+image:"https://i.postimg.cc/1XLkNM50/guven-kirac-1-buyuk-kglo.jpg",
+extra:["Cemal Hünal","Cüneyt Arkın","Murat Ünalmış","İlker Kaleli"],
+aliases:["Güven","Kıraç"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Erkan Petekkaya",
+image:"https://i.postimg.cc/XqTRyx7f/607b0eab554282297ca1b530.jpg",
+extra:["Yiğit Özşener","Ayberk Pekcan","Serdar Deniz","Erdal Beşikçioğlu"],
+aliases:["Petekkaya"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Mustafa Üstündağ",
+image:"https://i.postimg.cc/XqTRyx7L/mustafa-ustundag-500x500.png",
+extra:["Onur Tuna","Cahit Kayaoğlu","Uğur Güneş","Serkan Çayoğlu"],
+aliases:["Üstündağ"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Levent Ülgen",
+image:"https://i.postimg.cc/8cq2rwPK/levent-ulgen-97217-scaled.webp",
+extra:["Sadi Celil Cengiz","Hakan Yılmaz","Furkan Palalı","Oğuzhan Koç"],
+aliases:["Levent","Ülgen"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Reha Özcan",
+image:"https://i.postimg.cc/XqTRyx7h/65319.jpg",
+extra:["Mustafa Üstündağ","Giray Altınok","Ozan Güven","Engin Öztürk"],
+aliases:["Reha","Özcan"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Hüseyin Avni Danyal",
+image:"https://i.postimg.cc/gcQF5cqj/Huseyin-avni-danyal.jpg",
+extra:["Kaan Urgancıoğlu","Barış Arduç","İsmail Hacıoğlu","Çağatay Ulusoy"],
+aliases:["Danyal","Hüseyin","Hüseyin Avni","Hüseyin Danyal"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Yiğit Özşener",
+image:"https://i.postimg.cc/T19Y6pjP/MV5BZGNl-Njlk-Zm-Et-OTRm-My00Yzhm-LTg5OWQt-NGJj-OWNi-MTg2NTc4Xk-Ey-Xk-Fqc-Gc-V1-FMjpg-UX1000.jpg",
+extra:["Kemal Sunal","Mehmet Kurtuluş","Ekin Koç","Kaan Urgancıoğlu"],
+aliases:["Yiğit","Özşener"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Mehmet Kurtuluş",
+image:"https://i.postimg.cc/VvRL8d9L/m-Hkq4ab-Zo-Ub-IPMEd-Nh-Hutk-I5zxk.jpg",
+extra:["Kıvanç Tatlıtuğ","Aras Bulut İynemli","Kenan Çoban","Mustafa Avkıran"],
+aliases:["Kurtuluş"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Tamer Levent",
+image:"https://i.postimg.cc/tgSMLyn6/6b42af50-1197-432a-bbed-4071a823e573.jpg",
+extra:["Kerem Bürsin","Ekin Koç","Barış Arduç","Engin Altan Düzyatan"],
+aliases:["Levent","Tamer"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Uğur Yücel",
+image:"https://i.postimg.cc/sxcDrvPf/ugur-yucel.jpg",
+extra:["Mehmet Ali Nuroğlu","Feyyaz Duman","Aras Bulut İynemli","Erkan Petekkaya"],
+aliases:["Yücel"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Selçuk Yöntem",
+image:"https://i.postimg.cc/KjNv2R78/np-YNXs-WPgv-OKv5Dlt-Hb-L1Ds-Umdh.jpg",
+extra:["Birkan Sokullu","Mert Fırat","Sadi Celil Cengiz","Cem Gelinoğlu"],
+aliases:["Selçuk","Yöntem"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Şener Şen",
+image:"https://i.postimg.cc/sxcDrvP1/sener-sen-alzheimer-mi-oldu-yanit-geldi-i-sener-senden-alzheimer-iddialarina-yanit-i-alzheimer-oldug.jpg",
+extra:["İlker Kaleli","Hüseyin Avni Danyal","Nejat İşler","İsmail Filiz"],
+aliases:["Şener"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Kemal Sunal",
+image:"https://i.postimg.cc/tJ5CjYdT/n-T6zfupn0Q3oy-CWHXCvy-KS7Cc-LE.jpg",
+extra:["Turgut Tunçalp","Uğur Yücel","Sarp Apak","Engin Öztürk"],
+aliases:["Kemal"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Tarık Akan",
+image:"https://i.postimg.cc/J0q4LG30/w2SYSw-Jlr-NZESEb-Uij-Kti-KFne-Ew.jpg",
+extra:["İlker Aksum","Sarp Apak","İsmail Ege Şaşmaz","İlhan Şen"],
+aliases:["Akan","Tarık"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Cüneyt Arkın",
+image:"https://i.postimg.cc/ryCpWYB4/r-DVOf5XDh-Hl5WEa-Re-RBNi-IYm-En-D.jpg",
+extra:["Furkan Andıç","Engin Akyürek","Burak Sevinç","İbrahim Büyükak"],
+aliases:["Arkın","Cüneyt"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Kartal Tibet",
+image:"https://i.postimg.cc/sf92S0k7/g37kqt-AVKxbp6hz-RVryk-Jbsn-Vb-S.jpg",
+extra:["Hakan Kurtaş","Murat Ünalmış","İlhan Şen","Bartu Küçükçağlayan"],
+aliases:["Kartal","Tibet"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Gürkan Uygun",
+image:"https://i.postimg.cc/ZYFq3DG3/8FCX0ANpl-CW9N8ytnq-Wm-Zz-Fy-LZj.jpg",
+extra:["Mehmet Ali Nuroğlu","Serdar Deniz","Can Yaman","Necati Şaşmaz"],
+aliases:["Gürkan","Uygun"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Mustafa Avkıran",
+image:"https://i.postimg.cc/mZNrM6v7/MC5wbmc.jpg",
+extra:["Hakan Yılmaz","Celil Nalçakan","Engin Akyürek","Kerem Bürsin"],
+aliases:["Avkıran"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Hakan Boyav",
+image:"https://i.postimg.cc/NG70TP36/MV5BMz-E5Nm-Qw-Mj-It-Yj-Ni-Mi00Y2Jh-LThk-ZTYt-OWQ1Mj-Vk-Yj-Jl-ZTRk-Xk-Ey-Xk-Fqc-Gc-V1-FMjpg-UX1000.jpg",
+extra:["Serkan Çayoğlu","Serdar Deniz","İsmail Hacıoğlu","Bülent İnal"],
+aliases:["Boyav"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Celil Nalçakan",
+image:"https://i.postimg.cc/CMHKD63s/Celil-Nalcakan-Roportaj-1-Fikri-Sinema-2.jpg",
+extra:["Mehmet Ali Nuroğlu","Mehmet Günsür","Engin Öztürk","Furkan Andıç"],
+aliases:["Celil","Nalçakan"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Hakan Yılmaz",
+image:"https://i.postimg.cc/5yZpf2xc/5a2a2f2c18c7731e6438ffeb.jpg",
+extra:["Furkan Andıç","Reha Özcan","Giray Altınok","Cem Yılmaz"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Burak Sevinç",
+image:"https://i.postimg.cc/PfzqZFgM/gnym6w-XOpiw-Rvkd-JZj-Szf-TWip-Wg.jpg",
+extra:["Murat Ünalmış","Burak Deniz","Mert Fırat","Bartu Küçükçağlayan"],
+aliases:["Sevinç"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Sadi Celil Cengiz",
+image:"https://i.postimg.cc/nVYL7wyT/5121dd22-5515-41dc-9d18-6697b4d6f87c.jpg",
+extra:["Engin Öztürk","Cemal Hünal","Aras Bulut İynemli","Oğuzhan Koç"],
+aliases:["Cengiz","Sadi","Sadi Celil","Sadi Cengiz"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Necati Şaşmaz",
+image:"https://i.postimg.cc/YqdD4Mbq/eskiden-bana-artist-deseler-kavga-cikardi-4046015-389-amp.png",
+extra:["İsmail Ege Şaşmaz","Mehmet Ali Nuroğlu","Ali Sunal","Yiğit Özşener"],
+aliases:["Necati"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Oktay Kaynarca",
+image:"https://i.postimg.cc/d1R4JYLH/oktay-kaynarca.jpg",
+extra:["Engin Akyürek","Can Yaman","Celil Nalçakan","Hüseyin Avni Danyal"],
+aliases:["Kaynarca","Oktay"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Erdal Beşikçioğlu",
+image:"https://i.postimg.cc/Xvdggbcx/erdal-besikcioglu-gozaltina-mi-alindi-son-dakika-f712ca8d40-amp.jpg",
+extra:["Mert Yazıcıoğlu","Burak Özçivit","İbrahim Çelikkol","Ayberk Pekcan"],
+aliases:["Beşikçioğlu","Erdal"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Mehmet Akif Alakurt",
+image:"https://i.postimg.cc/05c0nZmm/yyu-YVb7QUZ1nx-Xyvgjwp-Xm-Fql-So.jpg",
+extra:["Barış Kılıç","Birkan Sokullu","Mert Ramazan Demir","İlhan Şen"],
+aliases:["Alakurt","Mehmet Akif","Mehmet Alakurt"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Kenan Çoban",
+image:"https://i.postimg.cc/KYWR4kgp/abdull69cd3a3d.jpg",
+extra:["Cem Gelinoğlu","Ali Atay","İlker Kaleli","Mehmet Ali Nuroğlu"],
+aliases:["Çoban"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Cahit Kayaoğlu",
+image:"https://i.postimg.cc/8CxzN2qH/315x420-1647f634175b0d00b7ac118dc40c6734e9b311d7be486cac4e4ee9e81f4d94fb.jpg",
+extra:["Serkan Çayoğlu","Kerem Bürsin","Mert Ramazan Demir","Kubilay Aka"],
+aliases:["Cahit","Kayaoğlu"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"İsmail Filiz",
+image:"https://i.postimg.cc/BnX3bh55/cadd-El7r-Xl8tvf4O9Kwutw-Ylew-A.jpg",
+extra:["Kıvanç Tatlıtuğ","Ahmet Kural","Barış Falay","İlker Aksum"],
+aliases:["Filiz"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Serdar Deniz",
+image:"https://i.postimg.cc/tTgNGxGW/MV5BNm-Nh-Mm-Vk-Ym-Ut-OTk3Yi00MWMx-LWEw-YTAt-Mm-Q4NDQ2Zm-E2Yz-Zj-Xk-Ey-Xk-Fqc-Gc-V1.jpg",
+extra:["İlker Aksum","Enis Arıkan","Serkan Keskin","Murat Ünalmış"],
+aliases:["Serdar"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Mehmet Özgür",
+image:"https://i.postimg.cc/Jnh5CkCb/oyuncu-mehmet-ozgurun-evlat-acisi-yillar-once-kaybettim-a88n.jpg",
+extra:["Erdal Beşikçioğlu","İsmail Filiz","İlker Aksum","Mehmet Kurtuluş"],
+aliases:["Özgür"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Çağrı Şensoy",
+image:"https://i.postimg.cc/tTgNGxGP/191-cagri-sensoy.jpg",
+extra:["Hakan Yılmaz","Kenan Çoban","Cem Gelinoğlu","Yılmaz Erdoğan"],
+aliases:["Çağrı","Şensoy"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Ayberk Pekcan",
+image:"https://i.postimg.cc/ZRqxzdz6/1D3Tw-IK5ho-WAn3k8j8Wrsq7CJn-S.jpg",
+extra:["Furkan Andıç","Fırat Tanış","İlker Kaleli","Kerem Bürsin"],
+aliases:["Ayberk","Pekcan"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Saygın Soysal",
+image:"https://i.postimg.cc/BQ3Rxgr7/detail-image-saygin-soysal-01-e1747999729859.jpg",
+extra:["Selçuk Yöntem","Serdar Deniz","Hüseyin Avni Danyal","Kerem Bürsin"],
+aliases:["Saygın","Soysal"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"İbrahim Kendirci",
+image:"https://i.postimg.cc/TYxBr9z7/65645e31-0f09-4fff-950a-ab968797a77d.jpg",
+extra:["Mehmet Özgür","Caner Cindoruk","Kerem Bürsin","Can Yaman"],
+aliases:["Kendirci"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Burak Çelik",
+image:"https://i.postimg.cc/rFT7SJB7/MV5BODMz-ZTMz-NDgt-Zj-Ey-NS00MTk2LWFh-Yz-Qt-M2Jh-NWRh-OTdm-ZDFk-Xk-Ey-Xk-Fqc-Gc-V1.jpg",
+extra:["Selçuk Yöntem","Ali Atay","Güven Kıraç","Ali Sunal"],
+aliases:["Çelik"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"İlker Aksum",
+image:"https://i.postimg.cc/X7Wtw8RP/ilker-aksum-500x500.png",
+extra:["Levent Ülgen","Ata Demirer","Kerem Bürsin","Erkan Petekkaya"],
+aliases:["Aksum"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Erkan Can",
+image:"https://i.postimg.cc/rFT7SJBv/MV5BYm-Zi-Yzgy-MTUt-Y2Mz-My00Mm-Fi-LWIx-OGIt-OTEy-Nm-M5Nm-Y2MWU3Xk-Ey-Xk-Fqc-Gc-V1.jpg",
+extra:["Murat Yıldırım","Barış Kılıç","Burak Deniz","Barış Arduç"],
+aliases:["Can"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Bülent İnal",
+image:"https://i.postimg.cc/Yq7T135s/fac7466a8932431eb4d41add7fe38853.jpg",
+extra:["Kemal Sunal","Barış Arduç","Sadi Celil Cengiz","Mehmet Ali Nuroğlu"],
+aliases:["Bülent","İnal"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"İsmail Ege Şaşmaz",
+image:"https://i.postimg.cc/DyhRq6VV/853395997626.jpg",
+extra:["Birkan Sokullu","Serkan Çayoğlu","Ozan Güven","Batuhan Karacakaya"],
+aliases:["İsmail Ege","İsmail Şaşmaz"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Serhat Tutumluer",
+image:"https://i.postimg.cc/7Y4jg9v8/serhat-tutumluer.png",
+extra:["Tamer Levent","Engin Öztürk","Selçuk Yöntem","Kemal Sunal"],
+aliases:["Serhat","Tutumluer"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Haluk Bilginer",
+image:"https://i.postimg.cc/MKYNtBwP/MV5BNTIw-ZDg5MTQt-NDNh-NS00Yz-Iw-LTg2NDkt-ODMz-Nz-U0OGI5YTkw-Xk-Ey-Xk-Fqc-Gc-V1-FMjpg-UX1000.jpg",
+extra:["Halit Ergenç","Kartal Tibet","Murat Yıldırım","Kaan Yıldırım"],
+aliases:["Bilginer","Haluk"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Çağlar Ertuğrul",
+image:"https://i.postimg.cc/hPnN9rkk/MV5BNz-Bh-YTU4Mm-Yt-N2Zl-ZC00NTQz-LWEx-Mz-Ut-YWYw-ODhk-Mj-Y1MWE0Xk-Ey-Xk-Fqc-Gc-V1-FMjpg-UX1000.jpg",
+extra:["Hakan Yılmaz","Selçuk Yöntem","Tamer Levent","Mustafa Üstündağ"],
+aliases:["Ertuğrul","Çağlar"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Mert Yazıcıoğlu",
+image:"https://i.postimg.cc/Yq7T1RcB/9Qosc-T7o-Kcu-RJRIr2SKUza3qr6x.jpg",
+extra:["Caner Cindoruk","Barış Falay","Tolga Sarıtaş","Burak Sevinç"],
+aliases:["Yazıcıoğlu"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Barış Kılıç",
+image:"https://i.postimg.cc/c4c2T3Wk/baris-kilic-500x500.png",
+extra:["Kenan Çoban","Caner Cindoruk","Birkan Sokullu","Barış Falay"],
+aliases:["Kılıç"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Ali Sunal",
+image:"https://i.postimg.cc/sDzbpmFR/5dbc6bbe5542841f0c90e336.jpg",
+extra:["Erkan Kolçak Köstendil","Nejat İşler","Burak Sevinç","Hakan Boyav"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Mehmet Ali Nuroğlu",
+image:"https://i.postimg.cc/9MrwgZsv/mehmet-ali-nuroglu-06.jpg",
+extra:["Onur Saylak","Enis Arıkan","Caner Cindoruk","Çağrı Şensoy"],
+aliases:["Mehmet Ali","Mehmet Nuroğlu","Nuroğlu"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Cemal Hünal",
+image:"https://i.postimg.cc/G2HTgG66/Yeralti-haber-resim-00e0c997-19d6-4fd0-931b-086d31a60b2b.jpg",
+extra:["Aras Bulut İynemli","Burak Özçivit","Enis Arıkan","Kartal Tibet"],
+aliases:["Cemal","Hünal"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Turgut Tunçalp",
+image:"https://i.postimg.cc/fLJSqm1g/turgut-tuncalp-kimdir-4-3-1548136245.jpg",
+extra:["Tamer Levent","Engin Akyürek","Aras Bulut İynemli","Reha Özcan"],
+aliases:["Tunçalp","Turgut"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Batuhan Karacakaya",
+image:"https://i.postimg.cc/wv7R4Ln4/kapak-155514.webp",
+extra:["İlker Kaleli","Güven Kıraç","Barış Falay","Nejat İşler"],
+aliases:["Batuhan","Karacakaya"]
+},
+{
+q:"Bu Türk oyuncu kimdir?",
+correct:"Barış Bağcı",
+image:"https://i.postimg.cc/sXvGH7tF/baris-bagci-3cca15.jpg",
+extra:["Kadir Doğulu","Cemal Hünal","Barış Arduç","Engin Öztürk"],
+aliases:["Bağcı"]
 }
 ]
 },
@@ -4406,6 +5720,11 @@ correct:qMap[qid].correct,
 
 extra:qMap[qid].extra||[],
 
+/* İsteğe bağlı alternatif kabul edilen cevaplar — daha önce
+   burada okunmadığı için admin panelinde eklenen cevaplar
+   sayfa yenilendiğinde kayboluyordu. */
+aliases:qMap[qid].aliases||[],
+
 /* İsteğe bağlı görsel bağlantısı — eski sorularda yok,
    o yüzden varsayılan boş string. */
 image:qMap[qid].image||""
@@ -4449,6 +5768,12 @@ q:q.q,
 correct:q.correct,
 
 extra:q.extra||[],
+
+/* İsteğe bağlı alternatif kabul edilen cevaplar (Türkçe/İngilizce
+   varyantlar, takma adlar vb.) — eskiden burada unutulup
+   Firebase'e hiç yazılmıyordu, admin panelinde eklense bile
+   bir sonraki yüklemede kayboluyordu. */
+aliases:q.aliases||[],
 
 /* Firebase boş/undefined alanları sessizce atar; tutarlı
    olması için her zaman string yazıyoruz. */
@@ -4716,6 +6041,8 @@ let adminAuthBusy=false;
 
 let adminScreen="home"; // "home" | category id
 
+let adminSearchQuery="";
+
 // Sayfa her açıldığında Firebase'in mevcut oturumunu kontrol et.
 // Kullanıcı zaten giriş yapmışsa (aynı tarayıcıda daha önce doğrulandıysa)
 // tekrar şifre sormadan admin olarak işaretle. Sayfa yenilendiğinde
@@ -4850,6 +6177,8 @@ adminUnlocked=false;
 
 mode=null;
 
+adminSearchQuery="";
+
 clearAdminScreen();
 
 render();
@@ -4908,6 +6237,93 @@ renderAdminCategory(adminScreen);
 
 }
 
+/* Tüm kategorilerdeki tüm sorularda (soru metni, doğru cevap,
+   yanlış seçenekler, alternatif cevaplar) arama yapar. Sonuçlar
+   tıklanınca ilgili kategoriye gidip o soruya kaydırır ve kısa
+   süreliğine vurgular — onlarca soru arasında elle kaydırmaya
+   gerek kalmasın diye. */
+function adminSearchResultsHTML(){
+
+const query=normalize(adminSearchQuery);
+
+if(!query) return "";
+
+const results=[];
+
+CATEGORIES.forEach(cat=>{
+
+cat.questions.forEach((q,i)=>{
+
+const haystack=normalize(
+[q.q,q.correct,...(q.extra||[]),...(q.aliases||[])]
+.filter(Boolean)
+.join(" ")
+);
+
+if(haystack.includes(query)){
+
+results.push({catId:cat.id,catName:cat.name,catIcon:cat.icon,index:i,q:q});
+
+}
+
+});
+
+});
+
+if(!results.length){
+
+return `<p class="sub" style="margin-top:12px">Sonuç bulunamadı.</p>`;
+
+}
+
+return `
+<div style="margin-top:14px">
+
+<p class="sub">${results.length} sonuç bulundu:</p>
+
+${
+results.slice(0,50).map(r=>`
+<button type="button" class="lobby-row"
+style="justify-content:space-between;width:100%;text-align:right;margin-top:8px;cursor:pointer;border:1px solid var(--line);background:var(--bg-deep);border-radius:var(--radius-sm);padding:10px 12px"
+onclick="adminJumpToQuestion('${r.catId}',${r.index})">
+<span style="flex:1">
+${r.catIcon} <strong>${escapeAttr(r.q.q)}</strong><br>
+<span class="cat-left">${escapeAttr(r.catName)} · ${escapeAttr(r.q.correct)}</span>
+</span>
+<span>→</span>
+</button>
+`).join("")
+}
+
+${results.length>50?`<p class="sub" style="margin-top:8px">...ve ${results.length-50} sonuç daha. Aramayı daraltmayı dene.</p>`:""}
+
+</div>
+`;
+
+}
+
+function adminJumpToQuestion(catId,index){
+
+renderAdminCategory(catId);
+
+setTimeout(function(){
+
+const el=document.getElementById("qcard_"+index);
+
+if(el){
+
+el.scrollIntoView({behavior:"smooth",block:"center"});
+
+el.classList.add("admin-search-highlight");
+
+setTimeout(function(){el.classList.remove("admin-search-highlight");},1700);
+
+}
+
+},60);
+
+}
+
 function renderAdminHome(){
 
 adminScreen="home";
@@ -4932,6 +6348,20 @@ ${
 :
 ""
 }
+
+<div class="card">
+
+<div class="stage-label">Soru Ara</div>
+
+<h2 class="headline" style="font-size:19px">🔍 Tüm Kategorilerde Ara</h2>
+
+<input type="text" id="adminSearchInput" placeholder="Kelime, soru ya da cevap ara..." value="${escapeAttr(adminSearchQuery)}" oninput="adminSearchQuery=this.value" onkeydown="if(event.key==='Enter'){adminSearchQuery=this.value;renderAdminHome();}">
+
+<button class="btn btn-primary" onclick="adminSearchQuery=document.getElementById('adminSearchInput').value;renderAdminHome()">Ara</button>
+
+${adminSearchQuery.trim()?adminSearchResultsHTML():""}
+
+</div>
 
 <div class="card">
 
@@ -5139,7 +6569,7 @@ document.getElementById("app").innerHTML=`
 ${
 cat.questions.map((q,i)=>`
 
-<div class="card" style="background:var(--bg-deep);margin-top:12px">
+<div class="card" id="qcard_${i}" style="background:var(--bg-deep);margin-top:12px">
 
 <label class="field-label">Soru</label>
 <input type="text" id="editQ_${i}_q" value="${escapeAttr(q.q)}">
