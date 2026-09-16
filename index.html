@@ -7373,6 +7373,58 @@ alert("Kaydedilemedi: "+(lastStorageError||"bilinmiyor"));
 
 }
 
+/* Tek bir kategoriyi koddaki (SEED_CATEGORIES) haliyle değiştirir —
+   "Tamamen Değiştir" gibi ama SADECE bu kategori için. Diğer
+   kategorilerin Firebase verisine dokunmaz. Tekrarlanmış/bozuk
+   sorulu bir kategoriyi güvenle onarmak için kullanılır. */
+async function adminReplaceCategoryFromCode(catId){
+
+if(!firebaseReady){
+alert("Firebase ayarlı değil.");
+return;
+}
+
+const seedCat=SEED_CATEGORIES.find(c=>c.id===catId);
+
+if(!seedCat){
+alert("Bu kategori kod içinde bulunamadı.");
+return;
+}
+
+const current=await storageGet("questions_data");
+
+const currentCat=current&&current[catId];
+
+const currentCount=currentCat&&currentCat.questions?Object.keys(currentCat.questions).length:0;
+
+if(!confirm(
+"SADECE \""+seedCat.name+"\" kategorisi değiştirilecek.\n\n"+
+"Firebase'deki mevcut "+currentCount+" soru SİLİNECEK, yerine koddaki "+seedCat.questions.length+" soru yazılacak.\n\n"+
+"Diğer kategoriler etkilenmeyecek.\n\nDevam edilsin mi?"
+)) return;
+
+const shaped=categoryToFbShape(seedCat);
+
+const ok=await storageSet("questions_data/"+catId,shaped);
+
+if(ok){
+
+const idx=CATEGORIES.findIndex(c=>c.id===catId);
+
+if(idx>-1) CATEGORIES[idx]=JSON.parse(JSON.stringify(seedCat));
+
+alert("\""+seedCat.name+"\" kategorisi koddaki "+seedCat.questions.length+" soruyla değiştirildi.");
+
+renderAdminCategory(catId);
+
+}else{
+
+alert("Kaydedilemedi: "+(lastStorageError||"bilinmiyor"));
+
+}
+
+}
+
 async function initQuestionBank(){
 
 if(!firebaseReady) return; // Firebase yoksa koddaki varsayılan sorular kullanılır
@@ -7943,6 +7995,16 @@ document.getElementById("app").innerHTML=`
 </div>
 
 <main>
+
+<div class="card" style="border-color:var(--danger)">
+
+<div class="stage-label">Bu Kategoriyi Onar</div>
+
+<p class="sub">Firebase'de bu kategoride tekrarlanan/bozuk sorular varsa (ör. iki kere "Birleştir" yapıldıysa), bu düğme SADECE bu kategoriyi koddaki temiz listeyle değiştirir — diğer kategorilere dokunmaz.</p>
+
+<button class="btn" style="background:var(--danger);color:#fff" onclick="adminReplaceCategoryFromCode('${catId}')">Sadece Bu Kategoriyi Koddaki ile Değiştir</button>
+
+</div>
 
 <div class="card">
 
