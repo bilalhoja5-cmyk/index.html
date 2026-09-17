@@ -4022,6 +4022,15 @@ const SEED_CATEGORIES=JSON.parse(JSON.stringify(CATEGORIES));
 function normalize(text){
 
 return (text||"")
+
+/* Farklı kaynaklardan kopyalanan metinler aynı Türkçe harfi
+   farklı Unicode temsilleriyle kodlayabilir (örn. bileşik
+   "İ" tek karakter yerine "I" + ayrı nokta işareti olarak).
+   Görünüşte aynı olsalar da string karşılaştırması eşleşmez.
+   NFC ile önce standart forma getiriyoruz — arama ve cevap
+   kontrolü artık kopyalama kaynağından bağımsız çalışır. */
+.normalize("NFC")
+
 .trim()
 .replace(/[.,!?:;'"\-\/()]/g,"")
 .replace(/\s+/g," ")
@@ -5219,7 +5228,17 @@ const ok=await storageSet("YALANCI_ROOM_"+roomCode,room);
 
 if(ok){
 
+roomState=room;
+
 closeMainMenu();
+
+renderOnlineGame();
+
+if(!roomPoll){
+
+roomPoll=setInterval(pollRoom,1200);
+
+}
 
 }else{
 
@@ -5281,8 +5300,6 @@ function renderChatSheet(){
 
 if(!chatViewOpen) return;
 
-const msgs=roomState.chat||[];
-
 document.getElementById("chatOverlay").innerHTML=`
 
 <div class="chat-sheet chat-open" id="chatSheet">
@@ -5292,18 +5309,7 @@ document.getElementById("chatOverlay").innerHTML=`
 <div class="stage-label" style="margin:0">Oda Sohbeti · ${roomCode}</div>
 </div>
 
-<div class="chat-messages" id="chatMessages">
-
-${
-msgs.length?msgs.map(m=>`
-<div class="chat-bubble ${m.name===onlineName?"chat-bubble-me":"chat-bubble-other"}">
-${m.name!==onlineName?`<div class="chat-bubble-name">${maskIconHTML(avatarFor(m.name,roomState.avatars).emoji)} ${escapeAttr(m.name)}</div>`:""}
-${escapeAttr(m.text)}
-</div>
-`).join(""):`<p class="sub" style="text-align:center;margin-top:20px">Henüz mesaj yok — ilk mesajı sen yaz!</p>`
-}
-
-</div>
+<div class="chat-messages" id="chatMessages"></div>
 
 <div class="chat-input-row">
 <input type="text" id="chatInput" placeholder="Mesaj yaz..." onkeydown="if(event.key==='Enter'){sendChatMessage();}">
@@ -5314,11 +5320,47 @@ ${escapeAttr(m.text)}
 
 `;
 
-onlineChatSeenCount=msgs.length;
+refreshChatMessages();
+
+}
+
+/* Sadece mesaj listesini tazeler — girdi kutusunu ASLA yeniden
+   oluşturmaz. Her yoklama döngüsünde (1.2 sn'de bir) bunu
+   çağırıyoruz; eğer tüm sohbet panelini (input dahil) her
+   seferinde yeniden çizseydik, kullanıcı yazarken input DOM
+   düğümü yok edilip yeniden yaratılır, bu da mobilde klavyenin
+   sürekli kapanıp açılmasına ve harflerin yazılamamasına yol
+   açardı. */
+function refreshChatMessages(){
+
+if(!chatViewOpen) return;
 
 const box=document.getElementById("chatMessages");
 
-if(box) box.scrollTop=box.scrollHeight;
+if(!box) return;
+
+const msgs=roomState.chat||[];
+
+const wasNearBottom=(box.scrollHeight-box.scrollTop-box.clientHeight)<80;
+
+box.innerHTML=
+msgs.length?msgs.map(m=>`
+<div class="chat-bubble ${m.name===onlineName?"chat-bubble-me":"chat-bubble-other"}">
+${m.name!==onlineName?`<div class="chat-bubble-name">${maskIconHTML(avatarFor(m.name,roomState.avatars).emoji)} ${escapeAttr(m.name)}</div>`:""}
+${escapeAttr(m.text)}
+</div>
+`).join(""):`<p class="sub" style="text-align:center;margin-top:20px">Henüz mesaj yok — ilk mesajı sen yaz!</p>`;
+
+onlineChatSeenCount=msgs.length;
+
+/* Kullanıcı yukarı kaydırıp eski mesajları okuyorsa, yeni
+   mesaj geldi diye onu aşağı sürüklemeyelim — sadece zaten
+   en alttaysa otomatik kaydır. */
+if(wasNearBottom){
+
+box.scrollTop=box.scrollHeight;
+
+}
 
 }
 
@@ -5334,7 +5376,13 @@ if(!text) return;
 
 inp.value="";
 
-const room=roomState;
+/* Yazma anındaki en güncel oda verisini çek — bellekteki
+   roomState, son yoklama döngüsünden beri güncel olmayabilir;
+   bunun üstüne yazmak başka bir işlemin (skor, başka bir
+   mesaj) kaybolmasına yol açabilir. */
+const fresh=normalizeRoom(await storageGet("YALANCI_ROOM_"+roomCode));
+
+const room=fresh||roomState;
 
 const chat=(room.chat||[]).slice();
 
@@ -5345,7 +5393,7 @@ room.chat=chat.slice(-60);
 
 roomState=room;
 
-renderChatSheet();
+refreshChatMessages();
 
 const ok=await storageSet("YALANCI_ROOM_"+roomCode,room);
 
@@ -6313,7 +6361,7 @@ options.filter(o=>
 !(o.owners && o.owners.includes(player))
 );
 
-const letters=["A","B","C","D","E","F","G"];
+const letters=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O"];
 
 document.getElementById("app").innerHTML=`
 
@@ -6850,6 +6898,8 @@ let chatViewOpen=false;
 
 let onlineChatSeenCount=0;
 
+let pollBusy=false;
+
 let onlineName="";
 
 let onlinePlayers=[];
@@ -7134,11 +7184,17 @@ icon:c.icon||"❓",
    Bu bayrak yönetici panelinden değiştirilir. */
 locked:!!c.locked,
 
+/* Kategorilerin gösterim sırası. Eski kayıtlarda yoksa
+   büyük bir değer verip sona atıyoruz. */
+order:(typeof c.order==="number")?c.order:999999,
+
 questions:questions
 
 };
 
 });
+
+arr.sort((a,b)=>a.order-b.order);
 
 return arr;
 
@@ -7190,9 +7246,11 @@ return false;
 
 const shaped={};
 
-CATEGORIES.forEach(c=>{
+CATEGORIES.forEach((c,idx)=>{
 
 shaped[c.id]=categoryToFbShape(c);
+
+shaped[c.id].order=idx;
 
 });
 
@@ -7844,13 +7902,19 @@ ${adminSearchQuery.trim()?adminSearchResultsHTML():""}
 <h2 class="headline" style="font-size:19px">Kategoriler</h2>
 
 ${
-CATEGORIES.map(c=>`
+CATEGORIES.map((c,idx)=>`
 
 <div class="lobby-row" style="justify-content:space-between;margin-top:10px">
 
 <div>${c.icon} <strong>${c.name}</strong> <span class="cat-left">(${c.questions.length} soru)${c.locked?" · 🔒 VIP":" · 🔓 Ücretsiz"}</span></div>
 
 <div style="display:flex;gap:8px;flex-wrap:wrap">
+
+<button class="btn btn-ghost" style="margin:0;padding:8px 10px;width:auto" ${idx===0?"disabled":""} onclick="adminMoveCategory('${c.id}',-1)">↑</button>
+
+<button class="btn btn-ghost" style="margin:0;padding:8px 10px;width:auto" ${idx===CATEGORIES.length-1?"disabled":""} onclick="adminMoveCategory('${c.id}',1)">↓</button>
+
+<button class="btn btn-ghost" style="margin:0;padding:8px 12px;width:auto" onclick="adminRenameCategory('${c.id}')">✏️ Ad</button>
 
 <button class="btn btn-ghost" style="margin:0;padding:8px 12px;width:auto;${c.locked?"color:var(--gold);border-color:var(--gold)":""}" onclick="adminToggleLock('${c.id}')">${c.locked?"🔒 Kilitli":"🔓 Açık"}</button>
 
@@ -7968,6 +8032,80 @@ alert("Kaydedilemedi: "+(lastStorageError||"bilinmiyor"));
 }
 
 renderAdminGame();
+
+}
+
+async function adminRenameCategory(catId){
+
+const cat=CATEGORIES.find(x=>x.id===catId);
+
+if(!cat) return;
+
+const newName=prompt("Yeni kategori adı:",cat.name);
+
+if(newName===null) return;
+
+const trimmed=newName.trim();
+
+if(!trimmed) return;
+
+const oldName=cat.name;
+
+cat.name=trimmed;
+
+const ok=await saveCategoriesToFirebase();
+
+if(ok){
+
+renderAdminHome();
+
+}else{
+
+cat.name=oldName;
+
+alert("Kaydedilemedi: "+(lastStorageError||"bilinmiyor"));
+
+}
+
+}
+
+/* Kategoriyi bir yukarı (dir=-1) ya da bir aşağı (dir=1)
+   taşır. Sıra CATEGORIES dizisindeki konuma göredir ve
+   saveCategoriesToFirebase() her kategoriye o anki index'i
+   "order" alanı olarak yazar, böylece sayfa yenilense de
+   sıra korunur. */
+async function adminMoveCategory(catId,dir){
+
+const idx=CATEGORIES.findIndex(x=>x.id===catId);
+
+if(idx<0) return;
+
+const newIdx=idx+dir;
+
+if(newIdx<0||newIdx>=CATEGORIES.length) return;
+
+const tmp=CATEGORIES[idx];
+
+CATEGORIES[idx]=CATEGORIES[newIdx];
+
+CATEGORIES[newIdx]=tmp;
+
+const ok=await saveCategoriesToFirebase();
+
+if(ok){
+
+renderAdminHome();
+
+}else{
+
+/* geri al */
+const tmp2=CATEGORIES[idx];
+CATEGORIES[idx]=CATEGORIES[newIdx];
+CATEGORIES[newIdx]=tmp2;
+
+alert("Kaydedilemedi: "+(lastStorageError||"bilinmiyor"));
+
+}
 
 }
 
@@ -8365,7 +8503,7 @@ renderAdminPreviewSelection();
 
 function renderAdminPreviewSelection(){
 
-const letters=["A","B","C","D","E","F","G"];
+const letters=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O"];
 
 document.getElementById("app").innerHTML=`
 
@@ -9723,7 +9861,7 @@ const myOptions=(roomState.options||[]).filter(o=>
 !(o.owners||[]).includes(onlineName)
 );
 
-const letters=["A","B","C","D","E","F","G"];
+const letters=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O"];
 
 document.getElementById("app").innerHTML=`
 
@@ -10002,7 +10140,9 @@ return`
 </div>
 </div>
 
-<button class="btn btn-primary" onclick="leaveOnlineRoom()">Ana Menü</button>
+${isHost?`<button class="btn btn-primary" onclick="confirmReturnToLobby()">Aynı Odada Yeni Tur</button>`:""}
+
+<button class="btn" onclick="leaveOnlineRoom()">Ana Menü</button>
 
 </main>
 `;
@@ -10375,6 +10515,12 @@ pollRoom();
 
 async function pollRoom(){
 
+if(pollBusy) return;
+
+pollBusy=true;
+
+try{
+
 if(!roomCode) return;
 
 const room=
@@ -10471,7 +10617,7 @@ lastRoomSnapshot=snapshot;
 
 if(chatViewOpen){
 
-renderChatSheet();
+refreshChatMessages();
 
 }
 
@@ -10510,16 +10656,16 @@ startTimer(roomState.questionTime||45,()=>{});
 
 }
 
-/* Oyun bittiyse (herkes "Oyun Bitti!" ekranını gördü), artık
-   round/faz değişecek bir şey kalmadığından yoklamayı
-   durduruyoruz — boşuna pil/veri tüketmesin. Kullanıcı "Ana
-   Menü"ye basınca zaten leaveOnlineRoom() ayrıca temizler;
-   bu sadece erken, gereksiz yoklamaları önler. */
-if(roomState.phase==="game_over" && roomPoll){
+/* NOT: Daha önce burada "Oyun Bitti!" fazına geçilince
+   yoklama durduruluyordu (pil tasarrufu için). Artık host
+   "Aynı Odada Yeni Tur" ile lobiye dönebildiği için, diğer
+   oyuncuların bunu görebilmesi adına yoklamayı KAPATMIYORUZ —
+   aksi halde onların ekranı sonsuza dek "Oyun Bitti" ekranında
+   donuk kalırdı. */
 
-clearInterval(roomPoll);
+}finally{
 
-roomPoll=null;
+pollBusy=false;
 
 }
 
