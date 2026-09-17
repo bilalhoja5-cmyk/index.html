@@ -2,6 +2,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f20">
 <title>YALANCI — Bilgi ve Blöf Oyunu</title><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-app-compat.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-database-compat.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-auth-compat.min.js"></script><link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
@@ -44,6 +45,14 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
 html,body{height:100%}
+
+/* WebView/tarayıcı, ağır bir senkron işlem sırasında (ör. büyük
+   bir ekran geçişi) henüz boyanmamış bir kareyi kendi varsayılan
+   rengiyle (genelde SİYAH) gösterebilir. html öğesine de aynı
+   koyu lacivert arka planı vererek bu olası "kararma" anının
+   göze siyah değil, uygulamanın kendi rengi gibi çarpmasını
+   sağlıyoruz. */
+html{background:var(--bg)}
 
 body{
   margin:0;
@@ -656,6 +665,50 @@ main{
   50%{box-shadow:0 0 0 1px rgba(255,221,140,.32) inset,0 0 28px -2px rgba(255,200,87,.85),0 0 6px rgba(255,235,180,1);}
 }
 
+/* Admin panelinde deneme ekranından dönüldüğünde, doğru soru
+   kartına kısa bir vurgu vererek admin'in gözünün kolayca
+   bulmasını sağlıyor. */
+.qcard-flash{
+  animation:qcard-flash-anim 1.2s ease-out;
+}
+
+@keyframes qcard-flash-anim{
+  0%{box-shadow:0 0 0 3px var(--gold);}
+  100%{box-shadow:0 0 0 0px transparent;}
+}
+
+/* Kategori düzenleme sayfası çok uzun bir soru listesi
+   olabildiği için, sağ kenarda sabit duran yukarı/aşağı
+   düğmeleri ekliyoruz — admin sayfada elle kaydırmak yerine
+   tek dokunuşla en üste ya da en alta zıplayabilsin. */
+.admin-scroll-nav{
+  position:fixed;
+  right:14px;
+  bottom:100px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  z-index:80;
+}
+
+.admin-scroll-nav button{
+  width:46px;
+  height:46px;
+  border-radius:50%;
+  background:var(--panel-2);
+  border:1.5px solid var(--line-strong);
+  color:var(--ink);
+  font-size:19px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 16px rgba(0,0,0,.45);
+  cursor:pointer;
+  padding:0;
+}
+
+.admin-scroll-nav button:active{transform:scale(.94)}
+
 .mode-tile-top{
   display:flex;
   align-items:center;
@@ -1039,7 +1092,8 @@ input[type=text]::placeholder{
   background:
     radial-gradient(circle at 50% 0%,#ffc85733 0%,transparent 60%),
     var(--panel);
-  border-color:#ffc85766;
+  border:1.5px solid rgba(255,221,140,.45);
+  animation:card-in var(--dur-slow) var(--ease), crystal-glow-gold 2.6s ease-in-out infinite;
 }
 
 .premium-list{
@@ -1640,16 +1694,18 @@ return MASK_COLORS.find(m=>m.id===id)||MASK_COLORS[0];
 /* Maske görsellerini splash ekranı gösterilirken (arka planda)
    önceden decode ediyoruz. Aksi halde, kategori seçimi gibi
    birden çok maskenin AYNI ANDA ilk kez ekrana geldiği bir
-   sahnede tarayıcı onları senkron şekilde decode etmeye
-   çalışıyor ve bu kısa bir "kararma / takılma" hissi
-   yaratıyordu. Splash 1.5 sn ekranda kaldığı için bu süre
-   yeterli. */
+   sahnede tarayıcı onları decode etmek için ana thread'i kısa
+   süreliğine bloke ediyor — WebView bu sırada arka planını
+   çizemediği için ekranın bir kare boyunca simsiyah görünmesine
+   yol açıyordu. img.decode() DOM'a hiç eklemeden gerçek
+   piksel çözümlemesini garantiler (yalnızca src atamak yetmez,
+   decode tarayıcıda "ilk kullanılana kadar" ertelenebiliyor). */
 (function preloadMaskImages(){
 try{
 Object.values(MASK_IMAGES).forEach(function(src){
 const img=new Image();
-img.decoding="async";
 img.src=src;
+if(img.decode) img.decode().catch(()=>{});
 });
 }catch(e){}
 })();
@@ -1683,7 +1739,258 @@ let CATEGORIES = [
 id:"cografya",
 name:"Coğrafya",
 icon:"🗺️",
-questions:[]
+questions:[
+{
+q:"Dünyanın en yüksek dağı ......dir.",
+correct:"Everest",
+extra:["K2","Kilimanjaro","Denali","Mont Blanc"]
+},
+{
+q:"Afrika kıtasının en yüksek dağı ......dir.",
+correct:"Kilimanjaro",
+extra:["Everest","Atlas Dağları","Ruwenzori","Kenya Dağı"]
+},
+{
+q:"Nüfus bakımından dünyanın en kalabalık ülkesi ......dir.",
+correct:"Hindistan",
+extra:["Çin","ABD","Endonezya","Pakistan"]
+},
+{
+q:"Yüzölçümü bakımından dünyanın en büyük ülkesi ......dir.",
+correct:"Rusya",
+extra:["Kanada","Çin","ABD","Brezilya"]
+},
+{
+q:"Yüzölçümü bakımından dünyanın en küçük ülkesi ......dir.",
+correct:"Vatikan",
+extra:["Monako","San Marino","Lihtenştayn","Malta"]
+},
+{
+q:"Sahra Çölü hangi kıtada yer alır?",
+correct:"Afrika",
+extra:["Asya","Avustralya","Güney Amerika","Avrupa"]
+},
+{
+q:"Dünyanın en büyük okyanusu ......dir.",
+correct:"Pasifik Okyanusu",
+extra:["Atlas Okyanusu","Hint Okyanusu","Arktik Okyanus","Güney Okyanusu"]
+},
+{
+q:"Nil Nehri hangi kıtada akar?",
+correct:"Afrika",
+extra:["Asya","Avrupa","Güney Amerika","Avustralya"]
+},
+{
+q:"Dünyanın en büyük tuzlu su gölü/iç denizi ......dır.",
+correct:"Hazar Denizi",
+extra:["Süperior Gölü","Viktoria Gölü","Ölü Deniz","Aral Gölü"]
+},
+{
+q:"Avustralya'nın başkenti ......dir (Sidney değil).",
+correct:"Canberra",
+extra:["Sidney","Melbourne","Brisbane","Perth"]
+},
+{
+q:"Kanada'nın başkenti ......dir.",
+correct:"Ottawa",
+extra:["Toronto","Vancouver","Montreal","Calgary"]
+},
+{
+q:"Brezilya'nın başkenti ......dir (Rio de Janeiro değil).",
+correct:"Brasília",
+extra:["Rio de Janeiro","São Paulo","Salvador","Belo Horizonte"]
+},
+{
+q:"Dünyanın en uzun karasal dağ sırası ......dir.",
+correct:"Andlar",
+extra:["Himalayalar","Kayalık Dağlar","Alp Dağları","Ural Dağları"]
+},
+{
+q:"Ekvator çizgisi, kıtalar arasında en fazla ülkeden ...... kıtasında geçer.",
+correct:"Afrika",
+extra:["Güney Amerika","Asya","Avustralya","Avrupa"]
+},
+{
+q:"Dünyanın en kalabalık metropollerinden biri olarak sıkça anılan şehir ......dir.",
+correct:"Tokyo",
+extra:["Şangay","Delhi","Mumbai","New York"]
+},
+{
+q:"Sahra Çölü'nden sonra dünyanın ikinci en büyük sıcak çölü ......dir.",
+correct:"Arap Çölü",
+extra:["Gobi Çölü","Kalahari Çölü","Atacama Çölü","Büyük Victoria Çölü"]
+},
+{
+q:"Amazon Yağmur Ormanları'nın büyük bölümü hangi ülkede yer alır?",
+correct:"Brezilya",
+extra:["Peru","Kolombiya","Venezuela","Ekvador"]
+},
+{
+q:"Dünyanın en kurak yeri olarak bilinen çöl ......dir.",
+correct:"Atacama Çölü",
+extra:["Sahra Çölü","Gobi Çölü","Namib Çölü","Kalahari Çölü"]
+},
+{
+q:"Avrupa ve Asya kıtalarını Rusya içinde birbirinden ayıran dağ sırası ......dir.",
+correct:"Ural Dağları",
+extra:["Kafkas Dağları","Alp Dağları","Karpat Dağları","Balkan Dağları"]
+},
+{
+q:"İstanbul, hangi iki kıtayı birbirine bağlayan bir şehirdir?",
+correct:"Avrupa ve Asya",
+extra:["Afrika ve Asya","Avrupa ve Afrika","Asya ve Avustralya","Kuzey ve Güney Amerika"]
+},
+{
+q:"Dünyanın en yüksek rakımlı başkenti ......dir.",
+correct:"La Paz, Bolivya",
+extra:["Kito, Ekvador","Bogota, Kolombiya","Thimphu, Bhutan","Kathmandu, Nepal"]
+},
+{
+q:"Grönland, coğrafi olarak hangi kıtaya dahil edilir?",
+correct:"Kuzey Amerika",
+extra:["Avrupa","Asya","Güney Amerika","Afrika"]
+},
+{
+q:"Debi (su akış hacmi) bakımından dünyanın en büyük nehri ......dir.",
+correct:"Amazon Nehri",
+extra:["Nil Nehri","Mississippi Nehri","Yangtze Nehri","Kongo Nehri"]
+},
+{
+q:"Victoria Şelalesi hangi iki ülke arasında yer alır?",
+correct:"Zambiya ve Zimbabve",
+extra:["Kenya ve Tanzanya","Güney Afrika ve Namibya","Mısır ve Sudan","Nijerya ve Kamerun"]
+},
+{
+q:"Endonezya, dünyanın en büyük ...... ülkesidir (adalardan oluşan).",
+correct:"Takımada",
+extra:["Yarımada","Vaha","Delta","Boğaz"]
+},
+{
+q:"Dünyanın en büyük yarımadası ......dir.",
+correct:"Arabistan Yarımadası",
+extra:["Hindistan Yarımadası","Skandinav Yarımadası","Kore Yarımadası","Balkan Yarımadası"]
+},
+{
+q:"Panama Kanalı hangi iki okyanusu birbirine bağlar?",
+correct:"Atlas ve Pasifik Okyanusları",
+extra:["Hint ve Pasifik Okyanusları","Atlas ve Hint Okyanusları","Arktik ve Atlas Okyanusları","Pasifik ve Arktik Okyanusları"]
+},
+{
+q:"Süveyş Kanalı hangi iki su kütlesini birbirine bağlar?",
+correct:"Akdeniz ve Kızıldeniz",
+extra:["Karadeniz ve Akdeniz","Kızıldeniz ve Basra Körfezi","Hint Okyanusu ve Kızıldeniz","Akdeniz ve Ege Denizi"]
+},
+{
+q:"Büyük Set Resifi (Great Barrier Reef) hangi ülkenin kıyılarında yer alır?",
+correct:"Avustralya",
+extra:["Endonezya","Filipinler","Yeni Zelanda","Papua Yeni Gine"]
+},
+{
+q:"Denizaşırı bölgeleri sayesinde dünyanın en fazla zaman dilimine (12) sahip ülkesi ......dir.",
+correct:"Fransa",
+extra:["Rusya","ABD","Çin","Avustralya"]
+},
+{
+q:"Çin, tek bir resmi saat dilimi kullanmasına rağmen coğrafi olarak ...... saat dilimine yayılır.",
+correct:"5",
+extra:["1","3","8","10"]
+},
+{
+q:"Yüzölçümü bakımından dünyanın en büyük tatlı su gölü ......dir.",
+correct:"Superior Gölü",
+extra:["Viktoria Gölü","Baykal Gölü","Huron Gölü","Michigan Gölü"]
+},
+{
+q:"Afrika'nın en büyük gölü ......dir.",
+correct:"Viktoria Gölü",
+extra:["Tanganyika Gölü","Malawi Gölü","Çad Gölü","Nasır Gölü"]
+},
+{
+q:"Dünyanın en büyük sıcak çölü ......dir.",
+correct:"Sahra Çölü",
+extra:["Gobi Çölü","Kalahari Çölü","Arap Çölü","Atacama Çölü"]
+},
+{
+q:"Dünyanın en uzun kesintisiz kara sınırına sahip iki ülkesi ......dir.",
+correct:"ABD ve Kanada",
+extra:["Rusya ve Çin","Çin ve Hindistan","Brezilya ve Arjantin","Fransa ve Almanya"]
+},
+{
+q:"Yeni Zelanda, coğrafi olarak hangi bölgeye dahil edilir?",
+correct:"Okyanusya",
+extra:["Asya","Avustralya kıtası","Antarktika","Afrika"]
+},
+{
+q:"Kilimanjaro Dağı hangi ülkede yer alır?",
+correct:"Tanzanya",
+extra:["Kenya","Uganda","Ruanda","Etiyopya"]
+},
+{
+q:"Büyük Set Resifi'nin uzunluğu yaklaşık ...... kilometredir.",
+correct:"2300",
+extra:["500","1000","1500","3000"]
+},
+{
+q:"İguazu Şelaleleri en çok hangi iki ülke arasındaki sınırıyla bilinir?",
+correct:"Arjantin ve Brezilya",
+extra:["Brezilya ve Paraguay","Arjantin ve Şili","Peru ve Bolivya","Kolombiya ve Venezuela"]
+},
+{
+q:"Dünyanın en soğuk yerleşim yeri olarak bilinen Oymyakon hangi ülkede yer alır?",
+correct:"Rusya",
+extra:["Kanada","Grönland","Moğolistan","Norveç"]
+},
+{
+q:"Ölü Deniz, deniz seviyesinden yaklaşık ...... metre daha alçaktadır (dünyanın en alçak kara noktası).",
+correct:"430",
+extra:["100","200","700","1000"]
+},
+{
+q:"Dünyanın en büyük nehir deltası ......dir.",
+correct:"Ganj-Brahmaputra Deltası",
+extra:["Nil Deltası","Mississippi Deltası","Amazon Deltası","Niger Deltası"]
+},
+{
+q:"Hem Avrupa hem Asya kıtasında toprağa sahip en büyük ülke ......dir.",
+correct:"Rusya",
+extra:["Mısır","Fas","İspanya","Yunanistan"]
+},
+{
+q:"Niagara Şelaleleri hangi iki ülke arasında yer alır?",
+correct:"ABD ve Kanada",
+extra:["ABD ve Meksika","Kanada ve Grönland","Meksika ve Kanada","ABD ve Küba"]
+},
+{
+q:"Antarktika hariç, dünyanın en büyük buzul kütlesi ......'da bulunur.",
+correct:"Grönland",
+extra:["Alaska","İzlanda","Norveç","Kanada"]
+},
+{
+q:"Dünyanın en kuzeydeki başkentine sahip ülke ......dir.",
+correct:"İzlanda",
+extra:["Norveç","Finlandiya","Rusya","Kanada"]
+},
+{
+q:"Dünyanın en büyük mangrov ormanı (Sundarbans) hangi iki ülke arasında paylaşılır?",
+correct:"Bangladeş ve Hindistan",
+extra:["Hindistan ve Myanmar","Endonezya ve Malezya","Tayland ve Kamboçya","Vietnam ve Laos"]
+},
+{
+q:"Angkor Wat tapınak kompleksi hangi ülkede yer alır?",
+correct:"Kamboçya",
+extra:["Tayland","Vietnam","Laos","Myanmar"]
+},
+{
+q:"Machu Picchu antik kenti hangi ülkede yer alır?",
+correct:"Peru",
+extra:["Bolivya","Şili","Ekvador","Kolombiya"]
+},
+{
+q:"Dünyanın en büyük adası Grönland, yönetimsel olarak hangi ülkeye bağlıdır?",
+correct:"Danimarka",
+extra:["Norveç","İsveç","İzlanda","Kanada"]
+}
+]
 },
 
 {
@@ -1697,7 +2004,258 @@ questions:[]
 id:"bilim",
 name:"Bilim",
 icon:"🔬",
-questions:[]
+questions:[
+{
+q:"İnsan vücudunda oksijeni hücrelere taşıyan protein ......dir.",
+correct:"Hemoglobin",
+extra:["Miyoglobin","Kollajen","İnsülin","Albümin"]
+},
+{
+q:"Suyun kimyasal formülü ......dir.",
+correct:"H2O",
+extra:["CO2","O2","H2O2","NaCl"]
+},
+{
+q:"Fotosentez sırasında bitkiler, güneş ışığını kullanarak ...... ve suyu glikoza dönüştürür.",
+correct:"Karbondioksiti",
+extra:["Azotu","Oksijeni","Hidrojeni","Metanı"]
+},
+{
+q:"İnsan vücudundaki en büyük iç organ ......dir.",
+correct:"Karaciğer",
+extra:["Akciğer","Böbrek","Mide","Dalak"]
+},
+{
+q:"DNA'nın açılımı ......dir.",
+correct:"Deoksiribonükleik asit",
+extra:["Ribonükleik asit","Adenozin trifosfat","Amino asit","Nükleotid asit"]
+},
+{
+q:"Bir atomun çekirdeğinde bulunan pozitif yüklü parçacığa ...... denir.",
+correct:"Proton",
+extra:["Nötron","Elektron","İyon","Foton"]
+},
+{
+q:"Bir atomun çekirdeğinde bulunan yüksüz parçacığa ...... denir.",
+correct:"Nötron",
+extra:["Proton","Elektron","Pozitron","Kuark"]
+},
+{
+q:"Periyodik tabloda \"Au\" sembolü hangi elementi temsil eder?",
+correct:"Altın",
+extra:["Gümüş","Alüminyum","Argon","Arsenik"]
+},
+{
+q:"Periyodik tabloda \"Fe\" sembolü hangi elementi temsil eder?",
+correct:"Demir",
+extra:["Flor","Fransiyum","Fosfor","Fermiyum"]
+},
+{
+q:"Su, deniz seviyesinde kaç santigrat derecede kaynar?",
+correct:"100",
+extra:["90","80","120","0"]
+},
+{
+q:"Su, deniz seviyesinde kaç santigrat derecede donar?",
+correct:"0",
+extra:["4","-4","10","-10"]
+},
+{
+q:"Newton'un birinci hareket yasasına göre, net kuvvet etkimeyen bir cisim ...... durumunu korur.",
+correct:"Sabit hız (veya durgunluk)",
+extra:["İvmelenme","Yavaşlama","Dönme","Titreşim"]
+},
+{
+q:"Enerjinin korunumu yasasına göre enerji ......",
+correct:"Yoktan var edilemez, yok da edilemez, sadece dönüşür",
+extra:["Sürekli artar","Sürekli azalır","Zamanla kaybolur","Sadece ısıya dönüşür"]
+},
+{
+q:"Kalbin bir kasılma-gevşeme döngüsüne verilen ad ......dir.",
+correct:"Kalp atışı (Kalp döngüsü)",
+extra:["Solunum döngüsü","Sinir iletimi","Kas spazmı","Kan basıncı dalgası"]
+},
+{
+q:"Güneş sisteminde Güneş'e en yakın gezegen ......dir.",
+correct:"Merkür",
+extra:["Venüs","Dünya","Mars","Jüpiter"]
+},
+{
+q:"Güneş sistemindeki en büyük gezegen ......dir.",
+correct:"Jüpiter",
+extra:["Satürn","Neptün","Uranüs","Dünya"]
+},
+{
+q:"Güneş sistemindeki en küçük gezegen ......dir.",
+correct:"Merkür",
+extra:["Mars","Venüs","Plüton","Dünya"]
+},
+{
+q:"İnsan sindirim sisteminin en uzun organı ......dir.",
+correct:"İnce bağırsak",
+extra:["Kalın bağırsak","Mide","Yemek borusu","Karaciğer"]
+},
+{
+q:"Kan grubu sisteminde \"evrensel verici\" olarak bilinen kan grubu ......dir.",
+correct:"0 Rh(-)",
+extra:["AB Rh(+)","A Rh(+)","B Rh(-)","AB Rh(-)"]
+},
+{
+q:"Kan grubu sisteminde \"evrensel alıcı\" olarak bilinen kan grubu ......dir.",
+correct:"AB Rh(+)",
+extra:["0 Rh(-)","A Rh(-)","B Rh(+)","AB Rh(-)"]
+},
+{
+q:"Oksijenli kanı vücuda pompalayan kalp odacığı ......dir.",
+correct:"Sol karıncık",
+extra:["Sağ karıncık","Sol kulakçık","Sağ kulakçık","Aort kapakçığı"]
+},
+{
+q:"Bitkilerde fotosentezin gerçekleştiği hücre organeli ......dir.",
+correct:"Kloroplast",
+extra:["Mitokondri","Ribozom","Çekirdek","Golgi cisimciği"]
+},
+{
+q:"Hücrenin \"enerji santrali\" olarak bilinen organeli ......dir.",
+correct:"Mitokondri",
+extra:["Kloroplast","Lizozom","Ribozom","Endoplazmik retikulum"]
+},
+{
+q:"Bir molekül suyun (H2O) yapısında kaç hidrojen atomu bulunur?",
+correct:"2",
+extra:["1","3","4","0"]
+},
+{
+q:"Ses, boşlukta (vakumda) ......",
+correct:"Yayılamaz (duyulmaz)",
+extra:["Işıktan hızlı yayılır","Yavaş yayılır","Normal hızında yayılır","İki katı hızla yayılır"]
+},
+{
+q:"Elektromanyetik spektrumda en kısa dalga boyuna sahip olan ......dir.",
+correct:"Gama ışınları",
+extra:["Radyo dalgaları","Mikrodalgalar","Kızılötesi ışınlar","Mor ötesi ışınlar"]
+},
+{
+q:"Elektromanyetik spektrumda en uzun dalga boyuna sahip olan ......dir.",
+correct:"Radyo dalgaları",
+extra:["Gama ışınları","X ışınları","Mor ötesi ışınlar","Görünür ışık"]
+},
+{
+q:"Periyodik tabloyu ilk kez sistemli olarak düzenleyen bilim insanı ......dir.",
+correct:"Dmitri Mendeleyev",
+extra:["Isaac Newton","Albert Einstein","Antoine Lavoisier","Marie Curie"]
+},
+{
+q:"Görelilik teorisini geliştiren bilim insanı ......dir.",
+correct:"Albert Einstein",
+extra:["Isaac Newton","Stephen Hawking","Niels Bohr","Max Planck"]
+},
+{
+q:"Kütle çekim (yerçekimi) yasasını formüle eden bilim insanı ......dir.",
+correct:"Isaac Newton",
+extra:["Albert Einstein","Galileo Galilei","Johannes Kepler","Nikola Tesla"]
+},
+{
+q:"Radyoaktiviteyi keşfeden ve bu alanda iki kez Nobel Ödülü kazanan bilim insanı ......dir.",
+correct:"Marie Curie",
+extra:["Albert Einstein","Ernest Rutherford","Niels Bohr","Max Planck"]
+},
+{
+q:"Penisilini keşfeden bilim insanı ......dir.",
+correct:"Alexander Fleming",
+extra:["Louis Pasteur","Robert Koch","Edward Jenner","Jonas Salk"]
+},
+{
+q:"Doğal seçilim yoluyla evrim teorisini ortaya atan bilim insanı ......dir.",
+correct:"Charles Darwin",
+extra:["Gregor Mendel","Jean-Baptiste Lamarck","Alfred Wallace","Louis Pasteur"]
+},
+{
+q:"Kalıtım yasalarını bezelye bitkileri üzerinde yaptığı deneylerle ortaya koyan bilim insanı ......dir.",
+correct:"Gregor Mendel",
+extra:["Charles Darwin","James Watson","Francis Crick","Rosalind Franklin"]
+},
+{
+q:"İnsan vücudunda Vitamin D üretimini tetikleyen ana kaynak ......dir.",
+correct:"Güneş ışığı",
+extra:["Su","Oksijen","Demir alımı","Egzersiz"]
+},
+{
+q:"Bir element ile bileşik arasındaki temel fark, elementin ...... içermesidir.",
+correct:"Tek tür atom",
+extra:["Birden fazla molekül türü","Sadece sıvı hâl","İyonik bağ","Sadece gaz hâl"]
+},
+{
+q:"Asit-baz (pH) ölçeğinde 7 değeri neyi ifade eder?",
+correct:"Nötr",
+extra:["Çok asidik","Çok bazik (alkali)","Ölçüm dışı","Yanıcı"]
+},
+{
+q:"Periyodik tabloda \"O\" sembolü hangi elementi temsil eder?",
+correct:"Oksijen",
+extra:["Osmiyum","Kalay","Kurşun","Kükürt"]
+},
+{
+q:"Vücudumuzda kemikleri güçlü tutan ve süt ürünlerinde bolca bulunan mineral ......dir.",
+correct:"Kalsiyum",
+extra:["Demir","Potasyum","Sodyum","Çinko"]
+},
+{
+q:"İnsan vücudunda bağışıklık sisteminin ana savunma hücreleri ......dir.",
+correct:"Akyuvarlar (Lökositler)",
+extra:["Alyuvarlar","Trombositler","Kas hücreleri","Sinir hücreleri"]
+},
+{
+q:"Ay'ın Dünya etrafındaki bir tam turu yaklaşık ...... gün sürer.",
+correct:"27",
+extra:["7","14","30","365"]
+},
+{
+q:"Dünya'nın Güneş etrafındaki bir tam turu (bir yıl) yaklaşık ...... gün sürer.",
+correct:"365",
+extra:["300","400","355","375"]
+},
+{
+q:"Buz, sıvı sudan daha ...... yoğunluktadır (bu yüzden su üzerinde yüzer).",
+correct:"Az (düşük)",
+extra:["Fazla (yüksek)","Eşit","Ölçülemez","İki katı"]
+},
+{
+q:"Kimyada asitler, turnusol kağıdını hangi renge çevirir?",
+correct:"Kırmızı",
+extra:["Mavi","Yeşil","Sarı","Mor"]
+},
+{
+q:"Kimyada bazlar (alkaliler), kırmızı turnusol kağıdını hangi renge çevirir?",
+correct:"Mavi",
+extra:["Kırmızı kalır","Yeşil","Sarı","Mor"]
+},
+{
+q:"Elektrik akımının birimi ......dir.",
+correct:"Amper",
+extra:["Volt","Watt","Ohm","Joule"]
+},
+{
+q:"Elektriksel gerilimin (potansiyel fark) birimi ......dir.",
+correct:"Volt",
+extra:["Amper","Watt","Ohm","Coulomb"]
+},
+{
+q:"Bir cismin kütlesi ile hacmi arasındaki orana ...... denir.",
+correct:"Yoğunluk",
+extra:["Ağırlık","Basınç","Hacim oranı","Kuvvet"]
+},
+{
+q:"Canlıların oksijen kullanarak glikozdan enerji ürettiği hücresel solunum türüne ...... solunum denir.",
+correct:"Aerobik",
+extra:["Anaerobik","Fotosentetik","Kimyasal","Mekanik"]
+},
+{
+q:"İnsan vücudunda sinir sisteminin temel yapı taşı olan hücreye ...... denir.",
+correct:"Nöron",
+extra:["Glial hücre","Kas hücresi","Epitel hücresi","Kök hücre"]
+}
+]
 },
 
 {
@@ -1732,7 +2290,258 @@ questions:[]
 id:"garip",
 name:"Garip Bilgiler",
 icon:"🤯",
-questions:[]
+questions:[
+{
+q:"Yetişkin bir insan vücudunda toplam ...... kemik bulunur.",
+correct:"206",
+extra:["186","226","256","196"]
+},
+{
+q:"İnsan iskeletindeki en uzun kemik ......dir.",
+correct:"Femur (uyluk kemiği)",
+extra:["Kaval kemiği","Kalça kemiği","Köprücük kemiği","Kürek kemiği"]
+},
+{
+q:"İnsan vücudundaki en sert doku ......dir.",
+correct:"Diş minesi",
+extra:["Kemik","Tırnak","Kıkırdak","Saç"]
+},
+{
+q:"Kulağımızdaki en küçük kemiğin adı ......dir.",
+correct:"Üzengi kemiği",
+extra:["Çekiç kemiği","Örs kemiği","Kaval kemiği","Köprücük kemiği"]
+},
+{
+q:"Bir gözü hareket ettiren dış kas sayısı ......dir.",
+correct:"6",
+extra:["4","8","3","10"]
+},
+{
+q:"Vücudumuzdaki en güçlü kas, kuvvet/ağırlık oranına göre ......dir.",
+correct:"Çene kası",
+extra:["Baldır kası","Bacak kası","Kalp kası","Sırt kası"]
+},
+{
+q:"Dünyanın en büyük kara hayvanı ......dir.",
+correct:"Afrika fili",
+extra:["Kutup ayısı","Su aygırı","Beyaz gergedan","Zürafa"]
+},
+{
+q:"Kara hayvanları arasında en hızlı koşan ......dir.",
+correct:"Çita",
+extra:["Aslan","Antilop","At","Geyik"]
+},
+{
+q:"Dev kaplumbağalar yaklaşık ...... yıla kadar yaşayabilir.",
+correct:"150",
+extra:["80","100","200","50"]
+},
+{
+q:"Afrika filleri günde ortalama sadece ...... saat uyur.",
+correct:"2",
+extra:["4","6","8","10"]
+},
+{
+q:"Kelebekler tatma duyularını ...... ile hissederler.",
+correct:"Ayaklarıyla",
+extra:["Antenleriyle","Kanatlarıyla","Hortumlarıyla","Gözleriyle"]
+},
+{
+q:"Flamingoların pembe rengi, beslendikleri karides ve alglerdeki ...... sayesindedir.",
+correct:"Karotenoid pigmentler",
+extra:["Genetik mutasyon","Güneş ışığı","Deniz tuzu","Yaşlanma"]
+},
+{
+q:"Bukalemunlar renk değiştirmeyi çoğunlukla kamuflaj için değil, ...... için yaparlar.",
+correct:"İletişim kurmak ve sıcaklığı düzenlemek",
+extra:["Avlanmak","Uyumak","Eş bulmadan kaçınmak","Yavru büyütmek"]
+},
+{
+q:"Bukalemunların dilleri, bazı türlerde vücut uzunluklarının ...... katına kadar uzayabilir.",
+correct:"2",
+extra:["1","3","5","10"]
+},
+{
+q:"Kanguru yavruları doğduktan sonra annelerinin kesesinde yaklaşık ...... ay kalır.",
+correct:"6",
+extra:["2","4","9","12"]
+},
+{
+q:"Venüs gezegeninde bir gün, Venüs'ün Güneş etrafındaki bir yılından daha ......dur.",
+correct:"Uzun",
+extra:["Kısa","Eşit","Yarısı kadar","Ölçülemez"]
+},
+{
+q:"Dünyanın en yaşlı bilinen ağaçlarından biri olan \"Methuselah\", 4800 yaşın üzerinde bir ...... ağacıdır.",
+correct:"Bristlecone çamı",
+extra:["Sekoya","Zeytin","Meşe","Baobab"]
+},
+{
+q:"İnsan vücudundaki en büyük organ ......dir.",
+correct:"Deri (Cilt)",
+extra:["Karaciğer","Akciğer","Bağırsak","Kalp"]
+},
+{
+q:"Dünyanın en büyük hücresi, döllenmemiş bir ...... yumurtasıdır.",
+correct:"Deve kuşu",
+extra:["Balina","Timsah","Kaplumbağa","Piton"]
+},
+{
+q:"Dünyanın en büyük adası (Avustralya kıta sayılmazsa) ......dir.",
+correct:"Grönland",
+extra:["Yeni Gine","Borneo","Madagaskar","Baffin Adası"]
+},
+{
+q:"Dünyanın en fazla dile sahip ülkesi ......dir (840'tan fazla dille).",
+correct:"Papua Yeni Gine",
+extra:["Endonezya","Hindistan","Nijerya","Filipinler"]
+},
+{
+q:"Dünya, Güneş etrafındaki bir tam turunda yaklaşık ...... milyon km yol kat eder.",
+correct:"940",
+extra:["500","700","1200","1500"]
+},
+{
+q:"Bir şimşek çakması, sıcaklık olarak Güneş yüzeyinden bile ...... olabilir.",
+correct:"Daha sıcak",
+extra:["Daha soğuk","Eşit sıcaklıkta","Yarısı kadar sıcak","Ölçülemez"]
+},
+{
+q:"Kutup ayılarının derisinin rengi aslında ......dir (kürkü beyaz görünse de).",
+correct:"Siyah",
+extra:["Kahverengi","Gri","Pembe","Mavi"]
+},
+{
+q:"Ateş böcekleri ışığını ...... yoluyla üretir.",
+correct:"Biyolüminesans (kimyasal reaksiyon)",
+extra:["Elektrik","Güneş enerjisi depolayarak","Sürtünme","Isı üreterek"]
+},
+{
+q:"İnsan vücudunda mide asidi, bazı metalleri bile eritebilecek kadar ...... bir asittir.",
+correct:"Güçlü",
+extra:["Zayıf","Nötr","Bazik","Tatlı"]
+},
+{
+q:"Bir çift insan ayağında toplam ...... kemik bulunur.",
+correct:"52",
+extra:["32","42","62","72"]
+},
+{
+q:"Papağanlar gibi bazı kuşlar, insan sesini taklit edebilme yeteneğine özel ...... yapıları sayesinde sahiptir.",
+correct:"Gırtlak (Siring)",
+extra:["Diş","Akciğer","Göz","Tüy"]
+},
+{
+q:"Bir insan, hayatı boyunca ortalama olarak yaklaşık ...... milyar kalp atışı gerçekleştirir.",
+correct:"2.5",
+extra:["0.5","1","5","10"]
+},
+{
+q:"En büyük yaşayan kemikli balık türü olan ay balığı (Mola mola), yaklaşık ...... kilograma kadar ağırlığa ulaşabilir.",
+correct:"1000",
+extra:["200","500","2000","3000"]
+},
+{
+q:"Dünyanın en yüksek sesle \"şarkı söyleyen\" hayvanı ......dir (bazı sesleri gemi motorlarından bile yüksek olabilir).",
+correct:"Mavi balina",
+extra:["Aslan","Goril","Kaplan","Fil"]
+},
+{
+q:"İnsan gözü, karanlıkta tam adapte olduğunda tek bir ...... bile algılayabilecek hassasiyete ulaşabilir.",
+correct:"Foton",
+extra:["Molekül","Atom","Elektron","Nötron"]
+},
+{
+q:"Dünyanın en büyük çiçeği olan Rafflesia, açtığında yaklaşık ...... santimetre çapa ulaşabilir.",
+correct:"100",
+extra:["30","50","200","300"]
+},
+{
+q:"Dünyanın en zehirli kara hayvanı kabul edilen altın zehir kurbağası ......'da bulunur.",
+correct:"Kolombiya",
+extra:["Brezilya","Peru","Ekvador","Venezuela"]
+},
+{
+q:"Bir insanın gözü, yaklaşık ...... megapiksellik bir kameraya eşdeğer çözünürlükte kabul edilir.",
+correct:"576",
+extra:["50","100","300","1000"]
+},
+{
+q:"Sadece bir memeli türü gerçek anlamda uçabilir; bu hayvan ......dir.",
+correct:"Yarasa",
+extra:["Uçan sincap","Şahin","Uçan balık","Sürüngen kertenkele"]
+},
+{
+q:"Grönland köpekbalığı, bilinen en uzun ömürlü omurgalılardan biridir ve ...... yıldan fazla yaşayabilir.",
+correct:"400",
+extra:["100","200","300","500"]
+},
+{
+q:"Karıncalar, kendi vücut ağırlıklarının yaklaşık ...... katını taşıyabilir.",
+correct:"20",
+extra:["5","50","100","200"]
+},
+{
+q:"Yer çekimi olmadığı için uzayda kalan astronotların boyu birkaç santimetre ......",
+correct:"Uzar",
+extra:["Kısalır","Değişmez","İkiye katlanır","Yarıya iner"]
+},
+{
+q:"İnsan ömrünün ortalama olarak yaklaşık ...... yılı uykuda geçer.",
+correct:"26",
+extra:["10","15","35","40"]
+},
+{
+q:"Antarktika, yağış miktarına göre aslında dünyanın en büyük ......dır.",
+correct:"Çölü",
+extra:["Ormanı","Adası","Yarımadası","Platosu"]
+},
+{
+q:"Satürn gezegeni, yoğunluğu sudan az olduğu için teorik olarak suda ......",
+correct:"Yüzer",
+extra:["Batar","Erir","Patlar","Buharlaşır"]
+},
+{
+q:"Bir örümceğin bacak sayısı ......dir.",
+correct:"8",
+extra:["6","10","12","4"]
+},
+{
+q:"Bal arıları, kovana dönerken diğer arılara yiyecek yerini \"...... dansı\" ile anlatır.",
+correct:"Kuyruk sallama (Waggle)",
+extra:["Daire","Zikzak","Spiral","Çember"]
+},
+{
+q:"Dünyanın en hızlı canlısı, dalış sırasında saatte 300 km'yi aşabilen ......dir.",
+correct:"Gökdoğan",
+extra:["Kartal","Atmaca","Baykuş","Leylek"]
+},
+{
+q:"Bir insanın tükürüğünde, küçük yaraların iyileşmesine yardımcı olan doğal ...... bulunur.",
+correct:"Antibakteriyel enzimler",
+extra:["Vitamin C","Kalsiyum","Adrenalin","Melanin"]
+},
+{
+q:"Bir insan vücudundaki tüm kan damarları uç uca eklense, Dünya'yı yaklaşık ...... kez dolanacak uzunlukta olur.",
+correct:"2",
+extra:["1","4","6","10"]
+},
+{
+q:"Dünyanın en yaşlı hayvanı olduğu düşünülen bir midye (Ming), yaklaşık ...... yaşında bulunmuştur.",
+correct:"500",
+extra:["100","200","300","1000"]
+},
+{
+q:"Bir insan hapşırdığında istemsizce gözlerini ......",
+correct:"Kapatır",
+extra:["Açık tutar","Kırpıştırmaz","Döndürür","Yaşartır"]
+},
+{
+q:"Bir tam gün (24 saat) içinde ortalama bir insan kalbi yaklaşık ...... kez atar.",
+correct:"100.000",
+extra:["50.000","70.000","150.000","200.000"]
+}
+]
 },
 
 {
@@ -1784,6 +2593,1264 @@ id:"atasozleri",
 name:"Atasözünü Tamamla",
 icon:"📜",
 questions:[]
+},
+
+{
+id:"sampiyonlarligi",
+name:"Şampiyonlar Ligi",
+icon:"🏆",
+questions:[
+{
+q:"2025/26 sezonu Şampiyonlar Ligi finalinde Paris Saint-Germain, penaltılarla hangi takımı mağlup ederek şampiyonluğunu korudu?",
+correct:"Arsenal",
+extra:["Bayern Münih","Real Madrid","İnter","Liverpool"]
+},
+{
+q:"2025/26 sezonu Şampiyonlar Ligi finali hangi şehirde oynandı?",
+correct:"Budapeşte",
+extra:["Münih","Londra","İstanbul","Milano"]
+},
+{
+q:"Paris Saint-Germain'in tarihindeki ilk Şampiyonlar Ligi şampiyonluğu hangi sezonda geldi?",
+correct:"2024/25",
+extra:["2025/26","2022/23","2020/21","2023/24"]
+},
+{
+q:"2024/25 sezonu Şampiyonlar Ligi finalinde Paris Saint-Germain, İnter'i kaç farkla mağlup ederek final tarihinin en yüksek skorlu galibiyetine imza attı?",
+correct:"5-0",
+extra:["4-0","3-0","6-1","2-0"]
+},
+{
+q:"2024/25 sezonu Şampiyonlar Ligi finali hangi şehirde oynandı?",
+correct:"Münih",
+extra:["Budapeşte","Wembley","Milano","İstanbul"]
+},
+{
+q:"Manchester City, tarihindeki tek Şampiyonlar Ligi şampiyonluğunu hangi yıl kazandı?",
+correct:"2023",
+extra:["2021","2019","2022","2024"]
+},
+{
+q:"2023 Şampiyonlar Ligi finalinde Manchester City'nin İnter'e karşı attığı tek golü kim attı?",
+correct:"Rodri",
+extra:["Erling Haaland","Kevin De Bruyne","İlkay Gündoğan","Bernardo Silva"]
+},
+{
+q:"2023 Şampiyonlar Ligi finali hangi şehirde oynandı?",
+correct:"İstanbul",
+extra:["Londra","Madrid","Berlin","Paris"]
+},
+{
+q:"2005 Şampiyonlar Ligi finalinde Liverpool'un ilk yarıda 0-3 geriye düştüğü rakibi hangi kulüptü?",
+correct:"Milan",
+extra:["Juventus","Bayern Münih","Barcelona","Real Madrid"]
+},
+{
+q:"2005 Şampiyonlar Ligi finali hangi şehirde oynandı?",
+correct:"İstanbul",
+extra:["Atina","Roma","Manchester","Moskova"]
+},
+{
+q:"2005 finalinde, maçın 1. dakikasında gol atarak Şampiyonlar Ligi tarihinin en hızlı final golü rekorunu bugün hâlâ elinde bulunduran oyuncu kimdir?",
+correct:"Paolo Maldini",
+extra:["Andriy Shevchenko","Hernán Crespo","Kaká","Steven Gerrard"]
+},
+{
+q:"2005 finalinin penaltı atışlarında Liverpool'a şampiyonluğu getiren kritik kurtarışları yapan kaleci kimdi?",
+correct:"Jerzy Dudek",
+extra:["Pepe Reina","Sander Westerveld","Bruce Grobbelaar","Chris Kirkland"]
+},
+{
+q:"1999 finalinde Manchester United'ı Bayern Münih karşısında şampiyon yapan maç hangi şehirde oynandı?",
+correct:"Barselona",
+extra:["Münih","Roma","Amsterdam","Viyana"]
+},
+{
+q:"1999 finalinde Manchester United'a beraberliği getiren golü kim attı?",
+correct:"Teddy Sheringham",
+extra:["Ole Gunnar Solskjær","Ryan Giggs","David Beckham","Andy Cole"]
+},
+{
+q:"1999 finalinde Manchester United'a son dakikalarda şampiyonluğu getiren golü kim attı?",
+correct:"Ole Gunnar Solskjær",
+extra:["Teddy Sheringham","Dwight Yorke","Paul Scholes","Andy Cole"]
+},
+{
+q:"Barcelona'nın 2017 yılında PSG'ye karşı 6-1 kazandığı ve \"La Remontada\" olarak anılan tarihi maçta uzatma dakikalarında turu getiren golü kim attı?",
+correct:"Sergi Roberto",
+extra:["Lionel Messi","Neymar","Luis Suárez","Andrés Iniesta"]
+},
+{
+q:"2012 finalinde Chelsea, kendi sahası olmayan ama Bayern Münih'in kendi evi olan bir stadyumda penaltılarla şampiyon oldu. Final hangi şehirde oynandı?",
+correct:"Münih",
+extra:["Berlin","Londra","Madrid","Milano"]
+},
+{
+q:"2012 finalinde Chelsea'ye uzatmadan önce beraberliği getiren kritik başı golü kim attı?",
+correct:"Didier Drogba",
+extra:["Frank Lampard","Fernando Torres","Juan Mata","Ramires"]
+},
+{
+q:"Real Madrid'in \"La Décima\" olarak anılan 10. Avrupa kupası şampiyonluğu hangi yıl geldi?",
+correct:"2014",
+extra:["2016","2017","2018","2013"]
+},
+{
+q:"2014 finalinde Real Madrid'e uzatmaya giden son dakika beraberlik golünü kim attı?",
+correct:"Sergio Ramos",
+extra:["Karim Benzema","Cristiano Ronaldo","Gareth Bale","Ángel Di María"]
+},
+{
+q:"Real Madrid, 2016, 2017 ve 2018 sezonlarında art arda kaç kez Şampiyonlar Ligi'ni kazanmıştır?",
+correct:"3",
+extra:["2","4","5","1"]
+},
+{
+q:"2018 finalinde Liverpool'un rakibi hangi kulüptü?",
+correct:"Real Madrid",
+extra:["Bayern Münih","Juventus","Barcelona","Atlético Madrid"]
+},
+{
+q:"2019 finalinde Liverpool'un rakibi olan ve final tarihindeki \"tüm İngiliz finalleri\"nden birini oluşturan takım hangisidir?",
+correct:"Tottenham",
+extra:["Chelsea","Manchester City","Arsenal","Manchester United"]
+},
+{
+q:"2019 Şampiyonlar Ligi finali hangi şehirde oynandı?",
+correct:"Madrid",
+extra:["Kiev","Cardiff","Milano","Londra"]
+},
+{
+q:"2020 finalinde Bayern Münih'in Paris Saint-Germain'e karşı attığı tek golü, eski takımına karşı kim attı?",
+correct:"Kingsley Coman",
+extra:["Thomas Müller","Robert Lewandowski","Serge Gnabry","Joshua Kimmich"]
+},
+{
+q:"Borussia Dortmund'un Şampiyonlar Ligi tarihindeki tek şampiyonluğu hangi yıl, Juventus'u mağlup ederek geldi?",
+correct:"1997",
+extra:["1996","1998","1995","2013"]
+},
+{
+q:"İnter, 45 yıllık bir aradan sonra 2010 yılında hangi teknik direktör önderliğinde şampiyon oldu?",
+correct:"José Mourinho",
+extra:["Roberto Mancini","Massimo Moratti","Rafael Benítez","Luciano Spalletti"]
+},
+{
+q:"2010 finalinde İnter, Bayern Münih'i kaç farkla mağlup etti?",
+correct:"2-0",
+extra:["1-0","3-1","2-1","1-1 (penaltılarla)"]
+},
+{
+q:"Porto, 2004 yılında hangi teknik direktör yönetiminde Şampiyonlar Ligi kazandı?",
+correct:"José Mourinho",
+extra:["André Villas-Boas","Fernando Santos","Jesualdo Ferreira","Sérgio Conceição"]
+},
+{
+q:"1998 finalinde Real Madrid'e 32 yıl aradan sonra şampiyonluğu getiren golü kim attı?",
+correct:"Predrag Mijatović",
+extra:["Raúl","Fernando Redondo","Roberto Carlos","Clarence Seedorf"]
+},
+{
+q:"Şampiyonlar Ligi'nin ilk sezonu olan 1992/93'te oynanan final, hangi iki takım arasında geçti?",
+correct:"Marseille ve Milan",
+extra:["Barcelona ve Sampdoria","Real Madrid ve Valencia","Ajax ve Milan","Bayern Münih ve Valencia"]
+},
+{
+q:"1993 finalinde Marseille'e galibiyeti getiren golü kim attı?",
+correct:"Basile Boli",
+extra:["Rudi Völler","Alen Bokšić","Jean-Pierre Papin","Didier Deschamps"]
+},
+{
+q:"1993 finalinde şampiyon olan Marseille, Fransa'nın Şampiyonlar Ligi'ni kazanan ilk kulübüydü. Bu final hangi şehirde oynandı?",
+correct:"Münih",
+extra:["Paris","Roma","Londra","Amsterdam"]
+},
+{
+q:"2021 finalinde Chelsea, Manchester City'yi tek golle mağlup etti. Bu golü kim attı?",
+correct:"Kai Havertz",
+extra:["Timo Werner","Mason Mount","N'Golo Kanté","Christian Pulisic"]
+},
+{
+q:"2021 Şampiyonlar Ligi finali, koronavirüs pandemisi nedeniyle İstanbul'dan hangi şehre taşınmıştı?",
+correct:"Porto",
+extra:["Lizbon","Madrid","Sevilla","Roma"]
+},
+{
+q:"2022 finalinde Real Madrid'e şampiyonluğu getiren tek golü kim attı?",
+correct:"Vinicius Junior",
+extra:["Karim Benzema","Rodrygo","Luka Modrić","Federico Valverde"]
+},
+{
+q:"2022 finalinde Liverpool'un gol atmasını önleyen ve maçın adamı seçilen Real Madrid kalecisi kimdi?",
+correct:"Thibaut Courtois",
+extra:["Andriy Lunin","Keylor Navas","Kepa Arrizabalaga","Iker Casillas"]
+},
+{
+q:"2024 finalinde Real Madrid'in tarihindeki 15. Avrupa şampiyonluğunu getiren gollerden birini atan ve sağ bek olmasına rağmen skor açan oyuncu kimdir?",
+correct:"Dani Carvajal",
+extra:["Vinicius Junior","Jude Bellingham","Federico Valverde","Nacho"]
+},
+{
+q:"2024 Şampiyonlar Ligi finali hangi stadyumda oynandı?",
+correct:"Wembley",
+extra:["Puskás Aréna","Atatürk Olimpiyat Stadı","Allianz Arena","Santiago Bernabéu"]
+},
+{
+q:"Şampiyonlar Ligi tarihinin en golcü ismi, 140 golle kimdir?",
+correct:"Cristiano Ronaldo",
+extra:["Lionel Messi","Robert Lewandowski","Karim Benzema","Kylian Mbappé"]
+},
+{
+q:"Şampiyonlar Ligi'nin tüm zamanlar gol krallığı listesinde Cristiano Ronaldo'nun ardından ikinci sırada kim yer alır?",
+correct:"Lionel Messi",
+extra:["Robert Lewandowski","Karim Benzema","Raúl","Thierry Henry"]
+},
+{
+q:"Şampiyonlar Ligi'nde 100 gole ulaşan ilk futbolcu kimdir?",
+correct:"Cristiano Ronaldo",
+extra:["Lionel Messi","Raúl","Robert Lewandowski","Ruud van Nistelrooy"]
+},
+{
+q:"Şampiyonlar Ligi tarihinde en fazla maça çıkan oyuncu kimdir?",
+correct:"Cristiano Ronaldo",
+extra:["Iker Casillas","Lionel Messi","Xavi Hernández","Thomas Müller"]
+},
+{
+q:"Şampiyonlar Ligi'nde 100 maça ulaşan ilk futbolcu kimdir?",
+correct:"Raúl",
+extra:["Cristiano Ronaldo","Paolo Maldini","Iker Casillas","Ryan Giggs"]
+},
+{
+q:"Bir tek kulüp formasıyla Şampiyonlar Ligi'nde en fazla maça çıkma rekorunu, Bayern Münih formasıyla kim elinde bulundurur?",
+correct:"Thomas Müller",
+extra:["Manuel Neuer","Philipp Lahm","Joshua Kimmich","Oliver Kahn"]
+},
+{
+q:"Şampiyonlar Ligi'nde tek bir sezonda en çok gol atma rekoru olan 17 gole, Cristiano Ronaldo hangi sezonda ulaşmıştır?",
+correct:"2013/14",
+extra:["2011/12","2015/16","2017/18","2012/13"]
+},
+{
+q:"Şampiyonlar Ligi tarihinde en fazla asist yapan oyuncu kimdir?",
+correct:"Cristiano Ronaldo",
+extra:["Lionel Messi","Kevin De Bruyne","Mesut Özil","Ángel Di María"]
+},
+{
+q:"1960 Avrupa Kupası finalinde Real Madrid'in Eintracht Frankfurt'u 7-3 mağlup ettiği efsanevi maçta 4 gol atan Macar asıllı yıldız kimdir?",
+correct:"Ferenc Puskás",
+extra:["Alfredo Di Stéfano","Raymond Kopa","Héctor Rial","Francisco Gento"]
+},
+{
+q:"1960 finalinde Puskás'ın yanı sıra 3 gol daha atan diğer efsanevi Real Madrid oyuncusu kimdir?",
+correct:"Alfredo Di Stéfano",
+extra:["Ferenc Puskás","Raymond Kopa","Francisco Gento","José Santamaría"]
+},
+{
+q:"Şampiyonlar Ligi'ni oyuncu olarak beş kez kazanan ilk futbolcu kimdir?",
+correct:"Cristiano Ronaldo",
+extra:["Paolo Maldini","Iker Casillas","Lionel Messi","Xavi Hernández"]
+},
+{
+q:"Dani Carvajal ve Luka Modrić, oyuncu olarak en çok final kazanma rekorunu paylaşmaktadır. Kaç kez şampiyon olmuşlardır?",
+correct:"6",
+extra:["5","4","7","3"]
+},
+{
+q:"Roberto Carlos, Real Madrid'deki yıllarının ardından kariyerinin ileri bir döneminde Şampiyonlar Ligi'nde hangi Türk kulübünün formasını giymiştir?",
+correct:"Fenerbahçe",
+extra:["Galatasaray","Beşiktaş","Trabzonspor","Başakşehir"]
+},
+{
+q:"Pepe, Real Madrid'deki yıllarının ardından kariyerinin son döneminde Şampiyonlar Ligi'nde hangi Türk kulübünün formasını giymiştir?",
+correct:"Beşiktaş",
+extra:["Fenerbahçe","Galatasaray","Trabzonspor","Başakşehir"]
+},
+{
+q:"Kylian Mbappé, Şampiyonlar Ligi'ndeki profesyonel kariyerine hangi kulüple başlamıştır?",
+correct:"Monaco",
+extra:["Paris Saint-Germain","Lyon","Marsilya","Rennes"]
+},
+{
+q:"Karim Benzema, Real Madrid'e transfer olmadan önce Şampiyonlar Ligi'nde hangi Fransız kulübünde forma giymiştir?",
+correct:"Lyon",
+extra:["Marsilya","Monaco","Lille","Paris Saint-Germain"]
+},
+{
+q:"Zlatan Ibrahimović, kariyeri boyunca Şampiyonlar Ligi'nde toplam kaç farklı kulüp formasıyla forma giymiştir?",
+correct:"7",
+extra:["4","5","6","8"]
+},
+{
+q:"Zinedine Zidane'ın 2002 finalinde attığı efsanevi voleyle Real Madrid'i şampiyon yaptığı maç hangi stadyumda oynandı?",
+correct:"Hampden Park",
+extra:["Old Trafford","Stade de France","San Siro","Wembley"]
+},
+{
+q:"Zidane'ın 2002 finalindeki efsanevi voleyinin rakibi hangi Alman kulübüydü?",
+correct:"Bayer Leverkusen",
+extra:["Bayern Münih","Borussia Dortmund","Schalke 04","Werder Bremen"]
+},
+{
+q:"2021/22 sezonu son 16 turunda Real Madrid'in Paris Saint-Germain'e karşı oynadığı unutulmaz rövanş maçında hat-trick yaparak turu getiren oyuncu kimdir?",
+correct:"Karim Benzema",
+extra:["Vinicius Junior","Cristiano Ronaldo","Luka Modrić","Rodrygo"]
+},
+{
+q:"Wesley Sneijder, Galatasaray'a transfer olmadan önce hangi İtalyan kulübüyle bir Şampiyonlar Ligi finali oynamıştı?",
+correct:"İnter",
+extra:["Milan","Juventus","Napoli","Roma"]
+},
+{
+q:"Didier Drogba, Chelsea'de Şampiyonlar Ligi kazandıktan sonra kariyerinin ileri bir döneminde hangi Türk kulübünde forma giymiştir?",
+correct:"Galatasaray",
+extra:["Fenerbahçe","Beşiktaş","Trabzonspor","Başakşehir"]
+},
+{
+q:"Şampiyonlar Ligi tarihinde en çok şampiyonluk kazanan teknik direktör kimdir?",
+correct:"Carlo Ancelotti",
+extra:["Pep Guardiola","Zinedine Zidane","José Mourinho","Bob Paisley"]
+},
+{
+q:"Carlo Ancelotti, Milan'ı teknik direktör olarak kaç kez Şampiyonlar Ligi şampiyonu yapmıştır?",
+correct:"2",
+extra:["1","3","4","5"]
+},
+{
+q:"Carlo Ancelotti, Real Madrid'i teknik direktör olarak kaç kez Şampiyonlar Ligi şampiyonu yapmıştır?",
+correct:"3",
+extra:["2","4","1","5"]
+},
+{
+q:"Luis Enrique, Paris Saint-Germain ile art arda iki şampiyonluk kazanmadan önce hangi kulüple Şampiyonlar Ligi'ni kazanmıştı?",
+correct:"Barcelona",
+extra:["Sevilla","Real Madrid","Roma","Celta Vigo"]
+},
+{
+q:"Real Madrid'i 2016, 2017 ve 2018 yıllarında üst üste şampiyon yapan Fransız teknik direktör kimdir?",
+correct:"Zinedine Zidane",
+extra:["Rafael Benítez","Carlo Ancelotti","Santiago Solari","Julen Lopetegui"]
+},
+{
+q:"Pep Guardiola, teknik direktör olarak ilk Şampiyonlar Ligi şampiyonluğunu hangi kulüple kazandı?",
+correct:"Barcelona",
+extra:["Bayern Münih","Manchester City","Manchester United","Chelsea"]
+},
+{
+q:"Pep Guardiola, Manchester City ile tarihindeki ilk Şampiyonlar Ligi şampiyonluğunu hangi yıl kazandı?",
+correct:"2023",
+extra:["2021","2022","2024","2019"]
+},
+{
+q:"Bob Paisley, Liverpool'u teknik direktör olarak kaç kez Avrupa/Şampiyonlar Ligi şampiyonu yapmıştır?",
+correct:"3",
+extra:["2","4","1","5"]
+},
+{
+q:"Frank Rijkaard, teknik direktör olarak Barcelona'yı hangi yıl Şampiyonlar Ligi şampiyonu yaptı?",
+correct:"2006",
+extra:["2009","2011","2015","2008"]
+},
+{
+q:"José Mourinho, Porto (2004) ve İnter (2010) ile şampiyonluk yaşamıştır. Bu iki kulübün arasında kaç yıl vardır?",
+correct:"6",
+extra:["4","8","5","10"]
+},
+{
+q:"Nottingham Forest, ilk Avrupa Kupası şampiyonluğunu hangi sezonda kazandı?",
+correct:"1979",
+extra:["1980","1978","1977","1981"]
+},
+{
+q:"Nottingham Forest, Avrupa Kupası'nı üst üste kaç kez kazanmıştır?",
+correct:"2",
+extra:["1","3","4","0"]
+},
+{
+q:"Aston Villa, tarihindeki tek Avrupa Kupası şampiyonluğunu hangi yıl kazandı?",
+correct:"1982",
+extra:["1981","1983","1980","1984"]
+},
+{
+q:"PSV Eindhoven, tarihindeki tek Avrupa Kupası şampiyonluğunu hangi yıl, penaltılarla kazandı?",
+correct:"1988",
+extra:["1987","1989","1990","1986"]
+},
+{
+q:"Steaua Bükreş, 1986 finalinde Barcelona'yı penaltılarla mağlup ederek hangi bölgeden Avrupa Kupası'nı kazanan ilk kulüp olmuştur?",
+correct:"Doğu Avrupa",
+extra:["Batı Avrupa","Kuzey Avrupa","Güney Avrupa","Balkanlar dışı"]
+},
+{
+q:"Kızılyıldız (Crvena Zvezda / Red Star Belgrade), tarihindeki tek Avrupa Kupası şampiyonluğunu hangi yıl, Marsilya'yı penaltılarla mağlup ederek kazandı?",
+correct:"1991",
+extra:["1990","1992","1989","1993"]
+},
+{
+q:"Chelsea, tarihindeki ilk Şampiyonlar Ligi şampiyonluğunu hangi yıl kazandı?",
+correct:"2012",
+extra:["2008","2021","2010","2015"]
+},
+{
+q:"Ajax, Avrupa Kupası/Şampiyonlar Ligi'ni toplam kaç kez kazanmıştır?",
+correct:"4",
+extra:["3","5","2","6"]
+},
+{
+q:"Liverpool, Avrupa Kupası/Şampiyonlar Ligi'ni toplam kaç kez kazanmıştır?",
+correct:"6",
+extra:["5","7","4","8"]
+},
+{
+q:"Bayern Münih, Avrupa Kupası/Şampiyonlar Ligi'ni toplam kaç kez kazanmıştır?",
+correct:"6",
+extra:["5","7","4","8"]
+},
+{
+q:"Milan, Avrupa Kupası/Şampiyonlar Ligi'ni toplam kaç kez kazanmıştır?",
+correct:"7",
+extra:["6","8","5","9"]
+},
+{
+q:"Barcelona, Avrupa Kupası/Şampiyonlar Ligi'ni toplam kaç kez kazanmıştır?",
+correct:"5",
+extra:["4","6","3","7"]
+},
+{
+q:"Juventus, Avrupa Kupası/Şampiyonlar Ligi'ni toplam kaç kez kazanmıştır?",
+correct:"2",
+extra:["3","1","4","0"]
+},
+{
+q:"Real Madrid, dünya futbolunda Avrupa Kupası/Şampiyonlar Ligi'ni en çok kazanan kulüp olarak toplam kaç kez şampiyon olmuştur?",
+correct:"15",
+extra:["13","14","12","16"]
+},
+{
+q:"Real Madrid, kuruluşunun ardından ilk 5 Avrupa Kupası'nı hangi yıllar arasında üst üste kazanmıştır?",
+correct:"1956-1960",
+extra:["1955-1959","1957-1961","1958-1962","1954-1958"]
+},
+{
+q:"Marsilya, tarihindeki tek Avrupa Kupası şampiyonluğunu 1993'te, hangi İtalyan devini mağlup ederek kazanmıştır?",
+correct:"Milan",
+extra:["Juventus","İnter","Napoli","Roma"]
+},
+{
+q:"Manchester United, 1999'daki şampiyonluğuyla birlikte hem ligi, hem kupayı hem de Avrupa'yı kazanarak neye ulaşmıştır?",
+correct:"Üçlemeye (Treble)",
+extra:["İkilemeye (Double)","Dörtlemeye","Sadece Avrupa şampiyonluğuna","Süper Kupa zaferine"]
+},
+{
+q:"Barcelona, 2009 sezonunda Pep Guardiola yönetiminde bir takvim yılı içinde kaç kupa kazanarak tarihi bir başarıya imza atmıştır (altılık/sextuple)?",
+correct:"6",
+extra:["4","5","3","7"]
+},
+{
+q:"Galatasaray'ın Şampiyonlar Ligi tarihindeki en iyi derecesi, iki farklı sezonda ulaştığı hangi tur olmuştur?",
+correct:"Çeyrek final",
+extra:["Yarı final","Son 16 turu","Final","Grup aşaması ikinci tur"]
+},
+{
+q:"Galatasaray, Şampiyonlar Ligi'nde ilk kez hangi sezonda çeyrek finale yükselmiştir?",
+correct:"2000/01",
+extra:["1999/00","2001/02","1998/99","2002/03"]
+},
+{
+q:"Galatasaray, ikinci kez hangi sezonda Şampiyonlar Ligi çeyrek finaline yükselmiştir?",
+correct:"2012/13",
+extra:["2013/14","2011/12","2014/15","2010/11"]
+},
+{
+q:"2025/26 sezonu Şampiyonlar Ligi lig aşamasında Galatasaray, İstanbul'da oynadığı maçta hangi İngiliz devini 1-0 mağlup etmiştir?",
+correct:"Liverpool",
+extra:["Arsenal","Manchester City","Chelsea","Tottenham"]
+},
+{
+q:"2025/26 sezonu Şampiyonlar Ligi'nde \"sezonun en iyi genç oyuncusu\" seçilen ve Real Madrid forması giyen Türk yıldız kimdir?",
+correct:"Arda Güler",
+extra:["Kenan Yıldız","Ferdi Kadıoğlu","Kerem Aktürkoğlu","Orkun Kökçü"]
+},
+{
+q:"İlkay Gündoğan, kariyerinin bir döneminde Şampiyonlar Ligi'nde hangi Türk kulübünün formasını da giymiştir?",
+correct:"Galatasaray",
+extra:["Fenerbahçe","Beşiktaş","Trabzonspor","Başakşehir"]
+},
+{
+q:"Galatasaray, 2000 yılında Şampiyonlar Ligi'nden farklı bir Avrupa kupası olan UEFA Kupası'nı kazanmıştır. Bu final hangi şehirde oynanmıştır?",
+correct:"Kopenhag",
+extra:["Amsterdam","Parma","Moskova","Brüksel"]
+},
+{
+q:"Kenan Yıldız, Şampiyonlar Ligi'nde forma giydiği İtalyan kulübü hangisidir?",
+correct:"Juventus",
+extra:["Milan","İnter","Napoli","Roma"]
+},
+{
+q:"2025/26 sezonu Şampiyonlar Ligi lig aşamasında Galatasaray'ı eleyen ve rövanşta 4-0 kazanan İngiliz kulübü hangisidir?",
+correct:"Liverpool",
+extra:["Arsenal","Chelsea","Manchester City","Tottenham"]
+},
+{
+q:"Barcelona'nın 2017'de ilk maçı 4-0 kaybettiği rövanşta 6-1 kazanarak tur atladığı \"La Remontada\" maçının rakibi hangi takımdı?",
+correct:"Paris Saint-Germain",
+extra:["Bayern Münih","Juventus","Milan","Arsenal"]
+},
+{
+q:"\"La Remontada\" olarak anılan 2017 tarihli 6-1'lik tarihi maç hangi stadyumda oynanmıştır?",
+correct:"Camp Nou",
+extra:["Santiago Bernabéu","Parc des Princes","Wanda Metropolitano","San Siro"]
+},
+{
+q:"Liverpool, 2019 yarı finalinde ilk maçı 3-0 kaybettiği Barcelona'yı rövanşta kaç farkla mağlup ederek finale yükselmiştir?",
+correct:"4-0",
+extra:["3-0","2-0","5-0","4-1"]
+},
+{
+q:"Deportivo La Coruña, 2004 çeyrek finalinde ilk maçı ağır kaybetmesine rağmen rövanşta hangi İtalyan devini eleyerek tarihi bir geri dönüşe imza atmıştır?",
+correct:"Milan",
+extra:["Juventus","İnter","Roma","Parma"]
+},
+{
+q:"2005 finalinde Liverpool, ilk yarıda 0-3 geriye düştüğü Milan karşısında ikinci yarıda kaç dakika içinde 3 gol atarak skoru eşitlemiştir?",
+correct:"6 dakika",
+extra:["10 dakika","3 dakika","15 dakika","20 dakika"]
+},
+{
+q:"2001 finalinde Bayern Münih, Valencia'yı penaltılarla mağlup etti. Bu final hangi şehirde oynandı?",
+correct:"Milano",
+extra:["Münih","Madrid","Paris","Londra"]
+},
+{
+q:"1999 çeyrek finalinde Manchester United'ı eleyen ve daha sonra yarı finalde Juventus'a elenen takım hangisidir?",
+correct:"İnter",
+extra:["Barcelona","Real Madrid","Dinamo Kiev","Bayern Münih"]
+},
+{
+q:"2003 finali, Şampiyonlar Ligi tarihindeki ilk \"tüm İtalyan finali\" olarak Milan ile hangi kulüp arasında oynanmış ve penaltılarla sonuçlanmıştır?",
+correct:"Juventus",
+extra:["İnter","Roma","Napoli","Lazio"]
+},
+{
+q:"2003 finali hangi stadyumda oynanmıştır?",
+correct:"Old Trafford",
+extra:["San Siro","Stadio Olimpico","Wembley","Camp Nou"]
+},
+{
+q:"2008 finalinde Manchester United ile Chelsea arasında oynanan ve Şampiyonlar Ligi tarihindeki ilk \"tüm İngiliz finali\" olan maç hangi şehirde oynanmıştır?",
+correct:"Moskova",
+extra:["Londra","Manchester","Madrid","Paris"]
+},
+{
+q:"2008 finalinde Chelsea kaptanı John Terry'nin kayarak kaçırdığı kritik penaltının ardından maçı kim kazanmıştır?",
+correct:"Manchester United",
+extra:["Chelsea","Maç berabere bitmiştir","Sonuç iptal edilmiştir","Bayern Münih"]
+},
+{
+q:"2006 finalinde Barcelona'nın rakibi olan ve kalecisi Jens Lehmann'ın erken kırmızı kart gördüğü İngiliz kulübü hangisidir?",
+correct:"Arsenal",
+extra:["Chelsea","Liverpool","Manchester United","Tottenham"]
+},
+{
+q:"2006 finali hangi şehirde oynanmıştır?",
+correct:"Paris",
+extra:["Londra","Madrid","Roma","Atina"]
+},
+{
+q:"2007 finalinde Milan, 2005'teki final yenilgisinin rövanşını hangi İngiliz kulübünden almıştır?",
+correct:"Liverpool",
+extra:["Chelsea","Manchester United","Arsenal","Tottenham"]
+},
+{
+q:"2025/26 sezonu Şampiyonlar Ligi'nde gol krallığını, Real Madrid forması giyerek 15 golle kim kazanmıştır?",
+correct:"Kylian Mbappé",
+extra:["Vinicius Junior","Erling Haaland","Harry Kane","Robert Lewandowski"]
+},
+{
+q:"2025/26 sezonunda Şampiyonlar Ligi'nde \"sezonun en iyi oyuncusu\" ödülünü Paris Saint-Germain'den kim kazanmıştır?",
+correct:"Khvicha Kvaratskhelia",
+extra:["Ousmane Dembélé","Vitinha","Achraf Hakimi","Marquinhos"]
+},
+{
+q:"2022/23 sezonunda Şampiyonlar Ligi gol krallığını Manchester City forması giyen hangi Norveçli forvet kazanmıştır?",
+correct:"Erling Haaland",
+extra:["Kylian Mbappé","Robert Lewandowski","Karim Benzema","Harry Kane"]
+},
+{
+q:"Khvicha Kvaratskhelia, 2025/26'da PSG ile \"sezonun en iyi oyuncusu\" seçilmeden önce, 2022/23 sezonunda hangi İtalyan kulübüyle \"sezonun en iyi genç oyuncusu\" seçilmişti?",
+correct:"Napoli",
+extra:["Milan","İnter","Fiorentina","Atalanta"]
+},
+{
+q:"2005/06 sezonunda henüz Barcelona'da bir genç yıldız olan ve daha sonra kulübün efsanesi olacak olan oyunculardan Lionel Messi, o sezon finalde oynayamamıştır çünkü sakattı. Bu final Barcelona'nın hangi İngiliz kulübünü mağlup ettiği finaldi?",
+correct:"Arsenal",
+extra:["Chelsea","Liverpool","Manchester United","Tottenham"]
+},
+{
+q:"Robert Lewandowski, Şampiyonlar Ligi'nde 100 gole en hızlı ulaşan oyuncu unvanını kaç maçta oynayarak elde etmiştir?",
+correct:"100 maç",
+extra:["90 maç","110 maç","80 maç","120 maç"]
+},
+{
+q:"Şampiyonlar Ligi'nde bir maçta en çok gol atan futbolculardan biri olarak tarihe geçen ve 1960 finalinde 4 gol birden atan Puskás'ın forması giydiği kulüp hangisiydi?",
+correct:"Real Madrid",
+extra:["Honvéd","Barcelona","Atlético Madrid","Valencia"]
+},
+{
+q:"Avrupa Kupası (European Cup), hangi sezondan itibaren \"UEFA Şampiyonlar Ligi\" adını almış ve formatı değişmiştir?",
+correct:"1992/93",
+extra:["1990/91","1993/94","1995/96","1991/92"]
+},
+{
+q:"Avrupa Kupası'nın (European Cup) tarihteki ilk şampiyonu hangi kulüptür (1956)?",
+correct:"Real Madrid",
+extra:["Milan","Benfica","Stade de Reims","Manchester United"]
+},
+{
+q:"2024/25 sezonundan itibaren yeni formatta Şampiyonlar Ligi'ne katılan toplam takım sayısı kaçtır?",
+correct:"36",
+extra:["32","24","40","48"]
+},
+{
+q:"2024/25 sezonundan itibaren yeni formatta lig aşamasında her takım kaç farklı rakiple oynar?",
+correct:"8",
+extra:["6","10","4","12"]
+},
+{
+q:"Şampiyonlar Ligi kupasının, taraftarlar arasında kulplarından dolayı yaygın olarak kullanılan lakabı nedir?",
+correct:"Koca Kulaklı Kupa",
+extra:["Gümüş Kupa","Altın Yıldız","Kristal Kupa","Ejder Kupası"]
+},
+{
+q:"Alfredo Di Stéfano, Real Madrid'in ilk 5 Avrupa Kupası'nı kazandığı 1956-1960 döneminde, hangi ülkenin de milli takımında oynamıştır (doğduğu Arjantin dışında)?",
+correct:"İspanya",
+extra:["Portekiz","İtalya","Fransa","Kolombiya"]
+},
+{
+q:"Paolo Maldini, tek bir kulüpte tüm kariyerini geçirerek Şampiyonlar Ligi'nde forma giymiştir. Bu kulüp hangisidir?",
+correct:"Milan",
+extra:["İnter","Juventus","Roma","Parma"]
+},
+{
+q:"Xavi Hernández, tüm Şampiyonlar Ligi kariyerini hangi kulüpte geçirmiştir?",
+correct:"Barcelona",
+extra:["Real Madrid","Sevilla","Villarreal","Espanyol"]
+},
+{
+q:"Iker Casillas, kariyerinin ileri bir döneminde Real Madrid'den ayrılarak Şampiyonlar Ligi'nde hangi Portekiz kulübünde forma giymiştir?",
+correct:"Porto",
+extra:["Benfica","Sporting","Braga","Vitória de Guimarães"]
+},
+{
+q:"Andriy Shevchenko, 2005 finalinde Milan formasıyla oynarken hangi ülkenin vatandaşıdır?",
+correct:"Ukrayna",
+extra:["Rusya","Polonya","Belarus","Gürcistan"]
+},
+{
+q:"Marco van Basten'in Şampiyonlar Ligi'ndeki (o zamanki adıyla Avrupa Kupası) son maçı, 1993 finalinde forma giydiği hangi kulüple oynanmıştır?",
+correct:"Milan",
+extra:["Ajax","Marsilya","Barcelona","PSV"]
+},
+{
+q:"Şampiyonlar Ligi'nde forma giymiş olan Fenerbahçe'nin bir dönem transfer ettiği ve Real Madrid efsanesi olan Brezilyalı sol bek kimdir?",
+correct:"Roberto Carlos",
+extra:["Cafu","Marcelo","Ronaldinho","Dani Alves"]
+},
+{
+q:"Şampiyonlar Ligi tarihinde Beşiktaş'ta forma giymiş olan ve Real Madrid'in de savunma oyuncularından biri olan Portekizli stoper kimdir?",
+correct:"Pepe",
+extra:["Bruno Alves","Ricardo Carvalho","José Fonte","Rui Patrício"]
+},
+{
+q:"Şampiyonlar Ligi'nde en fazla final oynayan oyunculardan biri olan Toni Kroos, kariyerinin başında hangi Alman kulübünde forma giymiştir?",
+correct:"Bayern Münih",
+extra:["Borussia Dortmund","Bayer Leverkusen","RB Leipzig","Schalke 04"]
+},
+{
+q:"İngiltere'den Şampiyonlar Ligi/Avrupa Kupası'nı ilk kazanan kulüp hangisidir (1968)?",
+correct:"Manchester United",
+extra:["Liverpool","Nottingham Forest","Aston Villa","Chelsea"]
+},
+{
+q:"Manchester United, 1968'de Avrupa Kupası'nı kazanan ilk İngiliz kulübü olmuştur. Final hangi stadyumda oynanmıştır?",
+correct:"Wembley",
+extra:["Old Trafford","Hampden Park","Highbury","Anfield"]
+},
+{
+q:"Hollanda'dan Avrupa Kupası'nı ilk kazanan kulüp hangisidir?",
+correct:"Feyenoord",
+extra:["Ajax","PSV Eindhoven","AZ Alkmaar","Twente"]
+},
+{
+q:"Feyenoord, Avrupa Kupası'nı hangi yıl kazanmıştır?",
+correct:"1970",
+extra:["1971","1969","1972","1973"]
+},
+{
+q:"Almanya'dan Avrupa Kupası'nı ilk kazanan kulüp hangisidir?",
+correct:"Bayern Münih",
+extra:["Borussia Mönchengladbach","Hamburger SV","Borussia Dortmund","1. FC Köln"]
+},
+{
+q:"Portekiz'den Avrupa Kupası'nı ilk kazanan kulüp hangisidir?",
+correct:"Benfica",
+extra:["Porto","Sporting","Braga","Vitória"]
+},
+{
+q:"İskoçya'dan Avrupa Kupası'nı kazanan tek kulüp hangisidir?",
+correct:"Celtic",
+extra:["Rangers","Aberdeen","Hearts","Dundee United"]
+},
+{
+q:"Celtic, Avrupa Kupası'nı hangi yıl, İtalya'nın İnter kulübünü mağlup ederek kazanmıştır?",
+correct:"1967",
+extra:["1968","1966","1969","1970"]
+},
+{
+q:"Atlético Madrid, Şampiyonlar Ligi finaline üç kez yükselmesine rağmen henüz şampiyonluk yaşayamamıştır. 2014 ve 2016 finallerinde rakibi hangi kulüp olmuştur?",
+correct:"Real Madrid",
+extra:["Barcelona","Bayern Münih","Milan","Sevilla"]
+},
+{
+q:"Bayer Leverkusen, 2002 finaline yükselmesine rağmen şampiyon olamamıştır. O sezon Bundesliga'da da şampiyonluğu kaçırarak \"neverkusen\" lakabını almıştır. 2002 finalindeki rakibi hangi kulüptü?",
+correct:"Real Madrid",
+extra:["Bayern Münih","Milan","Borussia Dortmund","Manchester United"]
+},
+{
+q:"Valencia, 2000 ve 2001 finallerinde üst üste kaybetmiştir. 2001 finalinde hangi kulübe penaltılarla kaybetmiştir?",
+correct:"Bayern Münih",
+extra:["Real Madrid","Milan","Liverpool","Arsenal"]
+},
+{
+q:"Monaco, 2004 finaline yükselmesine rağmen şampiyon olamamıştır. Finalde hangi Portekiz kulübüne kaybetmiştir?",
+correct:"Porto",
+extra:["Benfica","Sporting","Braga","Vitória"]
+},
+{
+q:"Leeds United, 2001 yarı finalinde elenmiştir. O dönem takımda oynayan ve daha sonra İngiltere milli takımının teknik direktörü olacak isim kimdir?",
+correct:"Gareth Southgate",
+extra:["Rio Ferdinand","Alan Smith","Jonathan Woodgate","Lee Bowyer"]
+},
+{
+q:"Club Brugge, Şampiyonlar Ligi/Avrupa Kupası'nda hiç şampiyonluk yaşamamış olsa da 1978'de bir Avrupa Kupası finaline yükselmiştir. O final hangi İngiliz kulübüne kaybedilmiştir?",
+correct:"Liverpool",
+extra:["Nottingham Forest","Aston Villa","Manchester United","Arsenal"]
+},
+{
+q:"Şampiyonlar Ligi'nde Türkiye'yi temsil eden kulüplerden Fenerbahçe, en iyi derecesini hangi aşamada yaşamıştır?",
+correct:"Grup aşaması",
+extra:["Çeyrek final","Yarı final","Final","Son 16 turu"]
+},
+{
+q:"Trabzonspor, Şampiyonlar Ligi'ne katıldığı sezonlarda en çok hangi aşamaya kadar ilerleyebilmiştir?",
+correct:"Grup aşaması",
+extra:["Çeyrek final","Son 16 turu","Yarı final","Final"]
+},
+{
+q:"Beşiktaş, 2017/18 sezonunda Şampiyonlar Ligi'nde son 16 turunda hangi Alman devine 8-1'lik toplam skorla elenmiştir?",
+correct:"Bayern Münih",
+extra:["Borussia Dortmund","Bayer Leverkusen","RB Leipzig","Schalke 04"]
+}
+,
+{
+q:"1966 Avrupa Kupası finalinde Real Madrid'in 2-1 mağlup ettiği ve Batı Avrupa dışından bir finale yükselen ilk kulüp olan rakibi hangisiydi?",
+correct:"Partizan",
+extra:["Kızılyıldız","Dinamo Kiev","Steaua Bükreş","Dinamo Zagreb"]
+},
+{
+q:"1966 finali hangi şehirde oynanmıştır?",
+correct:"Brüksel",
+extra:["Amsterdam","Madrid","Lizbon","Viyana"]
+},
+{
+q:"Real Madrid'in 1956'dan 1966'ya kadar kazandığı Avrupa Kupalarının tamamında forma giyerek bir oyuncunun en çok şampiyonluk rekorunu (6 kez) bugün hâlâ tek başına elinde bulunduran efsane kimdir?",
+correct:"Francisco Gento",
+extra:["Alfredo Di Stéfano","Ferenc Puskás","Raymond Kopa","José Santamaría"]
+},
+{
+q:"1994 finalinde Milan, Barcelona'yı 4-0 gibi farklı bir skorla mağlup etmiştir. Bu final hangi şehirde oynanmıştır?",
+correct:"Atina",
+extra:["Roma","Viyana","Münih","Barselona"]
+},
+{
+q:"1994 finalinde Milan'ın Barcelona'yı 4-0 mağlup ettiği maçta iki gol atan İtalyan forvet kimdir?",
+correct:"Daniele Massaro",
+extra:["Marco van Basten","Roberto Baggio","Filippo Inzaghi","Paolo Maldini"]
+},
+{
+q:"2013 finalinde Bayern Münih'i Borussia Dortmund karşısında 89. dakikada attığı golle şampiyon yapan oyuncu kimdir?",
+correct:"Arjen Robben",
+extra:["Franck Ribéry","Thomas Müller","Mario Mandžukić","Bastian Schweinsteiger"]
+},
+{
+q:"2013 finali hangi stadyumda oynanmıştır?",
+correct:"Wembley",
+extra:["Old Trafford","Emirates Stadyumu","Camp Nou","Santiago Bernabéu"]
+},
+{
+q:"2013 finalinde Borussia Dortmund'un beraberlik golünü penaltıdan atan ve daha sonra Manchester City ile Galatasaray'da da forma giyecek olan oyuncu kimdir?",
+correct:"İlkay Gündoğan",
+extra:["Marco Reus","Mario Götze","Robert Lewandowski","Jakub Błaszczykowski"]
+},
+{
+q:"Real Madrid, 2021/22 çeyrek finalinde savunan şampiyon Chelsea'yi ilk maçta Londra'da kaç farkla mağlup etmiştir?",
+correct:"3-1",
+extra:["2-0","4-1","2-1","3-0"]
+},
+{
+q:"2021/22 çeyrek final ilk maçında Chelsea'ye karşı ikinci kez üst üste hat-trick yaparak tarihe geçen Real Madrid forveti kimdir?",
+correct:"Karim Benzema",
+extra:["Vinicius Junior","Cristiano Ronaldo","Rodrygo","Marco Asensio"]
+},
+{
+q:"Real Madrid, 2021/22 sezonunda şampiyonluğa giderken PSG, Chelsea ve hangi İngiliz kulübüne karşı da unutulmaz geri dönüşler yaşamıştır (yarı finalde)?",
+correct:"Manchester City",
+extra:["Liverpool","Manchester United","Tottenham","Arsenal"]
+},
+{
+q:"Şampiyonlar Ligi tarihinde bir maçta 8 farkla kazanılan galibiyetlerden biri, Liverpool'un 2007 yılında hangi Türk kulübünü 8-0 mağlup ettiği maçtır?",
+correct:"Beşiktaş",
+extra:["Galatasaray","Fenerbahçe","Trabzonspor","Başakşehir"]
+},
+{
+q:"Real Madrid, 2015 yılında hangi İsveç kulübünü 8-0 mağlup ederek Şampiyonlar Ligi tarihindeki en farklı galibiyetlerden birine imza atmıştır?",
+correct:"Malmö",
+extra:["AIK","Göteborg","Helsingborg","Elfsborg"]
+},
+{
+q:"Bayern Münih, 2024 yılında hangi Hırvat kulübünü 9-2 mağlup ederek bir maçta bir takımın attığı en çok gol rekorunu kırmıştır?",
+correct:"Dinamo Zagreb",
+extra:["Hajduk Split","Rijeka","Osijek","Lokomotiva Zagreb"]
+},
+{
+q:"Borussia Dortmund'un 2016/17 sezonunda 8-4 kazandığı ve Şampiyonlar Ligi tarihinde bir maçta atılan en çok gol rekorunun (12 gol) sahibi olduğu maçtaki rakibi hangi Polonya kulübüdür?",
+correct:"Legia Varşova",
+extra:["Lech Poznań","Wisła Kraków","Górnik Zabrze","Śląsk Wrocław"]
+},
+{
+q:"2025/26 sezonu Şampiyonlar Ligi lig aşamasında Barcelona, Newcastle United'ı deplasmanda kaç golle mağlup etmiştir?",
+correct:"7-2",
+extra:["6-1","5-2","8-1","4-2"]
+},
+{
+q:"AC Milan'ı 2007 finalinde şampiyon yapan ve o sezon \"Avrupa'nın En İyi Futbolcusu\" seçilen Brezilyalı yıldız kimdir?",
+correct:"Kaká",
+extra:["Ronaldinho","Ricardo Kaká değil Robinho","Adriano","Alexandre Pato"]
+},
+{
+q:"Juventus'un efsane numara 10'u olan ve kariyeri boyunca hiç Şampiyonlar Ligi kazanamayan İtalyan yıldız kimdir?",
+correct:"Alessandro Del Piero",
+extra:["Francesco Totti","Roberto Baggio","Gianluigi Buffon","Fabio Cannavaro"]
+},
+{
+q:"AS Roma'nın efsanesi olan ve tüm kariyerini bu kulüpte geçirmesine rağmen bir Şampiyonlar Ligi şampiyonluğu yaşayamayan İtalyan kaptan kimdir?",
+correct:"Francesco Totti",
+extra:["Alessandro Del Piero","Daniele De Rossi","Antonio Cassano","Vincent Candela"]
+},
+{
+q:"Gianluigi Buffon, uzun kariyeri boyunca birçok final oynamasına rağmen, kariyerinin sonuna kadar Şampiyonlar Ligi'ni hiç kazanamamıştır. En yakın olduğu final hangi yıl, Real Madrid'e kaybettiği finaldir?",
+correct:"2017",
+extra:["2015","2003","2019","2021"]
+},
+{
+q:"David Villa, Barcelona'nın 2011 finalinde Manchester United'ı mağlup ettiği maçta gol atmıştır. Bu final hangi stadyumda oynanmıştır?",
+correct:"Wembley",
+extra:["Old Trafford","Camp Nou","Santiago Bernabéu","San Siro"]
+},
+{
+q:"Neymar, Barcelona'dan Paris Saint-Germain'e 2017 yazında dünya transfer rekoru kırarak transfer olmuştur. Bu transferin bedeli yaklaşık ne kadardır?",
+correct:"222 milyon avro",
+extra:["180 milyon avro","150 milyon avro","260 milyon avro","200 milyon avro"]
+},
+{
+q:"Luka Modrić, 2018 yılında hem Real Madrid ile Şampiyonlar Ligi'ni kazanmış hem de bireysel olarak dünyanın en prestijli ödüllerinden Ballon d'Or'u kazanmıştır. Bu, Ronaldo ve Messi'nin egemenliğini kaç yıl aradan sonra kırmıştır?",
+correct:"10 yıl",
+extra:["8 yıl","5 yıl","12 yıl","6 yıl"]
+},
+{
+q:"Thibaut Courtois, Şampiyonlar Ligi'nde hem Chelsea hem de Real Madrid formasıyla finale çıkmıştır. Real Madrid'e transferinden önce Chelsea'ye hangi İspanyol kulübünden kiralık olarak gitmiştir (kariyerinin başında)?",
+correct:"Atlético Madrid",
+extra:["Real Sociedad","Villarreal","Athletic Bilbao","Getafe"]
+},
+{
+q:"Manuel Neuer, Şampiyonlar Ligi'ndeki uzun kariyerine hangi Alman kulübüyle başlamıştır (Bayern Münih'e transferinden önce)?",
+correct:"Schalke 04",
+extra:["Borussia Dortmund","Werder Bremen","Bayer Leverkusen","VfB Stuttgart"]
+},
+{
+q:"Villarreal, 2021/22 sezonunda tarihinde ilk kez bir Şampiyonlar Ligi yarı finaline yükselmiş ve elenmeden önce çeyrek finalde hangi Alman devini elemiştir?",
+correct:"Bayern Münih",
+extra:["Borussia Dortmund","RB Leipzig","Bayer Leverkusen","Eintracht Frankfurt"]
+},
+{
+q:"Ajax'ın 1995 finalinde şampiyon olan kadrosunda yer alan ve daha sonra Barcelona'da teknik direktörlük de yapacak olan Hollandalı efsane kimdir?",
+correct:"Frank Rijkaard",
+extra:["Edwin van der Sar","Patrick Kluivert","Clarence Seedorf","Edgar Davids"]
+},
+{
+q:"Shakhtar Donetsk, Rusya-Ukrayna savaşı nedeniyle 2022'den itibaren Şampiyonlar Ligi'ndeki iç saha maçlarını kendi şehri dışında oynamak zorunda kalmıştır. Kulüp hangi ülkenin liginde mücadele eder?",
+correct:"Ukrayna",
+extra:["Rusya","Polonya","Moldova","Belarus"]
+},
+{
+q:"RB Leipzig, Şampiyonlar Ligi'ne ilk kez katıldığı sezonda (2017/18) doğrudan hangi aşamaya kadar ilerlemiştir?",
+correct:"Grup aşaması",
+extra:["Son 16 turu","Çeyrek final","Yarı final","Final"]
+},
+{
+q:"Atalanta, İtalya'nın küçük şehirlerinden biri olan Bergamo'yu temsil etmesine rağmen 2019/20 sezonunda Şampiyonlar Ligi çeyrek finaline yükselmiştir. Bu turda hangi Fransız kulübüne kaybetmiştir?",
+correct:"Paris Saint-Germain",
+extra:["Lyon","Monaco","Marsilya","Lille"]
+},
+{
+q:"PSV Eindhoven, 1988'deki tek şampiyonluğunu Benfica'ya karşı penaltılarla kazanmıştır. Bu final hangi şehirde oynanmıştır?",
+correct:"Stuttgart",
+extra:["Münih","Berlin","Frankfurt","Hamburg"]
+},
+{
+q:"Dinamo Kiev, Sovyetler Birliği döneminde Avrupa Kupası'nda başarılı olmuş bir kulüptür ancak hiçbir zaman şampiyon olamamıştır. Bu kulüp hangi ülkeyi temsil eder?",
+correct:"Ukrayna",
+extra:["Rusya","Belarus","Gürcistan","Azerbaycan"]
+},
+{
+q:"Beşiktaş, 2021/22 sezonunda Şampiyonlar Ligi lig aşamasında (grup aşaması) hangi İngiliz kulübüyle aynı grupta yer almıştır?",
+correct:"Chelsea",
+extra:["Liverpool","Manchester City","Manchester United","Arsenal"]
+},
+{
+q:"Sir Alex Ferguson, Manchester United ile Şampiyonlar Ligi'ni toplam kaç kez kazanmıştır (1999 ve 2008)?",
+correct:"2",
+extra:["1","3","4","0"]
+},
+{
+q:"Rafael Benítez, Liverpool'u 2005'teki \"İstanbul Mucizesi\" finaline taşıyan teknik direktördür. Benítez, Liverpool'a transfer olmadan önce hangi İspanyol kulübünü çalıştırıyordu?",
+correct:"Valencia",
+extra:["Real Madrid","Atlético Madrid","Sevilla","Deportivo La Coruña"]
+},
+{
+q:"Arsène Wenger, Arsenal'i 2006 finaline taşımıştır ancak kazanamamıştır. Wenger, Arsenal'i kaç yıl boyunca çalıştırmıştır (yaklaşık)?",
+correct:"22 yıl",
+extra:["15 yıl","18 yıl","25 yıl","12 yıl"]
+},
+{
+q:"Jupp Heynckes, hem Real Madrid'i (1998) hem de Bayern Münih'i (2013) şampiyon yapan nadir teknik direktörlerden biridir. Bayern ile şampiyonluğu hangi sezon, üçlemeyle (treble) birlikte gelmiştir?",
+correct:"2012/13",
+extra:["2011/12","2013/14","2010/11","2014/15"]
+},
+{
+q:"Diego Simeone, Atlético Madrid'i teknik direktör olarak iki kez Şampiyonlar Ligi finaline taşımıştır (2014 ve 2016) ancak ikisinde de hangi kulübe kaybetmiştir?",
+correct:"Real Madrid",
+extra:["Barcelona","Bayern Münih","Milan","Liverpool"]
+},
+{
+q:"2022 finalinde kupayı takım kaptanı sıfatıyla kaldıran ve o sezon sonunda kulüpten ayrılan Real Madrid oyuncusu kimdir?",
+correct:"Marcelo",
+extra:["Karim Benzema","Luka Modrić","Sergio Ramos","Toni Kroos"]
+},
+{
+q:"Yeni Şampiyonlar Ligi formatında, lig aşamasını 9. ile 24. sıralar arasında tamamlayan takımlar son 16 turuna yükselmek için hangi aşamayı oynar?",
+correct:"Play-off turu",
+extra:["Doğrudan son 16'ya yükselirler","Elenirler","Tekrar lig aşaması oynarlar","Ek maç oynamazlar"]
+},
+{
+q:"2019 finalinde Liverpool'un maçın ilk dakikalarında penaltıdan attığı golle öne geçen oyuncu kimdir?",
+correct:"Mohamed Salah",
+extra:["Sadio Mané","Roberto Firmino","Divock Origi","Georginio Wijnaldum"]
+},
+{
+q:"2019 finalinde Liverpool'un ikinci ve son golünü atan Belçikalı forvet kimdir?",
+correct:"Divock Origi",
+extra:["Christian Benteke","Romelu Lukaku","Michy Batshuayi","Dries Mertens"]
+},
+{
+q:"Sergio Ramos, 2016 finalinde Atlético Madrid'e karşı maçın erken dakikalarında bir kafa golü atmıştır. Bu final hangi şehirde oynanmıştır?",
+correct:"Milano",
+extra:["Madrid","Cardiff","Kiev","Lizbon"]
+},
+{
+q:"2016 finali, Real Madrid ile Atlético Madrid arasında oynanan ve tamamen Madrid'e ait iki takımın karşılaştığı ikinci finaldi (ilki 2014). Final penaltılarla sonuçlanmış ve kazanan Real Madrid olmuştur. Penaltıda kaçıran Atlético oyuncusu kimdir?",
+correct:"Juanfran",
+extra:["Antoine Griezmann","Koke","Saúl Ñíguez","Gabi"]
+},
+{
+q:"Karim Benzema, 2021/22 sezonunda gösterdiği performansla o yılın Ballon d'Or ödülünü kazanmıştır. Bu, kariyerinde kaçıncı Ballon d'Or'uydu?",
+correct:"1",
+extra:["2","3","0","4"]
+},
+{
+q:"Erling Haaland, Şampiyonlar Ligi'ndeki gol ortalamasıyla dikkat çeken bir oyuncudur. Kariyerine Şampiyonlar Ligi'nde hangi Avusturya kulübüyle başlamıştır?",
+correct:"Red Bull Salzburg",
+extra:["Rapid Wien","Sturm Graz","Austria Wien","LASK"]
+},
+{
+q:"Erling Haaland, Red Bull Salzburg'dan sonra Şampiyonlar Ligi'nde hangi Alman kulübünde forma giymiştir (Manchester City'den önce)?",
+correct:"Borussia Dortmund",
+extra:["Bayern Münih","RB Leipzig","Bayer Leverkusen","Eintracht Frankfurt"]
+},
+{
+q:"2025/26 sezonu Şampiyonlar Ligi finalinde Arsenal'e öne geçiren erken golü atan İngiliz oyuncu kimdir?",
+correct:"Kai Havertz",
+extra:["Bukayo Saka","Martin Ødegaard","Gabriel Jesus","Declan Rice"]
+},
+{
+q:"2025/26 sezonu finalinde Paris Saint-Germain'e beraberliği getiren penaltıyı kim gole çevirmiştir?",
+correct:"Ousmane Dembélé",
+extra:["Khvicha Kvaratskhelia","Vitinha","Achraf Hakimi","Bradley Barcola"]
+},
+{
+q:"2025/26 sezonu finalinin penaltı atışlarında Arsenal'in kararı belirleyen kaçırılan penaltısını kim kullanmıştır?",
+correct:"Gabriel Magalhães",
+extra:["Bukayo Saka","Declan Rice","Martin Ødegaard","Kai Havertz"]
+},
+{
+q:"1971 Avrupa Kupası finalinde Ajax'ın 2-0 mağlup ettiği ve tarihinde bir Avrupa Kupası finaline yükselen tek Yunan kulübü olan takım hangisidir?",
+correct:"Panathinaikos",
+extra:["Olympiacos","AEK Atina","PAOK","Aris Selanik"]
+},
+{
+q:"1971 finalinde Panathinaikos'u finale taşıyan teknik direktör, 1960 finalinde Real Madrid formasıyla 4 gol atan efsane Macar oyuncuyla aynı kişidir. Bu isim kimdir?",
+correct:"Ferenc Puskás",
+extra:["Alfredo Di Stéfano","Béla Guttmann","Nándor Hidegkuti","Sándor Kocsis"]
+},
+{
+q:"1971 finali hangi stadyumda oynanmıştır?",
+correct:"Wembley",
+extra:["Hampden Park","Heysel","Highbury","White Hart Lane"]
+},
+{
+q:"Şampiyonlar Ligi'nin ünlü resmi marşı, hangi besteci tarafından 1992 yılında, Handel'in bir eserinden esinlenerek yazılmıştır?",
+correct:"Tony Britten",
+extra:["John Williams","Hans Zimmer","Ennio Morricone","Vangelis"]
+},
+{
+q:"Şampiyonlar Ligi marşının esinlendiği Handel eserinin adı nedir?",
+correct:"Zadok the Priest",
+extra:["Water Music","Messiah","Music for the Royal Fireworks","Hallelujah Chorus"]
+},
+{
+q:"Şampiyonlar Ligi marşı, maç öncesi stadyumlarda hangi orkestra tarafından seslendirilen kayıtla çalınır?",
+correct:"Royal Philharmonic Orchestra",
+extra:["Berlin Filarmoni","Viyana Filarmoni","Londra Senfoni Orkestrası","BBC Senfoni Orkestrası"]
+},
+{
+q:"Bir Şampiyonlar Ligi finalinde forma giyen ilk Türk futbolcu, 2002 finalinde Bayer Leverkusen formasıyla sahaya çıkan hangi oyuncudur?",
+correct:"Yıldıray Baştürk",
+extra:["Arda Turan","Hakan Şükür","Tuncay Şanlı","Nihat Kahveci"]
+},
+{
+q:"Bir Şampiyonlar Ligi finalinde forma giyen ikinci Türk futbolcu, 2014 finalinde Atlético Madrid formasıyla sahaya çıkan hangi oyuncudur?",
+correct:"Arda Turan",
+extra:["Yıldıray Baştürk","Hamit Altıntop","Emre Belözoğlu","Colin Kazim-Richards"]
+},
+{
+q:"Arda Turan, 2014 yarı finalinde Chelsea'ye karşı deplasmanda attığı golle Atlético Madrid'i finale taşımıştır. Bu maç kaç farkla kazanılmıştır?",
+correct:"3-1",
+extra:["2-0","1-0","4-1","2-1"]
+},
+{
+q:"Arda Turan'ın da forma giydiği 2014 finalinde Atlético Madrid, uzatmalarda hangi kulübe kaybetmiştir?",
+correct:"Real Madrid",
+extra:["Barcelona","Bayern Münih","Chelsea","Milan"]
+},
+{
+q:"Hamit Altıntop, kariyerinde Şampiyonlar Ligi'nde forma giydiği Alman kulübü hangisidir?",
+correct:"Bayern Münih",
+extra:["Borussia Dortmund","Schalke 04","Bayer Leverkusen","Werder Bremen"]
+},
+{
+q:"2015 finalinde Barcelona, Juventus'u 3-1 mağlup etmiştir. Bu final hangi şehirde oynanmıştır?",
+correct:"Berlin",
+extra:["Milano","Madrid","Londra","Roma"]
+},
+{
+q:"2015 finalinde Barcelona'nın golcü üçlüsü Messi, Suárez ve Neymar'ın oluşturduğu hücum hattına verilen popüler isim nedir?",
+correct:"MSN",
+extra:["BBC","MSY","SMN","NSM"]
+},
+{
+q:"2017 finalinde Real Madrid, Juventus'u 4-1 mağlup etmiştir. Bu maçta iki gol atan Real Madrid yıldızı kimdir?",
+correct:"Cristiano Ronaldo",
+extra:["Karim Benzema","Gareth Bale","Luka Modrić","Toni Kroos"]
+},
+{
+q:"2017 finali hangi şehirde oynanmıştır?",
+correct:"Cardiff",
+extra:["Kiev","Milano","Londra","Berlin"]
+},
+{
+q:"2017 finalinde Juventus'un tek golünü atan İtalyan oyuncu kimdir?",
+correct:"Mario Mandžukić",
+extra:["Paulo Dybala","Gonzalo Higuaín","Leonardo Bonucci","Miralem Pjanić"]
+},
+{
+q:"Vicente del Bosque, Real Madrid'i teknik direktör olarak kaç kez Şampiyonlar Ligi şampiyonu yapmıştır (2000 ve 2002)?",
+correct:"2",
+extra:["1","3","4","0"]
+},
+{
+q:"Marcello Lippi, Juventus'u teknik direktör olarak hangi yıl Şampiyonlar Ligi şampiyonu yapmıştır?",
+correct:"1996",
+extra:["1997","1998","1995","2003"]
+},
+{
+q:"Louis van Gaal, Ajax'ı teknik direktör olarak hangi yıl Şampiyonlar Ligi şampiyonu yapmıştır?",
+correct:"1995",
+extra:["1996","1994","1993","1997"]
+},
+{
+q:"Ottmar Hitzfeld, hem Borussia Dortmund'u (1997) hem de Bayern Münih'i (2001) şampiyon yapan nadir teknik direktörlerden biridir. Bu iki kulüp de hangi ülkeyi temsil eder?",
+correct:"Almanya",
+extra:["Hollanda","İsviçre","Avusturya","Belçika"]
+},
+{
+q:"Edwin van der Sar, kariyerinde iki farklı kulüple Şampiyonlar Ligi şampiyonluğu yaşamıştır: Ajax (1995) ve hangi İngiliz kulübü (2008)?",
+correct:"Manchester United",
+extra:["Liverpool","Chelsea","Arsenal","Manchester City"]
+},
+{
+q:"Petr Čech, Chelsea'nin 2012'deki tek şampiyonluğunda kritik kurtarışlar yapan kalecidir. Çech, kariyerinin sonunda hangi Londra kulübünde forma giymiştir?",
+correct:"Arsenal",
+extra:["Tottenham","West Ham","Crystal Palace","Fulham"]
+},
+{
+q:"Julio César, İnter'in 2010'daki üçleme sezonunda kalede forma giyen Brezilyalı file bekçisidir. Bu sezon İnter'in teknik direktörü kimdi?",
+correct:"José Mourinho",
+extra:["Roberto Mancini","Rafael Benítez","Leonardo","Andrea Stramaccioni"]
+},
+{
+q:"Dida, Milan'ın hem 2003 hem de 2007 şampiyonluklarında kalede forma giyen Brezilyalı kalecidir. Dida'nın gerçek adı nedir?",
+correct:"Nélson de Jesus Silva",
+extra:["Cláudio Taffarel","Gilmar dos Santos Neves","Júlio César Soares","Rogério Ceni"]
+},
+{
+q:"1978 Avrupa Kupası finaline yükselen ve Liverpool'a kaybeden kulüp, Belçika'nın en başarılı Avrupa performanslarından birine imza atan hangi takımdır?",
+correct:"Club Brugge",
+extra:["Standard Liège","Anderlecht","Genk","Antwerp"]
+},
+{
+q:"Slavia Prag, 2023/24 sezonunda Şampiyonlar Ligi'nde mücadele eden bir Çek kulübüdür. Çekya'dan bugüne kadar Avrupa Kupası/Şampiyonlar Ligi'ni kazanan bir kulüp var mı?",
+correct:"Hayır",
+extra:["Evet, Slavia Prag kazanmıştır","Evet, Sparta Prag kazanmıştır","Evet, Viktoria Plzeň kazanmıştır","Evet, Baník Ostrava kazanmıştır"]
+},
+{
+q:"Young Boys, İsviçre'yi temsil eden ve zaman zaman Şampiyonlar Ligi'ne katılan bir kulüptür. Bu kulüp hangi İsviçre şehrinden gelir?",
+correct:"Bern",
+extra:["Zürih","Basel","Cenevre","Lozan"]
+},
+{
+q:"Fenerbahçe, 2007/08 sezonunda Şampiyonlar Ligi çeyrek finaline yükselmiş ve bu turda hangi İngiliz devine elenmiştir?",
+correct:"Chelsea",
+extra:["Manchester United","Liverpool","Arsenal","Manchester City"]
+},
+{
+q:"Bir Şampiyonlar Ligi maçında hat-trick yapma rekoruna sahip olan ve toplamda en çok hat-trick yapan oyuncu kimdir?",
+correct:"Cristiano Ronaldo",
+extra:["Lionel Messi","Robert Lewandowski","Karim Benzema","Kylian Mbappé"]
+},
+{
+q:"Lionel Messi, bir takvim yılında en çok gol atma rekorunu (tüm resmi maçlarda, 91 gol) hangi yılda kırmıştır?",
+correct:"2012",
+extra:["2011","2013","2015","2009"]
+},
+{
+q:"Robert Lewandowski, bir Bundesliga maçında 9 dakikada 5 gol atarak dünya rekoru kırmıştır. Bu maç hangi kulübe karşı oynanmıştır (Şampiyonlar Ligi değil, ilgili dönemin formunu gösterir)?",
+correct:"Wolfsburg",
+extra:["Schalke 04","Hamburg","Hannover 96","Werder Bremen"]
+},
+{
+q:"Şampiyonlar Ligi tarihinde bir sezonda en çok asist yapma rekoruna sahip oyuncu kimdir?",
+correct:"Lionel Messi",
+extra:["Cristiano Ronaldo","Kevin De Bruyne","Thomas Müller","Mesut Özil"]
+},
+{
+q:"Thomas Müller, Şampiyonlar Ligi'nde asist rekorlarıyla da öne çıkan bir isimdir. Müller, kariyeri boyunca tek bir kulüpte mi oynamıştır?",
+correct:"Evet, sadece Bayern Münih'te",
+extra:["Hayır, Borussia Dortmund'da da oynamıştır","Hayır, Real Madrid'de de oynamıştır","Hayır, Barcelona'da da oynamıştır","Hayır, Milan'da da oynamıştır"]
+},
+{
+q:"Fenerbahçe'nin, Şampiyonlar Ligi'nde de kulübü çalıştırmış olan efsane Hollandalı teknik direktörü kimdir?",
+correct:"Dick Advocaat",
+extra:["Guus Hiddink","Louis van Gaal","Frank Rijkaard","Bert van Marwijk"]
+},
+{
+q:"Galatasaray, 2012/13 sezonu Şampiyonlar Ligi çeyrek finalinde hangi İspanyol devine elenmiştir?",
+correct:"Real Madrid",
+extra:["Barcelona","Atlético Madrid","Valencia","Sevilla"]
+},
+{
+q:"Didier Drogba, Chelsea'nin 2012'deki tek şampiyonluğunda hem normal sürede beraberlik golü atmış hem de penaltılarda kazandıran golü kullanmıştır. Drogba hangi Batı Afrika ülkesini temsil eder?",
+correct:"Fildişi Sahili",
+extra:["Gana","Senegal","Nijerya","Kamerun"]
+},
+{
+q:"Wesley Sneijder, Galatasaray'a transfer olmadan önce Real Madrid'de de forma giymiştir. Sneijder hangi ülkenin millî futbolcusudur?",
+correct:"Hollanda",
+extra:["Belçika","Almanya","Danimarka","İsveç"]
+},
+{
+q:"Cristiano Ronaldo, Manchester United formasıyla Şampiyonlar Ligi'ndeki ilk golünü atana kadar kaçıncı maçını oynamıştır?",
+correct:"27",
+extra:["10","50","5","70"]
+},
+{
+q:"Avrupa Kupası/Şampiyonlar Ligi finaline tarihte en çok ev sahipliği yapan stadyum hangisidir?",
+correct:"Wembley",
+extra:["San Siro","Santiago Bernabéu","Camp Nou","Hampden Park"]
+},
+{
+q:"1960 finalinde 127.000'i aşkın seyirciyle final tarihinin en kalabalık izleyici kitlelerinden birine ev sahipliği yapan Hampden Park hangi şehirde bulunur?",
+correct:"Glasgow",
+extra:["Edinburgh","Londra","Dublin","Belfast"]
+},
+{
+q:"Franck Ribéry, Bayern Münih'in 2013'teki üçleme (treble) sezonunda kilit oyunculardan biriydi ancak o yıl bireysel olarak hangi prestijli ödülde ikinci sırada kalarak hayal kırıklığı yaşamıştır?",
+correct:"Ballon d'Or",
+extra:["FIFA En İyi Oyuncu","UEFA Yılın Oyuncusu","Altın Ayakkabı","Puskás Ödülü"]
+},
+{
+q:"Galatasaray, 2000 UEFA Kupası şampiyonluğunun ardından kazandığı UEFA Süper Kupası'nda hangi İspanyol devini mağlup etmiştir?",
+correct:"Real Madrid",
+extra:["Barcelona","Atlético Madrid","Valencia","Deportivo La Coruña"]
+},
+{
+q:"Galatasaray'ın 2000 UEFA Süper Kupası'nı kazandığı maç, geleneksel olarak yıllarca hangi şehirde oynanan tarafsız sahada gerçekleşmiştir?",
+correct:"Monako",
+extra:["Nyon","Cenevre","Zürih","Basel"]
+},
+{
+q:"Şampiyonlar Ligi'nde iki maçlı (gidiş-dönüş) turlarda uygulanan ve eşitlik durumunda deplasmanda atılan golü üstün sayan \"deplasman golü kuralı\", hangi yıldan itibaren kaldırılmıştır?",
+correct:"2021",
+extra:["2019","2023","2018","2020"]
+},
+{
+q:"Milan ve İnter kulüpleri, Şampiyonlar Ligi ev sahipliği yaptıkları maçlarda hangi ortak stadyumu kullanır?",
+correct:"San Siro",
+extra:["Stadio Olimpico","Allianz Stadium","Artemio Franchi","Diego Armando Maradona"]
+},
+{
+q:"Lionel Messi, 2012 yılında bir Şampiyonlar Ligi maçında tek başına 5 gol atarak rekor kırmıştır. Bu maçtaki rakip hangi Alman kulübüydü?",
+correct:"Bayer Leverkusen",
+extra:["Borussia Dortmund","Schalke 04","Bayern Münih","Wolfsburg"]
+},
+{
+q:"Messi'nin bir maçta 5 gol attığı bu tarihi karşılaşmada Barcelona, rakibini kaç farkla mağlup etmiştir?",
+correct:"7-1",
+extra:["6-0","5-0","8-2","4-1"]
+},
+{
+q:"Liverpool taraftarlarının Anfield'daki efsanevi tribünü, kulübün marşı \"You'll Never Walk Alone\"un en coşkuyla söylendiği yer olarak bilinir. Bu tribünün adı nedir?",
+correct:"Kop",
+extra:["The Shed","Stretford End","North Bank","Gwladys Street"]
+},
+{
+q:"Kylian Mbappé, Real Madrid'e 2024 yazında bonservissiz olarak transfer olmadan önce Paris Saint-Germain'de kaç sezon forma giymiştir?",
+correct:"7",
+extra:["5","9","4","6"]
+},
+{
+q:"Şampiyonlar Ligi'nin ikonik logosundaki yıldızlarla bezeli küre şekline İngilizce'de ne ad verilir?",
+correct:"Starball",
+extra:["Champions Orb","Golden Globe","Star Cup","Euro Sphere"]
+}]
 }
 
 ];
@@ -4957,9 +7024,18 @@ aliases:qMap[qid].aliases||[],
 
 /* İsteğe bağlı görsel bağlantısı — eski sorularda yok,
    o yüzden varsayılan boş string. */
-image:qMap[qid].image||""
+image:qMap[qid].image||"",
+
+/* Soruların gösterim sırası. Firebase, çocuk anahtarlarını
+   ekleniş sırasına göre değil ALFABETİK olarak sıralar; her
+   kaydetmede yeni rastgele bir anahtar üretildiği için sıra
+   her seferinde karışıyordu. Açık bir "order" alanıyla bu
+   artık sabit kalıyor. Eski kayıtlarda alan yoksa sona atılır. */
+order:(typeof qMap[qid].order==="number")?qMap[qid].order:999999
 
 }));
+
+questions.sort((a,b)=>a.order-b.order);
 
 return{
 
@@ -5013,7 +7089,12 @@ aliases:q.aliases||[],
 
 /* Firebase boş/undefined alanları sessizce atar; tutarlı
    olması için her zaman string yazıyoruz. */
-image:q.image||""
+image:q.image||"",
+
+/* Mevcut dizi sırasını (i) doğrudan yazıyoruz — Firebase'in
+   anahtarları alfabetik sıralamasına karşı sırayı koruyan
+   asıl alan bu. */
+order:i
 
 };
 
@@ -5898,7 +7979,7 @@ alert("Kaydedilemedi: "+(lastStorageError||"bilinmiyor"));
 
 }
 
-function renderAdminCategory(catId){
+function renderAdminCategory(catId,scrollToIndex){
 
 adminScreen=catId;
 
@@ -6004,7 +8085,49 @@ cat.questions.map((q,i)=>`
 <button class="btn btn-ghost" onclick="renderAdminHome()">← Kategorilere Dön</button>
 
 </main>
+
+<div class="admin-scroll-nav">
+<button onclick="adminScrollNav('top')" aria-label="Yukarı çık">⬆️</button>
+<button onclick="adminScrollNav('bottom')" aria-label="Aşağı in">⬇️</button>
+</div>
 `;
+
+/* Belirli bir soruya (ör. deneme ekranından ya da kaydetmeden
+   sonra dönüldüğünde) sayfanın başına değil, o soru kartına
+   kaydırıyoruz — admin her seferinde listede yeniden aramak
+   zorunda kalmasın diye. */
+if(typeof scrollToIndex==="number"){
+
+const card=document.getElementById("qcard_"+scrollToIndex);
+
+if(card){
+
+card.scrollIntoView({block:"center"});
+
+card.classList.add("qcard-flash");
+
+setTimeout(()=>card.classList.remove("qcard-flash"),1200);
+
+}
+
+}
+
+}
+
+/* Admin kategori sayfasındaki sabit yukarı/aşağı düğmeleri —
+   en üste (kategori başlığına) ya da en alta (yeni soru
+   eklemenin altına) yumuşak kaydırma yapar. */
+function adminScrollNav(direction){
+
+if(direction==="top"){
+
+window.scrollTo({top:0,behavior:"smooth"});
+
+}else{
+
+window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
+
+}
 
 }
 
@@ -6109,6 +8232,11 @@ renderAdminCategory(catId);
 
 let adminPreviewCatId=null;
 
+/* Deneme ekranına hangi sorudan girildiği — "Vazgeç" ile geri
+   dönünce kategori sayfasının en üstüne değil, tam bu soruya
+   kaydırmak için saklanıyor. */
+let adminPreviewQuestionIndex=null;
+
 let adminPreviewQuestionObj=null;
 
 let adminPreviewTypedAnswer="";
@@ -6122,6 +8250,8 @@ const data=readQuestionForm("editQ_"+index);
 if(!data) return;
 
 adminPreviewCatId=catId;
+
+adminPreviewQuestionIndex=index;
 
 adminPreviewQuestionObj=data;
 
@@ -6137,7 +8267,7 @@ function adminPreviewClose(){
 
 clearInterval(timer);
 
-renderAdminCategory(adminPreviewCatId);
+renderAdminCategory(adminPreviewCatId,adminPreviewQuestionIndex);
 
 }
 
