@@ -731,6 +731,123 @@ main{
 
 .admin-scroll-nav button:active{transform:scale(.94)}
 
+/* 📊 Soru Analitiği paneli */
+.analytics-summary{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+
+.analytics-summary div{
+  flex:1;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px 8px;
+  text-align:center;
+}
+
+.analytics-summary strong{
+  display:block;
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:22px;
+  color:var(--gold);
+}
+
+.analytics-summary span{
+  font-size:12px;
+  color:var(--ink-dim);
+}
+
+#analyticsCatSelect{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  color:var(--ink);
+  font-size:15px;
+  margin-top:10px;
+}
+
+.analytics-view-chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:12px;
+}
+
+.analytics-chip{
+  padding:7px 12px;
+  border-radius:999px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  color:var(--ink-dim);
+  font-size:12.5px;
+  cursor:pointer;
+}
+
+.analytics-chip-active{
+  background:var(--gold);
+  color:#1a1200;
+  border-color:var(--gold);
+  font-weight:700;
+}
+
+.analytics-row{
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px;
+  margin-top:10px;
+  background:var(--panel-2);
+}
+
+.analytics-row-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:12px;
+  color:var(--bluff);
+  margin-bottom:6px;
+}
+
+.analytics-row-adjust{
+  font-size:11px;
+  color:var(--gold);
+}
+
+.analytics-row-q{
+  font-size:14.5px;
+  margin-bottom:8px;
+}
+
+.analytics-row-stats{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  font-size:12.5px;
+  color:var(--ink-dim);
+  margin-bottom:10px;
+}
+
+.analytics-row-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.analytics-row-actions button{
+  flex:1;
+  min-width:72px;
+  padding:7px 6px;
+  border-radius:9px;
+  background:var(--bg-deep);
+  border:1px solid var(--line);
+  color:var(--ink);
+  font-size:12px;
+  cursor:pointer;
+}
+
 .mode-tile-top{
   display:flex;
   align-items:center;
@@ -1025,6 +1142,53 @@ input[type=text]::placeholder{
   font-size:23px;
   color:var(--gold-hi);
   margin-top:8px;
+}
+
+/* Oyun sonu ekranındaki isteğe bağlı, maç geneli geri bildirim
+   satırı — tek dokunuşla, zorunlu değil, hiçbir soruya özel
+   değil. */
+.match-feedback{
+  margin-top:16px;
+  padding-top:16px;
+  border-top:1px solid var(--line);
+  text-align:center;
+}
+
+.match-feedback-label{
+  font-size:13px;
+  color:var(--ink-dim);
+  margin-bottom:10px;
+}
+
+.match-feedback-optional{
+  opacity:.6;
+}
+
+.match-feedback-row{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+}
+
+.match-feedback-row button{
+  font-size:26px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:14px;
+  width:52px;
+  height:52px;
+  cursor:pointer;
+  transition:transform .12s;
+}
+
+.match-feedback-row button:active{
+  transform:scale(.92);
+}
+
+.match-feedback-thanks{
+  font-size:14px;
+  color:var(--ink-dim);
+  padding:6px 0;
 }
 
 .confetti{
@@ -4954,6 +5118,10 @@ let localTotalRounds=TOTAL_ROUNDS;
 
 let currentQuestion=null;
 
+/* Anti-Boring: yazma aşamasının GERÇEKTEN başladığı an (timer
+   başladığında) — cevap süresi istatistiği için. */
+let answerPhaseStartedAt=null;
+
 let currentCategory=null;
 
 let usedQuestions={};
@@ -6240,6 +6408,8 @@ CATEGORIES.forEach(c=>{
 usedQuestions[c.id]=[];
 });
 
+beginMatchStatsBuffer(players.length);
+
 localCategoryCycleState={
 selectedCategoryIds:localSelectedCategoryIds||playableCategories().map(c=>c.id),
 categoryCyclePool:null
@@ -6401,13 +6571,17 @@ return;
 }
 
 const index=
-available[Math.floor(Math.random()*available.length)];
+pickWeightedQuestionIndex(category,available);
 
 usedQuestions[id].push(index);
 
 currentCategory=category;
 
 currentQuestion=category.questions[index];
+
+recordQuestionPlayed(id,currentQuestion);
+
+noteMatchCategoryUsed(id);
 
 wrongAnswers={};
 
@@ -6470,6 +6644,8 @@ Hazırım
 ========================================================= */
 
 function startAnswer1(){
+
+answerPhaseStartedAt=Date.now();
 
 renderAnswer();
 
@@ -6604,6 +6780,9 @@ clearInterval(timer);
 if(text){
 wrongAnswers[player]=text;
 AudioManager.play("answerSubmit");
+if(answerPhaseStartedAt&&currentCategory){
+recordQuestionAnswerTime(currentCategory.id,currentQuestion,Date.now()-answerPhaseStartedAt);
+}
 }
 
 advanceAnswerPlayer();
@@ -6794,6 +6973,10 @@ const player=players[currentPlayerIndex];
 selectedChoices[player]=text;
 
 const option=options.find(o=>o.text===text);
+
+if(currentCategory&&currentQuestion){
+recordQuestionVote(currentCategory.id,currentQuestion,!!option.correct);
+}
 
 if(option.correct){
 
@@ -7021,6 +7204,8 @@ AudioManager.play("winner");
 
 clearLocalSession();
 
+const matchSummaryKey=flushMatchStatsSummary();
+
 const sorted=[...players].sort(
 (a,b)=>(scores[b]||0)-(scores[a]||0)
 );
@@ -7094,6 +7279,8 @@ ${scores[p]}
 }
 
 </div>
+
+${matchFeedbackHTML(matchSummaryKey)}
 
 </div>
 
@@ -7333,6 +7520,11 @@ let onlineMyWrong=null;
 let onlineLocalSelectStage="idle"; // idle | selecting | waiting
 
 let onlineMyChoice=null;
+
+/* Anti-Boring: bu oyuncunun cihazında, "answering" fazına
+   GERÇEKTEN girildiği an (handleOnlinePhaseAudio içinde bir kez
+   ayarlanır) — cevap süresi istatistiği için. */
+let onlineAnswerPhaseStartedAt=null;
 
 /* Her poll'da tüm ekranı yeniden çizmek (özellikle QR kodunu
    yeniden oluşturmak) telefon ekranında fark edilir bir
@@ -7706,6 +7898,431 @@ return await storageSet("questions_data/"+catId,shape);
    var" sayıp atlıyordu. */
 function qKey(q){
 return normalize(q.q)+"||"+normalize(q.correct)+"||"+((q.image||"").trim());
+}
+
+/* =========================================================
+   ANTI-BORING SİSTEMİ — istatistik tabanlı akıllı soru rotasyonu
+   =========================================================
+   Yapay zekâ/harici API/Machine Learning YOK. Sadece gerçek oyun
+   verisinden (kaç kez oynandı, doğru/yanlış oranı, ne zaman
+   oynandı, cevap süresi) türetilen basit, açıklanabilir bir
+   ağırlık hesabı. Hiçbir soruyu otomatik silmez/değiştirmez —
+   sadece rastgele seçimdeki ihtimalini yukarı/aşağı kaydırır.
+   Admin her zaman manuel olarak müdahale edebilir (Boost/Reduce/
+   Disable/Reset), ve istatistikler asla oynanışı (Firebase yazma
+   sıklığını) etkilemeyecek şekilde "ikincil" bir sistem olarak
+   tasarlandı: tüm kayıtlar fire-and-forget'tir (try/catch içinde,
+   başarısız olursa sessizce yutulur, oyunu ASLA durdurmaz). */
+
+/* Bir sorunun qKey() metnini Firebase yolu için güvenli, kısa,
+   kararlı bir anahtara çevirir (Firebase anahtarları ".", "#",
+   "$", "[", "]", "/" içeremez ve çok uzun metinler pratik değil).
+   Basit bir DJB2 hash yeterli — kriptografik güvenlik gerekmiyor,
+   sadece aynı soru her zaman aynı kısa anahtara düşsün istiyoruz. */
+function statHashKey(text){
+let h=5381;
+for(let i=0;i<text.length;i++){
+h=((h*33)^text.charCodeAt(i))>>>0;
+}
+return "q"+h.toString(36);
+}
+
+function qStatKey(q){
+return statHashKey(qKey(q));
+}
+
+/* Firebase'den bir kez okunan, oturum boyunca bellekte tutulan
+   istatistik önbelleği: QUESTION_STATS[catId][statKey] = {...}.
+   Canlı bir "on value" dinleyicisi KULLANMIYORUZ — istatistikler
+   saniye saniye değişmesi gereken bir şey değil, oyun açılışında
+   bir kerelik okumak yeterli ve gereksiz Firebase trafiğinden
+   kaçınır. Analiz panelini açarken ayrıca tazelenir (aşağıda). */
+let QUESTION_STATS={};
+
+let questionStatsLoaded=false;
+
+function loadQuestionStats(onDone){
+if(!firebaseReady){ if(onDone) onDone(); return; }
+try{
+db.ref("question_stats").once("value").then(function(snap){
+QUESTION_STATS=snap.val()||{};
+questionStatsLoaded=true;
+if(onDone) onDone();
+}).catch(function(){
+questionStatsLoaded=true;
+if(onDone) onDone();
+});
+}catch(e){
+questionStatsLoaded=true;
+if(onDone) onDone();
+}
+}
+
+function getQuestionStat(catId,statKey){
+return (QUESTION_STATS[catId]&&QUESTION_STATS[catId][statKey])||null;
+}
+
+/* En az bu kadar oynanmadan zorluk/kalite verisine güvenmiyoruz
+   (küçük örneklemden yargıya varmamak için). */
+const STATS_MIN_DATA_PLAYS=5;
+
+const STATS_EASY_THRESHOLD=0.85;
+
+const STATS_HARD_THRESHOLD=0.15;
+
+/* Bir sorunun ağırlığını hesaplar (Base 100 + bonuslar - cezalar).
+   Sert eşikler yerine YUMUŞAK/orantılı ayarlamalar kullanılır ki
+   seçim hep şaşırtıcı ve çeşitli kalsın — "mükemmel" bir soru bile
+   garanti çıkmaz, sadece ihtimali daha yüksek olur. */
+function computeQuestionWeight(stat){
+
+if(!stat||!stat.plays){
+
+/* Hiç oynanmamış: taze + "yeni soruyu dene" bonusu — asla
+   "kötü" sayılmaz, aksine iyi bir şans verilir. */
+return 100+40+20;
+
+}
+
+let w=100;
+
+const plays=stat.plays||0;
+
+const lastPlayedAt=stat.lastPlayedAt||0;
+
+const hoursSince=lastPlayedAt?(Date.now()-lastPlayedAt)/3600000:999;
+
+/* Tazelik bonusu: uzun süredir oynanmadıysa artar, bir tavanı var. */
+w+=Math.min(40,hoursSince*0.6);
+
+/* Yakın zamanda kullanım cezası: saatler geçtikçe sönümlenir. */
+w-=Math.max(0,40-hoursSince*3);
+
+/* Aşırı kullanım cezası: log-ölçekli, yani çok oynanan bir soru
+   tamamen elenmez, sadece giderek daha az öne çıkar. */
+w-=Math.min(35,Math.log2(plays+1)*6);
+
+if(plays<STATS_MIN_DATA_PLAYS){
+
+/* Yeterli veri yok — zorluk/kalite yargısı YOK, sadece "hâlâ
+   test ediliyor" bonusu. */
+w+=20;
+
+}else{
+
+const totalVotes=(stat.correctVotes||0)+(stat.wrongVotes||0);
+
+const correctRate=totalVotes>0?stat.correctVotes/totalVotes:null;
+
+if(correctRate!==null){
+
+if(correctRate>STATS_EASY_THRESHOLD){
+
+w-=(correctRate-STATS_EASY_THRESHOLD)*80;
+
+}else if(correctRate<STATS_HARD_THRESHOLD){
+
+w-=(STATS_HARD_THRESHOLD-correctRate)*80;
+
+}else{
+
+/* Sağlıklı zorluk bandında — ne bariz ne imkânsız. */
+w+=15;
+
+}
+
+}
+
+}
+
+if(stat.adminAdjust==="boost") w*=1.6;
+
+else if(stat.adminAdjust==="reduce") w*=0.4;
+
+/* Asla sıfıra inmesin — disabled dışında hiçbir soru %0 ihtimale
+   düşmemeli, gerçek rastgelelik hep korunsun. */
+return Math.max(5,w);
+
+}
+
+/* Ağırlıklı rastgele seçim: available (index dizisi) içinden,
+   istatistiklere göre "olasılığı yüksek ama garanti değil" bir
+   soru seçer. disabled işaretli sorular aday havuzundan tamamen
+   çıkarılır (admin'in bilinçli kararı). */
+function pickWeightedQuestionIndex(category,available){
+
+if(!available.length) return -1;
+
+if(available.length===1) return available[0];
+
+const catStats=QUESTION_STATS[category.id]||{};
+
+const candidates=[];
+
+for(let k=0;k<available.length;k++){
+
+const i=available[k];
+
+const key=qStatKey(category.questions[i]);
+
+const stat=catStats[key];
+
+if(stat&&stat.adminAdjust==="disabled") continue;
+
+candidates.push({i:i,key:key,w:computeQuestionWeight(stat)});
+
+}
+
+if(!candidates.length){
+
+/* Hepsi devre dışı bırakılmış (çok nadir bir durum) — oyunun
+   tıkanmaması için düz rastgeleye düş. */
+return available[Math.floor(Math.random()*available.length)];
+
+}
+
+const total=candidates.reduce(function(s,c){return s+c.w;},0);
+
+let r=Math.random()*total;
+
+for(let k=0;k<candidates.length;k++){
+
+r-=candidates[k].w;
+
+if(r<=0) return candidates[k].i;
+
+}
+
+return candidates[candidates.length-1].i;
+
+}
+
+/* =========================================================
+   İSTATİSTİK KAYDI — hepsi "ikincil": try/catch içinde,
+   başarısız olursa oyunu ASLA etkilemez, kullanıcıya hata
+   göstermez. ServerValue.increment() ATOMİK olduğu için birden
+   fazla cihazın (online modda her oyuncu) aynı soruya aynı anda
+   yazması güvenlidir — race condition riski yoktur, ayrı bir
+   host-koordinasyonuna gerek kalmaz. */
+
+function safeStatsUpdate(updates){
+
+if(!firebaseReady) return;
+
+try{
+
+db.ref().update(updates).catch(function(){});
+
+}catch(e){}
+
+}
+
+/* Bir soru gösterildiğinde (round başladığında) BİR KEZ çağrılır
+   — hem yerel modda (tek cihaz) hem online modda SADECE host
+   tarafından (applyCategorySelection zaten sadece host'ta
+   çalışır), böylece "plays" sayısı oyuncu sayısınca değil,
+   round sayısınca artar. */
+function recordQuestionPlayed(catId,question){
+
+const key=qStatKey(question);
+
+const path="question_stats/"+catId+"/"+key+"/";
+
+const updates={};
+
+updates[path+"plays"]=firebase.database.ServerValue.increment(1);
+
+updates[path+"lastPlayedAt"]=Date.now();
+
+safeStatsUpdate(updates);
+
+}
+
+/* Bir oyuncu oy kullandığında (doğruyu bulma aşaması) çağrılır —
+   her cihaz kendi oyu için bağımsız ve atomik olarak artırır. */
+function recordQuestionVote(catId,question,wasCorrect){
+
+const key=qStatKey(question);
+
+const path="question_stats/"+catId+"/"+key+"/";
+
+const updates={};
+
+updates[path+(wasCorrect?"correctVotes":"wrongVotes")]=firebase.database.ServerValue.increment(1);
+
+safeStatsUpdate(updates);
+
+if(matchStatsBuffer){
+
+matchStatsBuffer.voteSamples++;
+
+if(wasCorrect) matchStatsBuffer.correctVoteSamples++;
+
+}
+
+}
+
+/* Bir oyuncu yazma aşamasını bitirdiğinde (gerçek bir blöf
+   yazdığında) çağrılır — cevap süresi istatistiğine katkı. */
+function recordQuestionAnswerTime(catId,question,elapsedMs){
+
+if(!(elapsedMs>0)) return;
+
+const key=qStatKey(question);
+
+const path="question_stats/"+catId+"/"+key+"/";
+
+const updates={};
+
+updates[path+"answerTimeMs"]=firebase.database.ServerValue.increment(elapsedMs);
+
+updates[path+"answerTimeSamples"]=firebase.database.ServerValue.increment(1);
+
+safeStatsUpdate(updates);
+
+if(matchStatsBuffer){
+
+matchStatsBuffer.answerTimeMsTotal+=elapsedMs;
+
+matchStatsBuffer.answerTimeSamples++;
+
+}
+
+}
+
+/* =========================================================
+   MAÇ ÖZETİ — maç bitince TEK bir yazma. Kişisel veri
+   (oyuncu isimleri, tam cevaplar) YOK — sadece sayılar. */
+
+let matchStatsBuffer=null;
+
+function beginMatchStatsBuffer(playerCount){
+
+matchStatsBuffer={
+
+startedAt:Date.now(),
+
+playerCount:playerCount||0,
+
+questionsPlayed:0,
+
+categoriesUsed:{},
+
+voteSamples:0,
+
+correctVoteSamples:0,
+
+answerTimeMsTotal:0,
+
+answerTimeSamples:0
+
+};
+
+}
+
+function noteMatchCategoryUsed(catId){
+
+if(matchStatsBuffer) matchStatsBuffer.categoriesUsed[catId]=true;
+
+if(matchStatsBuffer) matchStatsBuffer.questionsPlayed++;
+
+}
+
+/* Maç sonunda çağrılır (yerel modda doğrudan; online modda
+   SADECE host). feedback isteğe bağlıdır (oyuncu ⭐ puanlamak
+   isterse ayrıca eklenir, istemezse hiç yazılmaz). */
+function flushMatchStatsSummary(){
+
+if(!matchStatsBuffer||!firebaseReady) return null;
+
+const b=matchStatsBuffer;
+
+const summary={
+
+ts:Date.now(),
+
+playerCount:b.playerCount,
+
+questionsPlayed:b.questionsPlayed,
+
+categories:Object.keys(b.categoriesUsed),
+
+avgAnswerTimeMs:b.answerTimeSamples>0?Math.round(b.answerTimeMsTotal/b.answerTimeSamples):null,
+
+avgCorrectRate:b.voteSamples>0?Math.round((b.correctVoteSamples/b.voteSamples)*1000)/1000:null
+
+};
+
+try{
+
+const ref=db.ref("match_summaries").push();
+
+ref.set(summary).catch(function(){});
+
+matchStatsBuffer=null;
+
+return ref.key;
+
+}catch(e){
+
+matchStatsBuffer=null;
+
+return null;
+
+}
+
+}
+
+/* Oyuncunun isteğe bağlı, maç geneli (soru bazlı DEĞİL) geri
+   bildirimi — hiçbir zaman zorunlu değildir. */
+function submitMatchFeedback(matchSummaryKey,rating){
+
+if(!matchSummaryKey||!firebaseReady) return;
+
+try{
+
+db.ref("match_summaries/"+matchSummaryKey+"/feedback").set(rating).catch(function(){});
+
+}catch(e){}
+
+}
+
+/* Oyun sonu ekranındaki isteğe bağlı geri bildirim satırı.
+   Hiçbir soruya özel değildir (oyuncuyu her soruyu puanlamaya
+   zorlamamak için) — sadece "genel olarak bu maçtaki sorular
+   nasıldı?" sorusu, tek dokunuşla, atlanabilir. */
+function matchFeedbackHTML(matchSummaryKey){
+
+if(!matchSummaryKey) return "";
+
+return `
+<div class="match-feedback" id="matchFeedbackBox">
+<div class="match-feedback-label">Bu maçtaki sorular nasıldı? <span class="match-feedback-optional">(isteğe bağlı)</span></div>
+<div class="match-feedback-row">
+<button onclick="giveMatchFeedback('${matchSummaryKey}',5)" aria-label="Mükemmel">😍</button>
+<button onclick="giveMatchFeedback('${matchSummaryKey}',4)" aria-label="İyi">🙂</button>
+<button onclick="giveMatchFeedback('${matchSummaryKey}',3)" aria-label="Orta">😐</button>
+<button onclick="giveMatchFeedback('${matchSummaryKey}',2)" aria-label="Sıkıcı">😴</button>
+</div>
+</div>
+`;
+
+}
+
+function giveMatchFeedback(matchSummaryKey,rating){
+
+submitMatchFeedback(matchSummaryKey,rating);
+
+const box=document.getElementById("matchFeedbackBox");
+
+if(box){
+
+box.innerHTML=`<div class="match-feedback-thanks">Teşekkürler! 🙌</div>`;
+
+}
+
+AudioManager.play("click");
+
 }
 
 /* GÜVENLİ MOD — Birleştir:
@@ -8160,6 +8777,10 @@ if(adminScreen==="home"){
 
 renderAdminHome();
 
+}else if(adminScreen==="analytics"){
+
+renderQuestionAnalyticsScreen();
+
 }else{
 
 renderAdminCategory(adminScreen);
@@ -8301,6 +8922,18 @@ ${
 
 <div class="card">
 
+<div class="stage-label">Soru Bankası Sağlığı</div>
+
+<h2 class="headline" style="font-size:19px">📊 Soru Analitiği</h2>
+
+<p class="sub">Hangi sorular çok/az kullanılıyor, çok kolay/zor, ya da hiç oynanmamış — istatistiklere göz at ve gerekirse öne çıkar/geride bırak.</p>
+
+<button class="btn btn-primary" onclick="renderQuestionAnalytics()">Analitiği Aç</button>
+
+</div>
+
+<div class="card">
+
 <div class="stage-label">Soru Ara</div>
 
 <h2 class="headline" style="font-size:19px">🔍 Tüm Kategorilerde Ara</h2>
@@ -8404,6 +9037,290 @@ Soru Bankasını Koddakiyle Değiştir
 
 </main>
 `;
+
+}
+
+/* =========================================================
+   📊 SORU ANALİTİĞİ — Anti-Boring admin panosu.
+   Sadece görüntüleme + manuel müdahale (Boost/Reduce/Disable/
+   Reset). Hiçbir soruyu otomatik silmez ya da değiştirmez.
+========================================================= */
+
+let analyticsCatFilter="all";
+
+let analyticsViewFilter="all";
+
+/* Firebase'den taze istatistik + o an QUESTION_STATS önbelleğine
+   göre, kategori/görünüm filtrelerine uyan satırları hesaplar.
+   Büyük kategoriler için (ör. 250+ soruluk bir kategori) tüm
+   listeyi DOM'a basmak yerine, görünüme göre en anlamlı üst
+   sınırla (60) kesiyoruz — sayfa yine de hızlı kalır. */
+function buildAnalyticsRows(){
+
+const rows=[];
+
+CATEGORIES.forEach(cat=>{
+
+if(analyticsCatFilter!=="all" && cat.id!==analyticsCatFilter) return;
+
+const catStats=QUESTION_STATS[cat.id]||{};
+
+cat.questions.forEach(q=>{
+
+const key=qStatKey(q);
+
+const stat=catStats[key]||null;
+
+const plays=stat?(stat.plays||0):0;
+
+const totalVotes=stat?((stat.correctVotes||0)+(stat.wrongVotes||0)):0;
+
+const correctRate=totalVotes>0?(stat.correctVotes||0)/totalVotes:null;
+
+const avgTime=stat&&stat.answerTimeSamples?Math.round(stat.answerTimeMs/stat.answerTimeSamples/1000):null;
+
+rows.push({
+catId:cat.id,
+catName:cat.name,
+key:key,
+q:q,
+stat:stat,
+plays:plays,
+correctRate:correctRate,
+avgTime:avgTime,
+enoughData:plays>=STATS_MIN_DATA_PLAYS
+});
+
+});
+
+});
+
+return rows;
+
+}
+
+function filterAndSortAnalyticsRows(rows){
+
+let filtered=rows;
+
+const V=analyticsViewFilter;
+
+if(V==="never_played"){
+filtered=rows.filter(r=>r.plays===0);
+}else if(V==="most_played"){
+filtered=rows.filter(r=>r.plays>0).sort((a,b)=>b.plays-a.plays);
+}else if(V==="least_played"){
+filtered=rows.filter(r=>r.plays>0).sort((a,b)=>a.plays-b.plays);
+}else if(V==="too_easy"){
+filtered=rows.filter(r=>r.enoughData&&r.correctRate!==null&&r.correctRate>STATS_EASY_THRESHOLD).sort((a,b)=>b.correctRate-a.correctRate);
+}else if(V==="too_hard"){
+filtered=rows.filter(r=>r.enoughData&&r.correctRate!==null&&r.correctRate<STATS_HARD_THRESHOLD).sort((a,b)=>a.correctRate-b.correctRate);
+}else if(V==="recently_used"){
+filtered=rows.filter(r=>r.stat&&r.stat.lastPlayedAt).sort((a,b)=>b.stat.lastPlayedAt-a.stat.lastPlayedAt);
+}else if(V==="needs_review"){
+filtered=rows.filter(r=>r.stat&&r.stat.adminAdjust==="reduce"||r.stat&&r.stat.adminAdjust==="disabled"||(r.enoughData&&r.correctRate!==null&&(r.correctRate>0.95||r.correctRate<0.05)));
+}else if(V==="high_quality"){
+filtered=rows.filter(r=>r.enoughData&&r.correctRate!==null&&r.correctRate>=STATS_HARD_THRESHOLD&&r.correctRate<=STATS_EASY_THRESHOLD).sort((a,b)=>b.plays-a.plays);
+}else if(V==="low_quality"){
+filtered=rows.filter(r=>r.stat&&r.stat.adminAdjust==="reduce");
+}else{
+filtered=rows.slice().sort((a,b)=>b.plays-a.plays);
+}
+
+return filtered;
+
+}
+
+function renderQuestionAnalytics(){
+
+adminScreen="analytics";
+
+saveAdminScreen();
+
+/* Panoyu her açtığında istatistikleri tazeler — analiz
+   ekranı sık açılan bir yer değil, bu yüzden burada bir kerelik
+   bir okuma yapmak sorun teşkil etmez. */
+loadQuestionStats(function(){
+if(adminScreen==="analytics") renderQuestionAnalyticsScreen();
+});
+
+renderQuestionAnalyticsScreen();
+
+}
+
+function renderQuestionAnalyticsScreen(){
+
+const allRows=buildAnalyticsRows();
+
+const totalQuestions=allRows.length;
+
+const playedCount=allRows.filter(r=>r.plays>0).length;
+
+const neverPlayedCount=totalQuestions-playedCount;
+
+const rows=filterAndSortAnalyticsRows(allRows);
+
+const SHOWN_LIMIT=60;
+
+const shown=rows.slice(0,SHOWN_LIMIT);
+
+const views=[
+["all","Tümü"],
+["most_played","En Çok Oynanan"],
+["least_played","En Az Oynanan"],
+["too_easy","Çok Kolay"],
+["too_hard","Çok Zor"],
+["recently_used","Son Kullanılan"],
+["never_played","Hiç Oynanmamış"],
+["high_quality","Sağlıklı Zorluk"],
+["low_quality","Düşürülmüş (Reduce)"],
+["needs_review","Gözden Geçir"]
+];
+
+document.getElementById("app").innerHTML=`
+
+<div class="topbar">
+<div class="brand"><span class="dot"></span>📊 Soru Analitiği</div>
+<button class="leave-link" onclick="renderAdminHome()">← Geri</button>
+</div>
+
+<main>
+
+<div class="card">
+
+<div class="stage-label">Genel Durum</div>
+
+<div class="analytics-summary">
+<div><strong>${totalQuestions}</strong><span>Toplam Soru</span></div>
+<div><strong>${playedCount}</strong><span>Oynanmış</span></div>
+<div><strong>${neverPlayedCount}</strong><span>Hiç Oynanmamış</span></div>
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="stage-label">Filtrele</div>
+
+<select id="analyticsCatSelect" onchange="analyticsCatFilter=this.value;renderQuestionAnalyticsScreen()">
+<option value="all" ${analyticsCatFilter==="all"?"selected":""}>Tüm Kategoriler</option>
+${CATEGORIES.map(c=>`<option value="${c.id}" ${analyticsCatFilter===c.id?"selected":""}>${c.icon} ${c.name}</option>`).join("")}
+</select>
+
+<div class="analytics-view-chips">
+${views.map(([v,label])=>`<button class="analytics-chip ${analyticsViewFilter===v?"analytics-chip-active":""}" onclick="analyticsViewFilter='${v}';renderQuestionAnalyticsScreen()">${label}</button>`).join("")}
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="stage-label">Sonuçlar ${rows.length>SHOWN_LIMIT?`(ilk ${SHOWN_LIMIT}/${rows.length})`:`(${rows.length})`}</div>
+
+${
+shown.length===0
+?`<p class="sub">Bu filtreye uyan soru yok.</p>`
+:shown.map(r=>analyticsRowHTML(r)).join("")
+}
+
+</div>
+
+</main>
+`;
+
+}
+
+function analyticsRowHTML(r){
+
+const rateLabel=r.enoughData&&r.correctRate!==null?Math.round(r.correctRate*100)+"% doğru":"Yetersiz veri";
+
+const adjust=r.stat&&r.stat.adminAdjust;
+
+const adjustLabel=adjust==="boost"?"⭐ Öne çıkarılmış":adjust==="reduce"?"⛔ Geride bırakılmış":adjust==="disabled"?"💤 Devre dışı":"";
+
+return `
+<div class="analytics-row">
+
+<div class="analytics-row-top">
+<span class="analytics-row-cat">${r.catName}</span>
+${adjustLabel?`<span class="analytics-row-adjust">${adjustLabel}</span>`:""}
+</div>
+
+<div class="analytics-row-q">${(r.q.q||"").slice(0,90)}${(r.q.q||"").length>90?"…":""}</div>
+
+<div class="analytics-row-stats">
+<span>Oynanma: <strong>${r.plays}</strong></span>
+<span>${rateLabel}</span>
+${r.avgTime?`<span>Ort. süre: ${r.avgTime}sn</span>`:""}
+</div>
+
+<div class="analytics-row-actions">
+<button onclick="adminSetQuestionAdjust('${r.catId}','${r.key}','boost')">⭐ Boost</button>
+<button onclick="adminSetQuestionAdjust('${r.catId}','${r.key}','reduce')">⛔ Reduce</button>
+<button onclick="adminSetQuestionAdjust('${r.catId}','${r.key}','disabled')">💤 Disable</button>
+<button onclick="adminResetQuestionStats('${r.catId}','${r.key}')">🔄 Reset</button>
+</div>
+
+</div>
+`;
+
+}
+
+/* Manuel kontroller — hiçbiri soruyu SİLMEZ ya da içeriğini
+   değiştirmez, sadece seçim ağırlığını etkileyen "adminAdjust"
+   alanını yazar. Aynı değere tekrar basmak normale döndürür
+   (toggle davranışı). */
+async function adminSetQuestionAdjust(catId,key,value){
+
+const current=QUESTION_STATS[catId]&&QUESTION_STATS[catId][key]&&QUESTION_STATS[catId][key].adminAdjust;
+
+const next=current===value?null:value;
+
+try{
+
+if(next){
+
+await db.ref("question_stats/"+catId+"/"+key+"/adminAdjust").set(next);
+
+}else{
+
+await db.ref("question_stats/"+catId+"/"+key+"/adminAdjust").remove();
+
+}
+
+QUESTION_STATS[catId]=QUESTION_STATS[catId]||{};
+
+QUESTION_STATS[catId][key]=QUESTION_STATS[catId][key]||{};
+
+QUESTION_STATS[catId][key].adminAdjust=next;
+
+renderQuestionAnalyticsScreen();
+
+}catch(e){
+
+alert("Kaydedilemedi, bağlantını kontrol edip tekrar dene.");
+
+}
+
+}
+
+async function adminResetQuestionStats(catId,key){
+
+if(!confirm("Bu sorunun tüm istatistikleri (oynanma, doğru/yanlış oranı, süre, boost/reduce) sıfırlansın mı? Sorunun kendisi ETKİLENMEZ.")) return;
+
+try{
+
+await db.ref("question_stats/"+catId+"/"+key).remove();
+
+if(QUESTION_STATS[catId]) delete QUESTION_STATS[catId][key];
+
+renderQuestionAnalyticsScreen();
+
+}catch(e){
+
+alert("Sıfırlanamadı, bağlantını kontrol edip tekrar dene.");
+
+}
 
 }
 
@@ -9959,6 +10876,7 @@ if(phase!==audioLastPhase){
 
 if(phase==="answering"){
 AudioManager.play("roundStart");
+onlineAnswerPhaseStartedAt=Date.now();
 }else if(phase==="select"){
 AudioManager.play("votingStart");
 }else if(phase==="round_result"){
@@ -10019,6 +10937,8 @@ room.questionTime=hostQuestionTime||45;
 room.hostPremium=isPremium;
 
 room.totalRounds=isPremium?(hostTotalRounds||TOTAL_ROUNDS):TOTAL_ROUNDS;
+
+beginMatchStatsBuffer((room.players||[]).length);
 
 room.round=1;
 
@@ -10118,7 +11038,7 @@ const available=category.questions
 
 if(!available.length) return false;
 
-const index=available[Math.floor(Math.random()*available.length)];
+const index=pickWeightedQuestionIndex(category,available);
 
 used.push(index);
 
@@ -10140,6 +11060,11 @@ room.roundChoices=null;
 room.phase="answering";
 
 room.answeringStartedAt=Date.now();
+
+if(isHost){
+recordQuestionPlayed(id,category.questions[index]);
+noteMatchCategoryUsed(id);
+}
 
 return true;
 
@@ -10413,6 +11338,9 @@ async function onlineFinalizeAnswer(wrongOrNull){
 
 if(wrongOrNull){
 AudioManager.play("answerSubmit");
+if(onlineAnswerPhaseStartedAt&&roomState.categoryId&&roomState.question){
+recordQuestionAnswerTime(roomState.categoryId,roomState.question,Date.now()-onlineAnswerPhaseStartedAt);
+}
 }
 
 onlineMyWrong=wrongOrNull;
@@ -10525,6 +11453,10 @@ async function onlineChooseAnswer(text){
 
 if(text){
 AudioManager.play("voteSelect");
+if(roomState.categoryId&&roomState.question&&roomState.options){
+const opt=roomState.options.find(o=>o.text===text);
+recordQuestionVote(roomState.categoryId,roomState.question,!!(opt&&opt.correct));
+}
 }
 
 clearInterval(timer);
@@ -10647,6 +11579,10 @@ if(!remaining || room.round>=(room.totalRounds||TOTAL_ROUNDS)){
 
 room.phase="game_over";
 
+const summaryKey=flushMatchStatsSummary();
+
+if(summaryKey) room.matchSummaryKey=summaryKey;
+
 await storageSet("YALANCI_ROOM_"+roomCode,room);
 
 roomState=room;
@@ -10735,6 +11671,9 @@ return`
 }
 
 </div>
+
+${matchFeedbackHTML(roomState.matchSummaryKey)}
+
 </div>
 
 ${isHost?`<button class="btn btn-primary" onclick="confirmReturnToLobby()">Aynı Odada Yeni Tur</button>`:""}
@@ -11322,6 +12261,10 @@ if(!available.length){
 
 room.phase="game_over";
 
+const summaryKey2=flushMatchStatsSummary();
+
+if(summaryKey2) room.matchSummaryKey=summaryKey2;
+
 await storageSet("YALANCI_ROOM_"+roomCode,room);
 
 roomState=room;
@@ -11547,6 +12490,15 @@ renderSplash();
 checkRoomFromURL();
 
 initQuestionBank();
+
+/* Anti-Boring istatistiklerini bir kerelik yüklüyoruz — canlı
+   dinleyici değil (istatistikler saniye saniye değişmesi
+   gereken bir şey değil), bu yüzden gereksiz Firebase trafiği
+   yaratmaz. Yüklenmesi oyunun başlamasını beklemez: bitene kadar
+   pickWeightedQuestionIndex() boş önbellekle çalışır (tüm
+   sorular eşit ağırlıkta — düz rastgeleden farksız), oyunu asla
+   bloklamaz. */
+loadQuestionStats();
 
 /* Sayfa yeniden açıldığında, daha önce bir online odaya
    katılmışsa (bağlantı koptu, sekme kapandı, vb.) otomatik
