@@ -168,6 +168,28 @@ h3{
 
 .scorebar::-webkit-scrollbar{display:none}
 
+/* Oyuncu avatar maskeleri — büyük base64 görsel verisi ARTIK
+   HTML'e her render'da <img src="data:..."> olarak gömülmüyor
+   (bkz. maskIconHTML). Bunun yerine her renk için TEK SEFERLİK,
+   sayfa açılırken enjekte edilen bir arka plan kuralı burada
+   tanımlanır (aşağıdaki #maskIconStyles <style> etiketi).
+   maskIconHTML artık sadece küçük bir <span class="mask-icon
+   mask-icon-yeşil"> döndürüyor — birkaç onluk byte, onlarca bin
+   karakter değil. Kategori/ekran geçişlerinde her oyuncu için
+   koca bir base64 metnini yeniden ayrıştırmak (parse) ana
+   thread'i kilitleyip düğmelere basıldığında hissedilen o kısa
+   "takılma/fasıla"nın asıl sebebiydi. */
+.mask-icon{
+  width:1em;
+  height:1em;
+  display:inline-block;
+  vertical-align:-.2em;
+  flex:none;
+  background-size:contain;
+  background-repeat:no-repeat;
+  background-position:center;
+}
+
 .score-chip{
   flex:1;
   min-width:72px;
@@ -1710,15 +1732,387 @@ if(img.decode) img.decode().catch(()=>{});
 }catch(e){}
 })();
 
+/* Maske görsellerinin ~60KB'lık base64 metinlerini HTML'e her
+   render'da yeniden GÖMMEK yerine (eski davranış: her scoreBar()
+   çağrısı, her oyuncu için koca bir <img src="data:..."> üretip
+   tarayıcının bunu ayrıştırmasını gerektiriyordu — kategori
+   seçimi gibi art arda birkaç ekran geçişinin olduğu anlarda ana
+   thread'i kısa süreliğine tıkayıp düğmeye basınca hissedilen o
+   "fasıla/takılma"nın gerçek nedeni buydu), her renk için TEK
+   SEFERLİK bir CSS arka plan kuralı enjekte ediyoruz. Bu kural
+   sayfa açılırken bir kez ayrıştırılır; ondan sonra maskIconHTML
+   sadece küçük bir sınıf adı üretir, koca metni değil. */
+(function injectMaskIconStyles(){
+try{
+const styleEl=document.createElement("style");
+styleEl.id="maskIconStyles";
+styleEl.textContent=Object.keys(MASK_IMAGES).map(function(id){
+return ".mask-icon-"+id+"{background-image:url('"+MASK_IMAGES[id]+"')}";
+}).join("\n");
+document.head.appendChild(styleEl);
+}catch(e){}
+})();
+
 function maskIconHTML(id){
 
 const m=maskColorById(id);
 
-const src=MASK_IMAGES[m.id]||MASK_IMAGES[MASK_COLORS[0].id];
-
-return `<img class="mask-icon" src="${src}" alt="${m.name}" style="width:1em;height:1em;object-fit:contain;display:inline-block;vertical-align:-.2em;flex:none">`;
+return `<span class="mask-icon mask-icon-${m.id}" role="img" aria-label="${m.name}"></span>`;
 
 }
+
+
+/* =========================================================
+   SES SİSTEMİ (AudioManager) — SADECE kısa efektler (SFX)
+   ========================================================= 
+   Dini/tasarım tercihi gereği hiçbir arka plan müziği
+   YOKTUR ve olmayacaktır — bu dosyada tek bir <audio>/müzik
+   çalma kodu bile bulunmaz. Tüm sesler, Web Audio API ile bu
+   dosyanın içinde ANLIK üretilir (osilatör + kısa zarf); harici
+   ses dosyası indirmeye, saklamaya ya da decode etmeye gerek
+   yoktur — bu hem "harici/kırılgan bağlantı kullanma" hem de
+   "mobilde ağır decode/yükleme olmasın" isteğini aynı anda
+   karşılar. Her çağrı birkaç ms sürer, önceden hesaplanmış
+   büyük bir tampon (buffer) gerekmez.
+
+   Tarayıcı autoplay kısıtlaması: AudioContext yalnızca gerçek
+   bir kullanıcı etkileşiminden SONRA sese izin verir. Bu yüzden
+   context'i ilk dokunuş/tıklamada "resume" ediyoruz; o ana kadar
+   play() çağrıları sessizce hiçbir şey yapmaz (oyunu bozmaz).
+
+   Sessize alma tercihi localStorage'da saklanır — sayfa
+   kapanıp açılsa da korunur. */
+const AudioManager=(function(){
+
+let ctx=null;
+
+let masterGain=null;
+
+let muted=false;
+
+try{
+
+muted=localStorage.getItem("yalanci_sound_muted")==="1";
+
+}catch(e){}
+
+/* Aynı sesin, hızlı art arda basmalarda üst üste binip
+   kulak tırmalayıcı bir yığın oluşturmasını engelleyen kısa
+   bekleme süreleri. 0 = sınırsız (reveal/winner/bluff gibi
+   nadir ve önemli anlar hiçbir zaman bastırılmamalı). */
+const COOLDOWN_MS={
+
+click:70,
+
+voteSelect:70,
+
+category:150,
+
+playerJoin:300,
+
+answerSubmit:150,
+
+roundStart:150,
+
+point:150
+
+};
+
+const lastPlayedAt={};
+
+function ensureContext(){
+
+if(ctx) return ctx;
+
+try{
+
+const AC=window.AudioContext||window.webkitAudioContext;
+
+if(!AC) return null;
+
+ctx=new AC();
+
+masterGain=ctx.createGain();
+
+/* Merkezi ana ses seviyesi — tüm efektler buradan geçer,
+   tek bir yerden kontrol edilebilir. */
+masterGain.gain.value=0.5;
+
+masterGain.connect(ctx.destination);
+
+}catch(e){
+
+ctx=null;
+
+}
+
+return ctx;
+
+}
+
+function resumeOnFirstInteraction(){
+
+const c=ensureContext();
+
+if(c && c.state==="suspended"){
+
+c.resume().catch(function(){});
+
+}
+
+}
+
+["pointerdown","touchstart","keydown"].forEach(function(evt){
+
+document.addEventListener(evt,resumeOnFirstInteraction,{passive:true});
+
+});
+
+/* Tek bir "nota": belirtilen frekans, dalga şekli ve kısa
+   bir attack/decay zarfıyla — kısa, temiz, "punchy" bir efekt
+   için bu yeterli, harici örnek (sample) dosyasına gerek yok. */
+function tone(opts){
+
+const c=ensureContext();
+
+if(!c||muted) return;
+
+const t0=c.currentTime+(opts.delay||0);
+
+const dur=opts.dur||0.12;
+
+const osc=c.createOscillator();
+
+const gain=c.createGain();
+
+osc.type=opts.type||"sine";
+
+osc.frequency.setValueAtTime(opts.freq,t0);
+
+if(opts.freqTo){
+
+osc.frequency.exponentialRampToValueAtTime(Math.max(1,opts.freqTo),t0+dur);
+
+}
+
+const peak=(opts.gain!==undefined?opts.gain:0.2);
+
+gain.gain.setValueAtTime(0.0001,t0);
+
+gain.gain.exponentialRampToValueAtTime(peak,t0+(opts.attack||0.008));
+
+gain.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+
+osc.connect(gain);
+
+gain.connect(masterGain);
+
+osc.start(t0);
+
+osc.stop(t0+dur+0.03);
+
+}
+
+/* Kısa bir gürültü patlaması — geçiş/açılış seslerine ince
+   bir "whoosh" dokusu katmak için (reveal, oylama başlangıcı,
+   kazanan ekranı). Süre kısa tutulduğu için performans
+   maliyeti ihmal edilebilir düzeydedir. */
+function noiseBurst(opts){
+
+const c=ensureContext();
+
+if(!c||muted) return;
+
+const dur=opts.dur||0.15;
+
+const t0=c.currentTime+(opts.delay||0);
+
+const size=Math.max(1,Math.floor(c.sampleRate*dur));
+
+const buffer=c.createBuffer(1,size,c.sampleRate);
+
+const data=buffer.getChannelData(0);
+
+for(let i=0;i<size;i++){
+
+data[i]=(Math.random()*2-1)*(1-i/size);
+
+}
+
+const src=c.createBufferSource();
+
+src.buffer=buffer;
+
+const filter=c.createBiquadFilter();
+
+filter.type=opts.filterType||"bandpass";
+
+filter.frequency.value=opts.freq||2000;
+
+const gain=c.createGain();
+
+gain.gain.setValueAtTime(opts.gain||0.1,t0);
+
+gain.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+
+src.connect(filter);
+
+filter.connect(gain);
+
+gain.connect(masterGain);
+
+src.start(t0);
+
+}
+
+/* Her ses adının "tarifi". YALANCI'nın kimliğine uygun:
+   kısa, net, modern, parti oyunu havasında — çocuksu ya da
+   sinematik değil. */
+const RECIPES={
+
+click:function(){
+tone({type:"sine",freq:780,dur:.045,gain:.09,attack:.002});
+},
+
+voteSelect:function(){
+tone({type:"sine",freq:620,dur:.06,gain:.11,attack:.003});
+},
+
+category:function(){
+tone({type:"triangle",freq:520,dur:.08,gain:.15,attack:.004});
+tone({type:"triangle",freq:780,dur:.09,gain:.13,attack:.004,delay:.05});
+},
+
+playerJoin:function(){
+tone({type:"sine",freq:440,dur:.09,gain:.13,attack:.004});
+tone({type:"sine",freq:660,dur:.12,gain:.15,attack:.004,delay:.07});
+},
+
+answerSubmit:function(){
+tone({type:"sine",freq:660,dur:.09,gain:.15,attack:.004,freqTo:880});
+},
+
+timeWarning:function(){
+tone({type:"square",freq:880,dur:.045,gain:.08,attack:.002});
+},
+
+timeUp:function(){
+tone({type:"square",freq:440,dur:.09,gain:.15,attack:.003});
+tone({type:"square",freq:330,dur:.14,gain:.15,attack:.003,delay:.11});
+},
+
+votingStart:function(){
+noiseBurst({dur:.18,freq:2200,gain:.09});
+tone({type:"triangle",freq:392,dur:.16,gain:.14,attack:.006,freqTo:587,delay:.02});
+},
+
+roundStart:function(){
+tone({type:"triangle",freq:494,dur:.11,gain:.13,attack:.005,freqTo:659});
+},
+
+reveal:function(){
+tone({type:"sine",freq:523,dur:.09,gain:.12,attack:.004});
+tone({type:"sine",freq:659,dur:.09,gain:.14,attack:.004,delay:.09});
+tone({type:"sine",freq:784,dur:.16,gain:.17,attack:.004,delay:.18});
+},
+
+bluff:function(){
+/* "Oo, bu bir blöftü!" — düşen, hafif komik ama rahatsız
+   etmeyen kısa bir ikili nota. Hakaret/alaycı değil. */
+tone({type:"sawtooth",freq:330,dur:.16,gain:.13,attack:.004,freqTo:165});
+tone({type:"sawtooth",freq:220,dur:.18,gain:.11,attack:.004,freqTo:110,delay:.10});
+},
+
+point:function(){
+tone({type:"sine",freq:784,dur:.07,gain:.15,attack:.003});
+tone({type:"sine",freq:1046,dur:.12,gain:.17,attack:.003,delay:.06});
+},
+
+winner:function(){
+[523,659,784,1046].forEach(function(f,i){
+tone({type:"triangle",freq:f,dur:.18,gain:.16,attack:.004,delay:i*.09});
+});
+noiseBurst({dur:.3,freq:3000,gain:.05,delay:.32});
+}
+
+};
+
+function play(name){
+
+if(muted) return;
+
+if(!RECIPES[name]) return;
+
+const now=Date.now();
+
+const cd=COOLDOWN_MS[name]||0;
+
+if(cd>0 && lastPlayedAt[name] && (now-lastPlayedAt[name])<cd) return;
+
+lastPlayedAt[name]=now;
+
+/* Ses üretimi hiçbir koşulda oyunu kesintiye uğratmamalı —
+   desteklenmeyen bir tarayıcı ya da beklenmedik bir hata
+   sessizce yutulur. */
+try{
+
+RECIPES[name]();
+
+}catch(e){}
+
+}
+
+function setMuted(v){
+
+muted=!!v;
+
+try{
+
+localStorage.setItem("yalanci_sound_muted",muted?"1":"0");
+
+}catch(e){}
+
+}
+
+function isMuted(){
+
+return muted;
+
+}
+
+function toggleMuted(){
+
+setMuted(!muted);
+
+return muted;
+
+}
+
+return { play:play, setMuted:setMuted, isMuted:isMuted, toggleMuted:toggleMuted };
+
+})();
+
+/* Genel "buton tıklaması" sesi — YALANCI'daki düğmelerin
+   büyük çoğunluğu inline onclick="..." kullanıyor; onlarca
+   yeri tek tek değiştirmek yerine TEK bir delege edilmiş
+   (delegated) dinleyici ile kapsıyoruz. Kendi ANLAMLI sesi olan
+   düğmeler (kategori kartı, oylama seçeneği) burada hariç
+   tutulur ki aynı dokunuşta iki ses üst üste binmesin — onlar
+   kendi fonksiyonlarında (selectCategory, chooseAnswer, vb.)
+   AudioManager.play() çağırır. */
+document.addEventListener("click",function(e){
+
+const btn=e.target.closest("button");
+
+if(!btn||btn.disabled) return;
+
+if(btn.classList.contains("cat-btn")) return;
+
+if(btn.classList.contains("option-btn")) return;
+
+AudioManager.play("click");
+
+},true);
 
 
 
@@ -4090,18 +4484,46 @@ return distance<=threshold;
    eşleşirse doğru kabul edilir. Local ve Online oyunun HER
    YERİNDE bu fonksiyon kullanılır, böylece iki mod arasında
    asla tutarsızlık olmaz. */
+/* Türkçe'de peygamber/din büyüklerinin isimlerinin önüne "Hz."
+   (Hazreti) saygı unvanı eklenir (örn. "Hz. Davud"). Oyuncu bu
+   unvanı hiç yazmadan sadece ismi ("Davud") yazdığında da cevap
+   kabul edilmeli — admin'in bunun için ayrıca her soruya "Davud"u
+   takma ad olarak eklemesi gerekmemeli. Bu unvanı hem doğru
+   cevaptan hem de oyuncunun yazdığından çıkarıp öyle karşılaştırıyoruz. */
+function stripHonorific(text){
+return (text||"")
+.replace(/^\s*(hz\.?|hazreti)\s+/i,"")
+.trim();
+}
+
 function isAnswerCorrect(userAnswer,question){
 
 if(!question) return false;
 
-const a=normalize(userAnswer);
+const rawUser=(userAnswer||"").toString();
+
+const a=normalize(rawUser);
 
 if(!a) return false;
 
-const candidates=[question.correct,...(question.aliases||[])]
+const aStripped=normalize(stripHonorific(rawUser));
+
+const rawCandidates=[question.correct,...(question.aliases||[])]
 .filter(Boolean);
 
-return candidates.some(c=>fuzzyTextMatch(a,normalize(c)));
+const candidates=[];
+
+rawCandidates.forEach(c=>{
+
+candidates.push(normalize(c));
+
+const stripped=stripHonorific(c);
+
+if(stripped) candidates.push(normalize(stripped));
+
+});
+
+return candidates.some(c=>fuzzyTextMatch(a,c)||fuzzyTextMatch(aStripped,c));
 
 }
 
@@ -4750,6 +5172,69 @@ renderPremium();
    etkilemeden açılıp kapanabilir.
 ========================================================= */
 
+/* Ana menüde ve oda içi ayarlar menüsünde ortak kullanılan
+   ses açma/kapama düğmesi. Tıklanınca menüyü baştan çizmek
+   yerine sadece kendi içeriğini günceller — gereksiz bir
+   tam yeniden render'a gerek yok. */
+function soundToggleMenuItemHTML(){
+
+const muted=AudioManager.isMuted();
+
+return `<button class="menu-item" id="soundToggleMenuItem" onclick="toggleSoundFromMenu()"><span class="menu-item-icon">${muted?"🔇":"🔊"}</span> Ses ${muted?"Kapalı":"Açık"}</button>`;
+
+}
+
+function toggleSoundFromMenu(){
+
+const muted=AudioManager.toggleMuted();
+
+const btn=document.getElementById("soundToggleMenuItem");
+
+if(btn){
+
+btn.innerHTML=`<span class="menu-item-icon">${muted?"🔇":"🔊"}</span> Ses ${muted?"Kapalı":"Açık"}`;
+
+}
+
+if(!muted){
+
+AudioManager.play("click");
+
+}
+
+}
+
+/* Yerel mod oyun içi üst çubukta (topbar) kullanılan küçük,
+   simge-only ses düğmesi — orada bir menü sistemi olmadığı
+   için doğrudan burada gösteriliyor. */
+function soundIconButtonHTML(){
+
+const muted=AudioManager.isMuted();
+
+return `<button class="leave-link" id="soundIconBtn" onclick="toggleSoundIcon()" aria-label="Ses">${muted?"🔇":"🔊"}</button>`;
+
+}
+
+function toggleSoundIcon(){
+
+const muted=AudioManager.toggleMuted();
+
+const btn=document.getElementById("soundIconBtn");
+
+if(btn){
+
+btn.textContent=muted?"🔇":"🔊";
+
+}
+
+if(!muted){
+
+AudioManager.play("click");
+
+}
+
+}
+
 function openMainMenu(){
 
 document.getElementById("menuOverlay").innerHTML=`
@@ -4766,6 +5251,8 @@ document.getElementById("menuOverlay").innerHTML=`
 </div>
 
 <button class="menu-item menu-item-blue" onclick="closeMainMenu();openHowToPlay()"><span class="menu-item-icon">🎮</span> Oyun Nasıl Oynanır?</button>
+
+${soundToggleMenuItemHTML()}
 
 <a class="menu-item menu-item-green" href="https://wa.me/96560349845" target="_blank"><span class="menu-item-icon">💬</span> Bize Ulaşın</a>
 
@@ -4829,6 +5316,8 @@ document.getElementById("menuOverlay").innerHTML=`
 <div class="menu-panel" id="menuPanel">
 
 <button class="menu-close" onclick="closeMainMenu()">✕</button>
+
+${soundToggleMenuItemHTML()}
 
 <button class="menu-item" onclick="openReportQuestionView()">⚠️ Soruyu Bildir</button>
 
@@ -5896,6 +6385,8 @@ selectCategory(pick.id);
 
 function selectCategory(id){
 
+AudioManager.play("category");
+
 clearInterval(timer);
 
 const category=getCategory(id);
@@ -6112,6 +6603,7 @@ clearInterval(timer);
 
 if(text){
 wrongAnswers[player]=text;
+AudioManager.play("answerSubmit");
 }
 
 advanceAnswerPlayer();
@@ -6139,6 +6631,8 @@ passToAnswer();
 ========================================================= */
 
 function buildFinalOptions(){
+
+AudioManager.play("votingStart");
 
 clearInterval(timer);
 
@@ -6291,6 +6785,8 @@ chooseAnswer(pick.text);
 
 function chooseAnswer(text){
 
+AudioManager.play("voteSelect");
+
 clearInterval(timer);
 
 const player=players[currentPlayerIndex];
@@ -6320,6 +6816,13 @@ showChoiceResult(false);
 }
 
 function showChoiceResult(correct){
+
+/* voteSelect sesiyle üst üste binmesin diye kısa bir gecikmeyle
+   çalıyoruz — böylece "seçim yapıldı" ve "sonuç" sesleri art
+   arda, net bir sırayla duyulur. */
+setTimeout(function(){
+AudioManager.play(correct?"point":"bluff");
+},120);
 
 /* Kime gittiği veya kimin yazdığı burada
    ASLA gösterilmez — bu bilgi yalnızca
@@ -6389,6 +6892,8 @@ passToSelection();
 ========================================================= */
 
 function showRoundResult(){
+
+AudioManager.play("reveal");
 
 /* Bu turda kazanılan puanlar ancak şimdi,
    herkes seçimini bitirdikten sonra asıl skora işlenir. */
@@ -6511,6 +7016,8 @@ beginLocalCategoryPhase();
 }
 
 function showGameOver(){
+
+AudioManager.play("winner");
 
 clearLocalSession();
 
@@ -6651,6 +7158,8 @@ YALANCI
 Tur ${currentRound}
 </div>
 
+${soundIconButtonHTML()}
+
 <button class="leave-link" onclick="exitLocalGame()">Çıkış</button>
 
 </div>
@@ -6695,9 +7204,17 @@ timeLeft--;
 
 updateTimerDisplay();
 
+if(timeLeft===5){
+
+AudioManager.play("timeWarning");
+
+}
+
 if(timeLeft<=0){
 
 clearInterval(timer);
+
+AudioManager.play("timeUp");
 
 onExpire();
 
@@ -6823,6 +7340,17 @@ let onlineMyChoice=null;
    değişiklik olduğunda çiziyoruz, olmadığında hiçbir şeye
    dokunmuyoruz. */
 let lastRoomSnapshot=null;
+
+/* Ses sistemi için: bir önceki render'da bilinen oda
+   fazı/oyuncu sayısı. renderOnlineGame() zaten yalnızca
+   gerçek bir değişiklikte çağrıldığı için (yukarıdaki
+   lastRoomSnapshot mekanizması sayesinde), buradaki karşılaştırma
+   "aynı fazda başka bir sebeple yeniden çizildi" durumunu
+   (ör. bir oyuncu daha oy verdi) doğru şekilde ayıklayıp sesin
+   sadece GERÇEK faz geçişinde bir kez çalmasını sağlar. */
+let audioLastPhase=null;
+
+let audioLastPlayerCount=0;
 
 
 /*
@@ -7125,6 +7653,38 @@ shaped[c.id].order=idx;
 });
 
 return await storageSet("questions_data",shaped);
+
+}
+
+/* Tek bir kategoriyi kaydeder — kategori sırası, ad ya da
+   kilit değişikliği gibi TÜM kategorileri aynı anda etkileyen
+   işlemler hâlâ saveCategoriesToFirebase() kullanır, ama tek bir
+   soru eklemek/düzenlemek/silmek gibi günlük işlemler için tüm
+   soru bankasını (o an binlerce soruya çıkabilen tüm kategoriler
+   dahil) her seferinde yeniden yazmak gereksiz derecede ağırdır.
+   Kategorilerden biri büyüdükçe (ör. yüzlerce soruluk bir kategori)
+   bu tam yazma işlemi yavaşlayıp zaman zaman sessizce başarısız
+   olabiliyordu — bu da "düzenliyorum ama kaydolmuyor" şikayetinin
+   asıl nedeniydi. Artık sadece değişen kategori yazılıyor. */
+async function saveOneCategoryToFirebase(catId){
+
+if(!firebaseReady){
+
+alert("Firebase ayarlı değil, değişiklikler kalıcı olarak kaydedilemiyor.");
+
+return false;
+
+}
+
+const idx=CATEGORIES.findIndex(c=>c.id===catId);
+
+if(idx===-1) return false;
+
+const shape=categoryToFbShape(CATEGORIES[idx]);
+
+shape.order=idx;
+
+return await storageSet("questions_data/"+catId,shape);
 
 }
 
@@ -7995,6 +8555,16 @@ return;
 
 }
 
+/* Firebase'in "canlı dinleyici"si, kendi yaptığımız kaydı da geri
+   okuyup bu ekranı otomatik olarak yeniden çiziyor (bkz. aşağıdaki
+   db.ref("questions_data").on("value", ...)). scrollToIndex
+   verilmediğinde bu otomatik yeniden çizim, admin bir soruyu deneyip
+   geri döndükten kısa bir süre sonra devreye girip onu tekrar
+   sayfanın en başına fırlatıyordu — "test edince en başa dönüyor"
+   şikayetinin asıl nedeni buydu. Önce mevcut kaydırma konumunu
+   saklayıp yeniden çizimden sonra aynı yere geri koyuyoruz. */
+const preservedScrollY=(typeof scrollToIndex!=="number")?window.scrollY:null;
+
 document.getElementById("app").innerHTML=`
 
 <div class="topbar">
@@ -8110,6 +8680,10 @@ setTimeout(()=>card.classList.remove("qcard-flash"),1200);
 
 }
 
+}else if(preservedScrollY!==null){
+
+window.scrollTo({top:preservedScrollY});
+
 }
 
 }
@@ -8184,7 +8758,17 @@ const cat=CATEGORIES.find(c=>c.id===catId);
 
 cat.questions.push(data);
 
-await saveCategoriesToFirebase();
+const ok=await saveOneCategoryToFirebase(catId);
+
+if(!ok){
+
+cat.questions.pop();
+
+alert("Kaydedilemedi. İnternet bağlantını kontrol edip tekrar dene.");
+
+return;
+
+}
 
 renderAdminCategory(catId);
 
@@ -8198,11 +8782,23 @@ if(!data) return;
 
 const cat=CATEGORIES.find(c=>c.id===catId);
 
+const previous=cat.questions[index];
+
 cat.questions[index]=data;
 
-const ok=await saveCategoriesToFirebase();
+const ok=await saveOneCategoryToFirebase(catId);
 
-if(ok) alert("Kaydedildi.");
+if(ok){
+
+alert("Kaydedildi.");
+
+}else{
+
+cat.questions[index]=previous;
+
+alert("Kaydedilemedi. İnternet bağlantını kontrol edip tekrar dene.");
+
+}
 
 }
 
@@ -8212,9 +8808,19 @@ if(!confirm("Bu soruyu silmek istediğine emin misin?")) return;
 
 const cat=CATEGORIES.find(c=>c.id===catId);
 
-cat.questions.splice(index,1);
+const removed=cat.questions.splice(index,1)[0];
 
-await saveCategoriesToFirebase();
+const ok=await saveOneCategoryToFirebase(catId);
+
+if(!ok){
+
+cat.questions.splice(index,0,removed);
+
+alert("Silinemedi. İnternet bağlantını kontrol edip tekrar dene.");
+
+return;
+
+}
 
 renderAdminCategory(catId);
 
@@ -9320,12 +9926,74 @@ function renderOnlineGame(){
 
 if(!roomState) return;
 
+handleOnlinePhaseAudio(roomState);
+
 if(roomState.phase==="lobby"){ renderOnlineLobby(); return; }
 if(roomState.phase==="category_pick"){ renderOnlineCategoryPick(); return; }
 if(roomState.phase==="answering"){ renderOnlineAnswering(); return; }
 if(roomState.phase==="select"){ renderOnlineSelect(); return; }
 if(roomState.phase==="round_result"){ renderOnlineRoundResult(); return; }
 if(roomState.phase==="game_over"){ renderOnlineGameOver(); return; }
+
+}
+
+/* Online moddaki tüm faz-geçişi seslerini TEK bir yerden yönetir.
+   renderOnlineGame() zaten sadece oda verisi gerçekten
+   değiştiğinde çağrıldığı için (bkz. pollRoom içindeki
+   lastRoomSnapshot kontrolü), burada SADECE "bir önceki
+   render'a göre faz değişti mi" bakmak, sesin her poll'da değil
+   yalnızca gerçek bir geçişte bir kez çalmasını garanti eder. */
+function handleOnlinePhaseAudio(room){
+
+const count=(room.players||[]).length;
+
+if(audioLastPlayerCount>0 && count>audioLastPlayerCount){
+AudioManager.play("playerJoin");
+}
+
+audioLastPlayerCount=count;
+
+const phase=room.phase;
+
+if(phase!==audioLastPhase){
+
+if(phase==="answering"){
+AudioManager.play("roundStart");
+}else if(phase==="select"){
+AudioManager.play("votingStart");
+}else if(phase==="round_result"){
+
+AudioManager.play("reveal");
+
+/* Bu oyuncunun kendi seçimi doğru muydu, yoksa bir
+   blöfe mi kandı? Yerel moddaki showChoiceResult'ın
+   çevrimiçi karşılığı — orada anlık olan bu bilgi,
+   online modda ancak burada (round_result'a girerken)
+   netleşiyor, bu yüzden reveal sesinden kısa bir süre
+   sonra, katmanlı şekilde çalıyoruz. */
+if(onlineName && room.roundChoices && room.options){
+
+const myChoiceText=room.roundChoices[onlineName];
+
+if(myChoiceText){
+
+const chosen=room.options.find(o=>o.text===myChoiceText);
+
+setTimeout(function(){
+AudioManager.play(chosen&&chosen.correct?"point":"bluff");
+},450);
+
+}
+
+}
+
+}else if(phase==="game_over"){
+AudioManager.play("winner");
+}
+
+audioLastPhase=phase;
+
+}
 
 }
 
@@ -9577,6 +10245,8 @@ async function onlineSelectCategory(id){
 
 if(onlineActionBusy) return;
 
+AudioManager.play("category");
+
 onlineActionBusy=true;
 
 clearInterval(timer);
@@ -9741,6 +10411,10 @@ onlineFinalizeAnswer(text||null);
 
 async function onlineFinalizeAnswer(wrongOrNull){
 
+if(wrongOrNull){
+AudioManager.play("answerSubmit");
+}
+
 onlineMyWrong=wrongOrNull;
 
 onlineLocalAnswerStage="waiting";
@@ -9848,6 +10522,10 @@ ${onlineScoreBar()}
 }
 
 async function onlineChooseAnswer(text){
+
+if(text){
+AudioManager.play("voteSelect");
+}
 
 clearInterval(timer);
 
@@ -10112,6 +10790,10 @@ onlineMyChoice=null;
 
 lastRoomSnapshot=null;
 
+audioLastPhase=null;
+
+audioLastPlayerCount=0;
+
 clearOnlineSession();
 
 mode=null;
@@ -10317,6 +10999,10 @@ clearInterval(roomPoll);
 }
 
 lastRoomSnapshot=null;
+
+audioLastPhase=null;
+
+audioLastPlayerCount=0;
 
 renderOnlineGame();
 
