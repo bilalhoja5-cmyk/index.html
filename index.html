@@ -4908,6 +4908,24 @@ function slug(name){
 return (name||"").trim().replace(/[^a-zA-Z0-9ÇĞİÖŞÜçğıöşü]/g,"_")||"oyuncu";
 }
 
+/* Aynı odada yeni oyun başlayınca tur numaraları 1'den yeniden
+   başlar; eski oyundan kalan ans/cho kayıtları yeni oyunda "herkes
+   cevapladı/seçti" gibi görünüp aşamaları anında atlatabilir.
+   Lobiye dönerken bu kayıtlar temizlenir (en iyi çaba). */
+function clearRoundKeys(code,players,lastRound){
+try{
+const updates={};
+for(let r=1;r<=lastRound;r++){
+(players||[]).forEach(function(n){
+updates[roomKey(code,"ans",r,n)]=null;
+updates[roomKey(code,"cho",r,n)]=null;
+});
+}
+if(Object.keys(updates).length){
+db.ref().update(updates).catch(function(){});
+}
+}catch(e){}
+}
 function roomKey(code,kind,round,name){
 return "YALANCI_ROOM_"+code+"_"+kind+"_"+round+"_"+slug(name);
 }
@@ -5822,8 +5840,9 @@ async function returnToLobby(){
 
 const room=roomState;
 
+const staleRound=room.round||0;
+const stalePlayers=[...(room.players||[])];
 room.phase="lobby";
-
 room.round=0;
 
 room.pickerIndex=0;
@@ -5843,11 +5862,9 @@ room.categoryCyclePool=null;
 (room.players||[]).forEach(p=>{ room.scores[p]=0; });
 
 const ok=await storageSet("YALANCI_ROOM_"+roomCode,room);
-
 if(ok){
-
+clearRoundKeys(roomCode,stalePlayers,staleRound);
 roomState=room;
-
 closeMainMenu();
 
 renderOnlineGame();
@@ -7595,6 +7612,21 @@ let roomPoll=null;
    faza kendi saatiyle ilk girdiği anı kaydeder. */
 let hostAnsweringTrackKey=null;
 let hostAnsweringObservedAt=null;
+/* Aşama süre aşımı: başka cihazın yazdığı zaman damgasıyla değil,
+   bu host aşamayı ilk gördüğü andan itibaren KENDİ saatiyle ölçülür
+   (cihaz saat farkından ve host devrinden etkilenmez). Anahtara,
+   aşamaya girişte yazılan zaman damgası da katılır ki her aşama
+   girişi benzersiz olsun. */
+let hostPhaseTrackKey=null;
+let hostPhaseObservedAt=0;
+function hostPhaseElapsedMs(room){
+const key=roomCode+":"+room.round+":"+room.phase+":"+(room.selectStartedAt||room.categoryPickStartedAt||0);
+if(hostPhaseTrackKey!==key){
+hostPhaseTrackKey=key;
+hostPhaseObservedAt=Date.now();
+}
+return Date.now()-hostPhaseObservedAt;
+}
 
 /* Firebase'e yazan tek seferlik online işlemler (oda kur,
    odaya katıl, oyunu başlat, kategori seç, sonraki tur) için
@@ -7681,6 +7713,8 @@ let db=null;
 let auth=null;
 
 let authReadyPromise=null;
+let serverTimeOffsetMs=0;
+function serverNow(){return Date.now()+serverTimeOffsetMs;}
 
 let firebaseReady=false;
 
@@ -7703,6 +7737,14 @@ db=firebase.database();
 auth=firebase.auth();
 
 firebaseReady=true;
+
+/* Cihaz saatleri birbirini tutmayabilir. Host zaman damgaları
+   Firebase sunucu saatine göre (serverNow) yazılır/karşılaştırılır. */
+try{
+db.ref(".info/serverTimeOffset").on("value",function(snap){
+serverTimeOffsetMs=Number(snap.val())||0;
+});
+}catch(e){}
 
 // Sıradan oyuncular şifre girmez, bunun yerine otomatik ve
 // görünmez bir "anonim" oturum açar. Database Rules artık
@@ -10430,7 +10472,7 @@ host:name,
    kapattı, bağlantısı tamamen koptu ve asla geri dönmedi),
    biri host rolünü devralır — aksi halde oyun, host'un
    bağlantısı koptuğu an SONSUZA KADAR askıda kalırdı. */
-hostLastSeen:Date.now(),
+hostLastSeen:serverNow(),
 /* Host premium ise odadaki herkes premium ayrıcalıklarını
    kullanır (daha fazla oyuncu, kilitli kategoriler, tur
    sayısı seçimi). */
@@ -12329,7 +12371,7 @@ lastHostHeartbeatAt=now;
 
 try{
 
-await db.ref("YALANCI_ROOM_"+roomCode+"/hostLastSeen").set(now);
+await db.ref("YALANCI_ROOM_"+roomCode+"/hostLastSeen").set(serverNow());
 
 }catch(e){
 
@@ -12360,7 +12402,7 @@ if(hostClaimInFlight) return;
 
 const lastSeen=room.hostLastSeen||0;
 
-if(Date.now()-lastSeen<HOST_STALE_MS) return;
+if(serverNow()-lastSeen<HOST_STALE_MS) return;
 
 hostClaimInFlight=true;
 
@@ -12385,7 +12427,7 @@ isHost=true;
 
 lastHostHeartbeatAt=Date.now();
 
-await db.ref("YALANCI_ROOM_"+roomCode+"/hostLastSeen").set(Date.now());
+await db.ref("YALANCI_ROOM_"+roomCode+"/hostLastSeen").set(serverNow());
 
 }
 
@@ -12428,6 +12470,12 @@ return;
 
 }
 
+/* Başka biri host'u devraldıysa eski host kendini host saymayı
+   bırakır — aksi halde iki host aynı anda oyunu ilerletmeye
+   çalışır ve aşamalar bozulur. */
+if(isHost && onlineName && room.host && room.host!==onlineName){
+isHost=false;
+}
 onlinePlayers=room.players||[];
 
 onlineScores=room.scores||{};
@@ -12593,9 +12641,7 @@ const CATEGORY_PICK_TIMEOUT_MS=(qTime+5)*1000;
    tıpkı Elden Ele modundaki otomatik seçim gibi. */
 if(room.phase==="category_pick"){
 
-const timedOut=
-room.categoryPickStartedAt &&
-(Date.now()-room.categoryPickStartedAt>CATEGORY_PICK_TIMEOUT_MS);
+const timedOut=hostPhaseElapsedMs(room)>CATEGORY_PICK_TIMEOUT_MS;
 
 if(timedOut){
 
@@ -12726,9 +12772,7 @@ allIn=false;
 
 }
 
-const timedOut=
-room.selectStartedAt &&
-(Date.now()-room.selectStartedAt>SELECT_PHASE_TIMEOUT_MS);
+const timedOut=hostPhaseElapsedMs(room)>SELECT_PHASE_TIMEOUT_MS;
 
 if(allIn||timedOut){
 
