@@ -4924,6 +4924,12 @@ room.hostPremium=!!room.hostPremium;
 
 room.totalRounds=room.totalRounds||TOTAL_ROUNDS;
 
+/* Eski (bu güncellemeden önce oluşturulmuş) odalarda bu alan
+   bulunmayabilir — yokluğunu "az önce görüldü" gibi ele alıyoruz
+   ki hemen host değişikliği tetiklenmesin, sadece bundan sonra
+   normal şekilde izlenmeye başlasın. */
+room.hostLastSeen=room.hostLastSeen||Date.now();
+
 return room;
 
 }
@@ -10388,6 +10394,12 @@ CATEGORIES.forEach(c=>{ usedQ[c.id]=[]; });
 const room={
 phase:"lobby",
 host:name,
+/* Host'un hâlâ aktif/bağlı olduğunu gösteren zaman damgası.
+   Diğer oyuncular bunun çok eskidiğini görürse (host telefonu
+   kapattı, bağlantısı tamamen koptu ve asla geri dönmedi),
+   biri host rolünü devralır — aksi halde oyun, host'un
+   bağlantısı koptuğu an SONSUZA KADAR askıda kalırdı. */
+hostLastSeen:Date.now(),
 /* Host premium ise odadaki herkes premium ayrıcalıklarını
    kullanır (daha fazla oyuncu, kilitli kategoriler, tur
    sayısı seçimi). */
@@ -10488,10 +10500,16 @@ return;
 
 const isReturningPlayer=room.players.includes(name);
 
-/* Oyun zaten başladıysa, sadece daha önce bu odada olan
-   (yani bağlantısı kopmuş / yanlışlıkla çıkmış) bir oyuncunun
-   geri dönmesine izin veriyoruz — yeni bir oyuncunun devam
-   eden bir oyuna katılması engellenir. */
+/* NOT: Yukarıdaki oda okuması sadece HIZLI bir ön kontrol/geri
+   bildirim içindir (oyun başladı mı, oda dolu mu). Asıl katılma
+   işlemi aşağıda bir Firebase transaction() ile yapılır — çünkü
+   iki oyuncu TAM OLARAK aynı anda "Katıl"a basarsa, düz bir
+   oku-değiştir-yaz (read-then-set) burada bir race condition
+   yaratıp birinin katılımını sessizce kaybettirebilirdi (ikinci
+   yazan, birincinin eklediği oyuncuyu görmeden üzerine yazardı).
+   transaction() Firebase tarafında atomik olarak çalışır ve
+   çakışma durumunda otomatik yeniden dener — iki oyuncu da
+   güvenle eklenir. */
 if(room.phase!=="lobby" && !isReturningPlayer){
 
 showOnlineSetupError("Bu oyun zaten başladı.");
@@ -10500,12 +10518,7 @@ return;
 
 }
 
-if(!isReturningPlayer){
-
-/* Oda dolduysa yeni oyuncu alınmaz. Geri dönen (bağlantısı
-   kopmuş) bir oyuncu bu kontrolün dışındadır — o zaten
-   listede olduğu için odayı büyütmez. */
-if(room.players.length>=roomMaxPlayers(room)){
+if(!isReturningPlayer && room.players.length>=roomMaxPlayers(room)){
 
 showOnlineSetupError("Bu oda dolu (en fazla "+roomMaxPlayers(room)+" oyuncu).");
 
@@ -10513,27 +10526,83 @@ return;
 
 }
 
-room.players.push(name);
+let abortReason=null;
 
-room.scores[name]=0;
+let txRoom=null;
 
-room.avatars=room.avatars||{};
+try{
 
-room.avatars[name]={emoji:pendingAvatarEmoji,color:pendingAvatarColor};
+const txResult=await db.ref("YALANCI_ROOM_"+code).transaction(function(current){
 
-const ok=await storageSet(
-"YALANCI_ROOM_"+code,
-room);
+if(current===null){
+abortReason="deleted";
+return;
+}
 
-if(!ok){
+const normalized=normalizeRoom(current);
 
-showOnlineSetupError("Odaya katılamadın (Firebase'e yazma başarısız oldu). Teknik detay: "+(lastStorageError||"bilinmiyor")+" — Firebase Console > Realtime Database > Rules kısmını kontrol et.");
+const already=(normalized.players||[]).includes(name);
+
+if(normalized.phase!=="lobby" && !already){
+abortReason="started";
+return;
+}
+
+if(!already){
+
+if((normalized.players||[]).length>=roomMaxPlayers(normalized)){
+abortReason="full";
+return;
+}
+
+abortReason=null;
+
+normalized.players.push(name);
+normalized.scores[name]=0;
+normalized.avatars=normalized.avatars||{};
+normalized.avatars[name]={emoji:pendingAvatarEmoji,color:pendingAvatarColor};
+
+}else{
+
+abortReason=null;
+
+}
+
+return normalized;
+
+});
+
+if(txResult && txResult.committed){
+
+txRoom=normalizeRoom(txResult.snapshot.val());
+
+}
+
+}catch(e){
+
+showOnlineSetupError("Odaya katılamadın (bağlantı hatası). Tekrar dene.");
 
 return;
 
 }
 
+if(!txRoom){
+
+if(abortReason==="full"){
+showOnlineSetupError("Bu oda dolu.");
+}else if(abortReason==="started"){
+showOnlineSetupError("Bu oyun zaten başladı.");
+}else if(abortReason==="deleted"){
+showOnlineSetupError("Oda artık mevcut değil.");
+}else{
+showOnlineSetupError("Odaya katılamadın. Tekrar dene.");
 }
+
+return;
+
+}
+
+const room2=txRoom;
 
 onlineName=name;
 
@@ -10543,9 +10612,9 @@ roomCode=code;
    de geri kazanır — yoksa oyun, host'un bağlantısı koptuğu an
    kalıcı olarak askıda kalır (hiçbir istemci faz geçişlerini
    yönetemez). */
-isHost=(name===room.host);
+isHost=(name===room2.host);
 
-roomState=room;
+roomState=room2;
 
 saveOnlineSession();
 
@@ -12188,6 +12257,107 @@ pollRoom();
 
 }
 
+/* =========================================================
+   HOST DEVRİ (host migration) — host'un bağlantısı tamamen
+   kopup asla geri dönmezse oyunun sonsuza kadar askıda
+   kalmasını engeller.
+========================================================= */
+
+/* Host'un en son ne zaman aktif olduğunu gösteren zaman
+   damgasını günceller — ama HER pollRoom() turunda değil (1.2
+   saniyede bir olurdu, gereksiz Firebase yazımı). Sadece belirli
+   aralıklarla "hâlâ buradayım" sinyali gönderir; host zaten aktif
+   şekilde başka bir şey yazıyorsa (kategori seçimi, tur ilerletme
+   vb.) o yazımlar da dolaylı olarak aynı işi görür, bu sadece
+   host'un hiçbir şey yazmadığı boşluklarda (ör. herkesin cevap
+   vermesini beklerken) devreye giren bir güvenlik ağıdır. */
+let lastHostHeartbeatAt=0;
+
+const HOST_HEARTBEAT_INTERVAL_MS=8000;
+
+async function sendHostHeartbeat(){
+
+if(!roomCode) return;
+
+const now=Date.now();
+
+if(now-lastHostHeartbeatAt<HOST_HEARTBEAT_INTERVAL_MS) return;
+
+lastHostHeartbeatAt=now;
+
+try{
+
+await db.ref("YALANCI_ROOM_"+roomCode+"/hostLastSeen").set(now);
+
+}catch(e){
+
+/* Bu sadece bir "hayattayım" sinyali — başarısız olsa da
+   oyunu etkilemez, bir sonraki turda tekrar denenir. */
+
+}
+
+}
+
+/* Host'un sinyali belirli bir süredir gelmiyorsa (telefonu
+   kapattı, uygulamayı tamamen kapattı, interneti tamamen gitti
+   ve hiç geri gelmedi), odadaki BAŞKA BİR oyuncu host rolünü
+   devralır. Birden fazla oyuncu bunu aynı anda denerse, Firebase
+   transaction() mekanizması sayesinde SADECE BİRİ başarılı olur
+   — iki oyuncunun aynı anda host olması mümkün değildir. */
+const HOST_STALE_MS=25000;
+
+let hostClaimInFlight=false;
+
+async function maybeClaimHostIfStale(room){
+
+if(!room||!onlineName) return;
+
+if(room.phase==="game_over") return;
+
+if(hostClaimInFlight) return;
+
+const lastSeen=room.hostLastSeen||0;
+
+if(Date.now()-lastSeen<HOST_STALE_MS) return;
+
+hostClaimInFlight=true;
+
+try{
+
+const staleHostName=room.host;
+
+const result=await db.ref("YALANCI_ROOM_"+roomCode+"/host")
+.transaction(function(current){
+
+if(current===staleHostName||current==null){
+return onlineName;
+}
+
+return; // başkası bizden önce devraldı — dokunma
+
+});
+
+if(result && result.committed && result.snapshot.val()===onlineName){
+
+isHost=true;
+
+lastHostHeartbeatAt=Date.now();
+
+await db.ref("YALANCI_ROOM_"+roomCode+"/hostLastSeen").set(Date.now());
+
+}
+
+}catch(e){
+
+/* Devralma denemesi başarısız olursa sorun değil — bir
+   sonraki yoklamada (1.2 sn sonra) tekrar denenecek. */
+
+}
+
+hostClaimInFlight=false;
+
+}
+
 async function pollRoom(){
 
 if(pollBusy) return;
@@ -12246,6 +12416,12 @@ await hostMaybeAdvance();
 console.error("hostMaybeAdvance hatası:",e);
 
 }
+
+sendHostHeartbeat();
+
+}else{
+
+await maybeClaimHostIfStale(room);
 
 }
 
